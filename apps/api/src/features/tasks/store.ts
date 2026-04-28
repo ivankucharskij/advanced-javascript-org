@@ -1,0 +1,253 @@
+import { Prisma, prisma, type Task as PrismaTask } from "@repo/database/client";
+
+import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
+import { HttpStatus } from "../../shared/http-status.js";
+import type { User } from "../users/schemas.js";
+import type {
+  CreateTaskInput,
+  DeleteManyTasksInput,
+  Task,
+  TaskQuery,
+  UpdateTaskInput,
+} from "./schemas.js";
+
+const serializeTask = (task: PrismaTask): Task => {
+  const { userId: _userId, ...rest } = task;
+
+  return {
+    ...rest,
+    dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+    createdAt: task.createdAt.toISOString(),
+    updatedAt: task.updatedAt.toISOString(),
+  };
+};
+
+const serializeTasks = (tasks: PrismaTask[]) => tasks.map(serializeTask);
+
+const hasCode = (error: unknown, code: string) => {
+  return error instanceof Error && "code" in error && error.code === code;
+};
+
+export const tasksStore = {
+  async post(
+    currentUser: User,
+    input: CreateTaskInput,
+  ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.CREATED>> {
+    try {
+      if (input.parentId) {
+        const parentTask = await prisma.task.findFirst({
+          where: {
+            id: input.parentId,
+            userId: currentUser.id,
+          },
+        });
+
+        if (!parentTask) {
+          return createHttpResult({
+            message: "Parent task not found",
+            status: HttpStatus.NOT_FOUND,
+          });
+        }
+      }
+
+      const task = await prisma.task.create({
+        data: {
+          title: input.title,
+          description: input.description ?? null,
+          priority: input.priority,
+          status: input.status,
+          dueDate: input.dueDate ? new Date(input.dueDate) : null,
+          tags: input.tags ?? [],
+          userId: currentUser.id,
+          parentId: input.parentId ?? null,
+        },
+      });
+
+      return createHttpResult({
+        status: HttpStatus.CREATED,
+        data: serializeTask(task),
+      });
+    } catch (error: unknown) {
+      if (hasCode(error, "P2003")) {
+        return createHttpResult({
+          message: "Parent task not found",
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      throw error;
+    }
+  },
+  async getMany(currentUser: User, query: TaskQuery): Promise<{
+    data: Task[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> {
+    const safePage = Math.max(query.page, 1);
+    const safeLimit = Math.min(query.limit, 50);
+    const skip = (safePage - 1) * safeLimit;
+
+    const where: Prisma.TaskWhereInput = {
+      AND: [
+        query.q
+          ? {
+              OR: [
+                { title: { contains: query.q, mode: "insensitive" } },
+                { description: { contains: query.q, mode: "insensitive" } },
+              ],
+            }
+          : {},
+        { userId: currentUser.id },
+        query.priority ? { priority: query.priority } : {},
+        query.status ? { status: query.status } : {},
+        query.dueDateStart || query.dueDateEnd
+          ? {
+              dueDate: {
+                ...(query.dueDateStart && { gte: new Date(query.dueDateStart) }),
+                ...(query.dueDateEnd && { lte: new Date(query.dueDateEnd) }),
+              },
+            }
+          : {},
+      ],
+    };
+
+    const orderBy: Prisma.TaskOrderByWithRelationInput | undefined = query.sortBy
+      ? {
+          [query.sortBy]: query.order ?? "desc",
+        }
+      : undefined;
+
+    const [tasks, total] = await Promise.all([
+      prisma.task.findMany({
+        skip,
+        take: safeLimit,
+        where,
+        orderBy,
+      }),
+      prisma.task.count({ where }),
+    ]);
+
+    return {
+      data: serializeTasks(tasks),
+      meta: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    };
+  },
+  async getOne(
+    currentUser: User,
+    id: string,
+  ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.OK>> {
+    const task = await prisma.task.findFirst({
+      where: {
+        id,
+        userId: currentUser.id,
+      },
+    });
+
+    if (!task) {
+      return createHttpResult({
+        message: "Task not found",
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    return createHttpResult({
+      status: HttpStatus.OK,
+      data: serializeTask(task),
+    });
+  },
+  async patch(
+    currentUser: User,
+    id: string,
+    input: UpdateTaskInput,
+  ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.OK>> {
+    const cleanData = Object.fromEntries(
+      Object.entries(input).filter(([, value]) => value !== undefined),
+    ) as Partial<UpdateTaskInput>;
+
+    try {
+      const existingTask = await prisma.task.findFirst({
+        where: {
+          id,
+          userId: currentUser.id,
+        },
+      });
+
+      if (!existingTask) {
+        return createHttpResult({
+          message: "Task not found",
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      if (cleanData.parentId) {
+        const parentTask = await prisma.task.findFirst({
+          where: {
+            id: cleanData.parentId,
+            userId: currentUser.id,
+          },
+        });
+
+        if (!parentTask) {
+          return createHttpResult({
+            message: "Parent task not found",
+            status: HttpStatus.NOT_FOUND,
+          });
+        }
+      }
+
+      const task = await prisma.task.update({
+        where: { id },
+        data: {
+          ...cleanData,
+          ...(cleanData.dueDate !== undefined && {
+            dueDate: cleanData.dueDate ? new Date(cleanData.dueDate) : null,
+          }),
+        },
+      });
+
+      return createHttpResult({
+        status: HttpStatus.OK,
+        data: serializeTask(task),
+      });
+    } catch (error: unknown) {
+      if (hasCode(error, "P2025")) {
+        return createHttpResult({
+          message: "Task not found",
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      if (hasCode(error, "P2003")) {
+        return createHttpResult({
+          message: "Parent task not found",
+          status: HttpStatus.NOT_FOUND,
+        });
+      }
+
+      throw error;
+    }
+  },
+  async deleteMany(currentUser: User, input: DeleteManyTasksInput): Promise<{ count: number }> {
+    const result = await prisma.task.deleteMany({
+      where: {
+        userId: currentUser.id,
+        id: {
+          in: input.ids,
+        },
+      },
+    });
+
+    return {
+      count: result.count,
+    };
+  },
+};

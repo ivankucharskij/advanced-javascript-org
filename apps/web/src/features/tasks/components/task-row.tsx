@@ -1,0 +1,78 @@
+import { Checkbox, Typography } from "@mui/material";
+import TableCell from "@mui/material/TableCell";
+import TableRow, { tableRowClasses } from "@mui/material/TableRow";
+import type { GetTasks200DataItem } from "@repo/api-client";
+import { MouseEvent } from "react";
+
+import RemoveAndEdit from "@/features/tasks/components/remove-and-edit";
+import TitleCellContent from "@/features/tasks/components/title-cell-content";
+import { priorityLabel, statusLabel } from "@/features/tasks/task-labels";
+import { formatDateTime } from "@/lib/date";
+import { COLORS } from "@/theme/tokens";
+
+export default function TaskRow({
+  selected,
+  setSelected,
+  row,
+}: {
+  selected: Set<string>;
+  setSelected: (selected: Set<string>) => void;
+  row: GetTasks200DataItem;
+}) {
+  const isItemSelected = selected.has(row.id);
+
+  const handleClick = (_: MouseEvent<unknown>, id: string) => {
+    const next = new Set<string>(selected);
+
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+
+    setSelected(next);
+  };
+
+  return (
+    <TableRow
+      hover
+      onClick={(event) => handleClick(event, row.id)}
+      tabIndex={-1}
+      key={row.id}
+      selected={isItemSelected}
+      sx={{
+        cursor: "pointer",
+        [`&.${tableRowClasses.selected}`]: {
+          boxShadow: `inset 3px 0 0 ${COLORS["$blue-3"]}`,
+        },
+      }}
+    >
+      <TableCell padding="checkbox">
+        <Checkbox checked={isItemSelected} />
+      </TableCell>
+      <TableCell sx={{ paddingLeft: 1, maxWidth: 400 }} align="left">
+        <TitleCellContent title={row.title} description={row.description} />
+      </TableCell>
+      <TableCell align="center">
+        <Typography>{priorityLabel[row.priority]}</Typography>
+      </TableCell>
+      <TableCell align="center">
+        <Typography noWrap>{statusLabel[row.status]}</Typography>
+      </TableCell>
+      <TableCell align="center">
+        {row.dueDate !== null ? (
+          <Typography>{formatDateTime(row.dueDate).date}</Typography>
+        ) : null}
+      </TableCell>
+      <TableCell align="center">
+        <div>
+          <Typography>{formatDateTime(row.createdAt).time}</Typography>
+          <Typography>{formatDateTime(row.createdAt).date}</Typography>
+        </div>
+      </TableCell>
+      <TableCell>
+        <RemoveAndEdit task={row} />
+      </TableCell>
+    </TableRow>
+  );
+}
