@@ -18,8 +18,13 @@ async function fetchTasks(): Promise<GetTasks200> {
   });
 
   if (!res.ok) {
-    const parsed: CommonError = await res.json();
-    throw new Error(translateApiError(parsed.message));
+    const parsed = (await res.json().catch(() => null)) as
+      | Partial<CommonError>
+      | null;
+    const message =
+      parsed?.message ?? `API request failed with status ${res.status}`;
+
+    throw new Error(translateApiError(message));
   }
 
   return (await res.json()) as GetTasks200;
