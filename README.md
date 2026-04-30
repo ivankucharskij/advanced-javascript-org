@@ -172,6 +172,8 @@ Run this after the API is running:
 pnpm generate:api-client
 ```
 
+Commit both `packages/api-client/openapi.json` and `packages/api-client/src/generated` after regenerating them. The web app imports `@repo/api-client`, so deployment platforms such as Vercel need these generated files in the repository checkout.
+
 ## Environment
 
 Useful env files:
@@ -188,6 +190,8 @@ The API reads:
 The web app reads:
 
 - `LOCAL_API_URL`
+
+For Vercel, set `LOCAL_API_URL` to the deployed API HTTPS URL from Yandex Cloud. After Vercel gives you a web domain, update the API `WEB_ORIGIN` value to that Vercel origin and deploy a new API revision.
 
 ## Notes
 

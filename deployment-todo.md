@@ -62,7 +62,7 @@ curl http://localhost:8080/api/healthz
 Expected:
 
 ```json
-{"status":"healthy"}
+{"status":"ok"}
 ```
 
 ## Build And Push API Image
@@ -179,8 +179,21 @@ curl https://<container-url>/api/healthz
 Expected:
 
 ```json
-{"status":"healthy"}
+{"status":"ok"}
 ```
+
+## Deploy Web To Vercel
+
+- [ ] Commit `packages/api-client/openapi.json` and `packages/api-client/src/generated` so Vercel can build from a clean checkout.
+- [ ] Import the GitHub repository in Vercel.
+- [ ] Set the Vercel project root directory to `apps/web`.
+- [ ] Keep the framework preset as Next.js.
+- [ ] Set `LOCAL_API_URL` to the Yandex API HTTPS URL.
+- [ ] Deploy the web app.
+- [ ] Copy the Vercel app origin, for example `https://your-app.vercel.app`.
+- [ ] Update the Yandex API `WEB_ORIGIN` environment variable to the Vercel origin.
+- [ ] Deploy a new Yandex API revision.
+- [ ] Test auth and API calls from the Vercel domain.
 
 ## Updating API Later
 

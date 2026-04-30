@@ -90,3 +90,17 @@ For local development, put it in `apps/web/.env.local`:
 ```env
 LOCAL_API_URL=http://localhost:8080
 ```
+
+## Vercel
+
+Deploy `apps/web` as the Vercel project root.
+
+Set this environment variable in Vercel:
+
+```env
+LOCAL_API_URL=https://<your-yandex-api-url>
+```
+
+The app uses Next.js rewrites, so browser requests go to `/api/*` on the Vercel domain and Vercel proxies them to the API URL above.
+
+After Vercel creates the web domain, update the Yandex API `WEB_ORIGIN` environment variable to that exact origin and deploy a new API revision.
