@@ -1,5 +1,4 @@
-import { Prisma, prisma, type Task as PrismaTask } from "@repo/database/client";
-
+import { Prisma, prisma, type Task as PrismaTask } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
 import type { User } from "../users/schemas.js";

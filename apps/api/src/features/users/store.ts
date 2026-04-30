@@ -1,5 +1,4 @@
-import { prisma, type User as PrismaUser } from "@repo/database/client";
-
+import { prisma, type User as PrismaUser } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
 import { PaginationQuery } from "../../shared/schemas.js";

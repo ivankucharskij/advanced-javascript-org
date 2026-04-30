@@ -6,6 +6,6 @@ export const healthRouter = new OpenAPIHono();
 
 healthRouter.openapi(healthOpenApi.getHealth, (c) => {
   return c.json({
-    status: "ok",
+    status: "healthy",
   });
 });

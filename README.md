@@ -20,17 +20,11 @@ Create local API env:
 cp apps/api/.env.example apps/api/.env
 ```
 
-Create local database env:
-
-```bash
-cp packages/database/.env.example packages/database/.env
-```
-
 Apply migrations and generate the Prisma client:
 
 ```bash
-pnpm --filter @repo/database prisma:migrate:dev
-pnpm --filter @repo/database prisma:generate
+pnpm db:migrate:dev
+pnpm db:generate
 ```
 
 Generate API client types:
@@ -74,7 +68,7 @@ This workspace contains:
 
 - `apps/api` - Hono API with OpenAPI route definitions and Swagger UI
 - `apps/web` - Next.js web app with App Router routes and feature code under `src/features`
-- `packages/database` - Prisma schema, generated client, and local Postgres setup
+- `apps/api/prisma` - Prisma schema, migrations, generated client, and local Postgres setup
 - `packages/api-client` - generated API types/client package from the API OpenAPI spec
 - `packages/ui` - shared UI package
 - `packages/eslint-config` - shared ESLint config
@@ -141,19 +135,25 @@ pnpm db:up
 Generate Prisma client:
 
 ```bash
-pnpm --filter @repo/database prisma:generate
+pnpm db:generate
 ```
 
 Create/apply a development migration:
 
 ```bash
-pnpm --filter @repo/database prisma:migrate:dev -- --name your_migration_name
+pnpm db:migrate:dev -- --name your_migration_name
 ```
 
-The database package keeps its Prisma schema in:
+Apply existing migrations to the shared/production database before deploying the API:
+
+```bash
+pnpm db:migrate:deploy
+```
+
+The API package keeps its Prisma schema in:
 
 ```text
-packages/database/prisma/schema.prisma
+apps/api/prisma/schema.prisma
 ```
 
 ## API Docs
@@ -178,15 +178,11 @@ Useful env files:
 
 - `apps/api/.env.example`
 - `apps/web/.env.local`
-- `packages/database/.env.example`
 
 The API reads:
 
 - `PORT`
 - `AUTH_SECRET`
-
-The database package reads:
-
 - `DATABASE_URL`
 
 The web app reads:
@@ -197,4 +193,4 @@ The web app reads:
 
 - Task records belong to a user.
 - Protected API routes use Hono middleware auth and store the authenticated user in context.
-- The API package runs from source with `tsx`; it does not rely on a separate runtime `dist` export from `@repo/database`.
+- The API owns Prisma because it is the only service that talks directly to the database.

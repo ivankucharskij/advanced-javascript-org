@@ -1,4 +1,4 @@
-const getRequiredEnv = (name: "AUTH_SECRET") => {
+const getRequiredEnv = (name: "AUTH_SECRET" | "DATABASE_URL") => {
   const value = process.env[name];
 
   if (!value) {
@@ -26,6 +26,7 @@ const getPort = () => {
 export const getEnv = () =>
   ({
     AUTH_SECRET: getRequiredEnv("AUTH_SECRET"),
+    DATABASE_URL: getRequiredEnv("DATABASE_URL"),
     PORT: getPort(),
     WEB_ORIGIN: process.env.WEB_ORIGIN,
   }) as const;

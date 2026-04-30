@@ -1,0 +1,74 @@
+name: Deploy API to Yandex Cloud
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/api/**"
+      - "packages/eslint-config/**"
+      - "packages/typescript-config/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "turbo.json"
+      - ".github/workflows/deploy-api-yc.yml"
+  workflow_dispatch:
+
+env:
+  REGISTRY_ID: ${{ vars.YC_REGISTRY_ID }}
+  IMAGE_NAME: fullstack-api
+  CONTAINER_NAME: ${{ vars.YC_CONTAINER_NAME }}
+  SERVICE_ACCOUNT_ID: ${{ secrets.YC_SERVICE_ACCOUNT_ID }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Yandex Cloud CLI
+        run: |
+          curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash -s -- -i "$HOME/yandex-cloud" -n
+          echo "$HOME/yandex-cloud/bin" >> "$GITHUB_PATH"
+
+      - name: Configure Yandex Cloud profile
+        run: |
+          cat > key.json <<'JSON'
+          ${{ secrets.YC_SERVICE_ACCOUNT_KEY_JSON }}
+          JSON
+          yc config profile create github-actions
+          yc config set service-account-key key.json
+          yc config set cloud-id "${{ secrets.YC_CLOUD_ID }}"
+          yc config set folder-id "${{ secrets.YC_FOLDER_ID }}"
+          yc config list
+
+      - name: Configure Docker for Yandex Container Registry
+        run: yc container registry configure-docker
+
+      - name: Build and push API image
+        run: |
+          IMAGE="cr.yandex/${REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
+          docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy Serverless Container revision
+        run: |
+          yc serverless container revision deploy \
+            --container-name "$CONTAINER_NAME" \
+            --image "$IMAGE" \
+            --service-account-id "$SERVICE_ACCOUNT_ID" \
+            --memory 512M \
+            --cores 1 \
+            --execution-timeout 30s \
+            --concurrency 8 \
+            --environment AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
+            --environment DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --environment WEB_ORIGIN="${{ secrets.WEB_ORIGIN }}"

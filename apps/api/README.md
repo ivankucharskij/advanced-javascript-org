@@ -7,7 +7,7 @@
 - `@hono/zod-openapi` for typed routes and OpenAPI generation
 - `@hono/swagger-ui` for interactive docs
 - auth middleware for protected routes
-- Prisma-backed persistence via `@repo/database`
+- Prisma-backed persistence owned by the API package
 
 ## Run
 
@@ -15,10 +15,9 @@ From the repo root:
 
 ```bash
 cp apps/api/.env.example apps/api/.env
-cp packages/database/.env.example packages/database/.env
 pnpm db:up
-pnpm --filter @repo/database prisma:migrate:dev
-pnpm --filter @repo/database prisma:generate
+pnpm db:migrate:dev
+pnpm db:generate
 pnpm --filter api dev
 pnpm --filter api build
 pnpm --filter api start
@@ -37,6 +36,26 @@ When the server is running:
 
 - OpenAPI JSON: `/doc`
 - Swagger UI: `/swagger`
+
+## Docker
+
+Build the API image from the repo root:
+
+```bash
+docker build -f apps/api/Dockerfile -t fullstack-api .
+```
+
+Run it locally:
+
+```bash
+docker run --env-file apps/api/.env -p 8080:8080 fullstack-api
+```
+
+When using Docker `--env-file`, keep values unquoted:
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/db?sslmode=require
+```
 
 ## Structure
 
@@ -92,8 +111,13 @@ Main variables:
 
 - `PORT`
 - `AUTH_SECRET`
+- `DATABASE_URL`
 
-Database connection settings are owned by `packages/database/.env`.
+Run this before deploying the API container to apply existing migrations to the configured database:
+
+```bash
+pnpm db:migrate:deploy
+```
 
 ## Seed
 

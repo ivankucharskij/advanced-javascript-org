@@ -3,12 +3,12 @@ import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { prisma } from "@repo/database/client";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { getEnv } from "./config/env.js";
-import { openApiDocumentConfig } from "./openapi.js";
+import { openApiDocumentConfig } from "./config/openapi.js";
+import { prisma } from "./lib/prisma.js";
 import { createRouter } from "./router.js";
 
 export const createServer = (runtimeEnv = getEnv()) => {

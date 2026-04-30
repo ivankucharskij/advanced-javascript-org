@@ -1,8 +1,7 @@
 import "dotenv/config";
 
-import { prisma, type User as PrismaUser } from "@repo/database/client";
-
 import { hashPassword, normalizeEmail } from "../features/users/password.js";
+import { prisma, type User as PrismaUser } from "../lib/prisma.js";
 
 const seededUsers = [
   {

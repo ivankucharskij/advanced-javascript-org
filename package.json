@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "db:up": "docker compose -f packages/database/compose.yaml up -d",
+    "db:generate": "pnpm --filter api prisma:generate",
+    "db:migrate:dev": "pnpm --filter api prisma:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter api prisma:migrate:deploy",
     "dev": "turbo run dev",
     "seed": "pnpm --filter api seed",
     "lint": "turbo run lint",
