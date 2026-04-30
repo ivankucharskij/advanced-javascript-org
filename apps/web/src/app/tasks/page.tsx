@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import type { GetTasks200 } from "@repo/api-client";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 
 import FiltersBar from "@/features/tasks/components/filters";
 import SearchBar from "@/features/tasks/components/search-bar";
@@ -12,9 +12,10 @@ import { url } from "@/lib/url-builder";
 export const dynamic = "force-dynamic";
 
 async function fetchTasks(): Promise<GetTasks200> {
-  const accessToken = (await cookies()).get("accessToken")?.value;
+  const cookieHeader = (await headers()).get("cookie");
   const res = await fetch(url("/api/tasks", { limit: 5 }), {
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    cache: "no-store",
+    headers: cookieHeader ? { Cookie: cookieHeader } : {},
   });
 
   if (!res.ok) {
@@ -37,7 +38,8 @@ export default async function TasksPage() {
   try {
     tasks = await fetchTasks();
   } catch (e) {
-    errorMessage = e instanceof Error ? e.message : "Не удалось загрузить задачи";
+    errorMessage =
+      e instanceof Error ? e.message : "Не удалось загрузить задачи";
   }
 
   return (
