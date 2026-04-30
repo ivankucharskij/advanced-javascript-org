@@ -1,9 +1,13 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
+import { setCookie } from "hono/cookie";
 
 import { authMiddleware, type AuthVariables } from "../../middleware/auth.js";
 import { HttpStatus } from "../../shared/http-status.js";
 import { authOpenApi, usersOpenApi } from "./openapi.js";
 import { usersStore } from "./store.js";
+
+const AUTH_COOKIE_NAME = "accessToken";
+const AUTH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export const authRouter = new OpenAPIHono();
 export const usersRouter = new OpenAPIHono<{
@@ -20,6 +24,8 @@ authRouter.openapi(authOpenApi.register, async (c) => {
     return c.json({ message: result.message }, result.status);
   }
 
+  setAuthCookie(c, result.data.accessToken);
+
   return c.json(
     {
       data: result.data,
@@ -35,6 +41,8 @@ authRouter.openapi(authOpenApi.login, async (c) => {
   if (!result.ok) {
     return c.json({ message: result.message }, result.status);
   }
+
+  setAuthCookie(c, result.data.accessToken);
 
   return c.json(
     {
@@ -76,3 +84,16 @@ usersRouter.openapi(usersOpenApi.block, async (c) => {
 
   return c.json({ data: result.data }, HttpStatus.OK);
 });
+
+const setAuthCookie = (
+  c: Parameters<typeof setCookie>[0],
+  accessToken: string,
+) => {
+  setCookie(c, AUTH_COOKIE_NAME, accessToken, {
+    httpOnly: true,
+    maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
+    path: "/",
+    sameSite: "Lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+};

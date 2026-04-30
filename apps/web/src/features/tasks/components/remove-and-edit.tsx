@@ -7,9 +7,14 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import type { GetTasks200DataItem, PatchTasksIdBody } from "@repo/api-client";
+import type {
+  DeleteTasksBody,
+  GetTasks200DataItem,
+  PatchTasksIdBody,
+} from "@repo/api-client";
 import { useState } from "react";
 import useSWRMutation from "swr/mutation";
 
@@ -24,10 +29,11 @@ export default function RemoveAndEdit({ task }: { task: GetTasks200DataItem }) {
   const { mutate } = useTasks({});
   const { handleOpen, popoverProps, handleClose } = usePopover();
 
-  const { trigger: triggerDelete, isMutating: isDeleting } = useSWRMutation(
-    `/api/tasks/${task.id}`,
-    (url) => api.delete(url),
-  );
+  const { trigger: triggerRemoveMany, isMutating: isRemovingMany } =
+    useSWRMutation<unknown, unknown, string, DeleteTasksBody>(
+      "/api/tasks",
+      (url, { arg }) => api.delete(url, { data: arg }),
+    );
 
   const { trigger: triggerEdit, isMutating: isEditing } = useSWRMutation<
     unknown,
@@ -45,7 +51,7 @@ export default function RemoveAndEdit({ task }: { task: GetTasks200DataItem }) {
         }}
         open={dialogOpened}
       >
-        <DialogTitle variant={"h5"}>Редактировать товар</DialogTitle>
+        <DialogTitle variant={"h5"}>Редактировать задачу</DialogTitle>
         <FormFields
           handleClose={handleClose}
           schema={EditTaskFormSchema}
@@ -59,19 +65,23 @@ export default function RemoveAndEdit({ task }: { task: GetTasks200DataItem }) {
           }}
         />
       </Dialog>
-      <IconButton
-        size={"small"}
-        sx={{ borderRadius: "23px" }}
-        loading={isDeleting || isEditing}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOpen(e);
-        }}
-      >
-        <MoreVertOutlinedIcon />
-      </IconButton>
+      <Tooltip title="Открыть действия">
+        <IconButton
+          aria-label="Открыть действия"
+          size={"small"}
+          sx={{ borderRadius: "23px" }}
+          loading={isRemovingMany || isEditing}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpen(e);
+          }}
+        >
+          <MoreVertOutlinedIcon />
+        </IconButton>
+      </Tooltip>
       <Menu {...popoverProps} onClick={(e) => e.stopPropagation()}>
         <MenuItem
+          aria-label="Редактировать задачу"
           sx={{ gap: 1 }}
           onClick={() => {
             setDialogOpened(true);
@@ -81,9 +91,10 @@ export default function RemoveAndEdit({ task }: { task: GetTasks200DataItem }) {
           <Typography variant={"body2"}>Редактировать</Typography>
         </MenuItem>
         <MenuItem
+          aria-label="Удалить задачу"
           sx={{ gap: 1 }}
           onClick={() => {
-            triggerDelete()
+            triggerRemoveMany({ ids: [task.id] })
               .then(() => mutate())
               .then(handleClose);
           }}

@@ -78,9 +78,8 @@ export default function SearchBar() {
       </Box>
       <Typography
         variant="h6"
-        color="transparent"
         className="up-md"
-        sx={{ fontWeight: 600 }}
+        sx={{ fontWeight: 600, color: "transparent" }}
       >
         Задачи
       </Typography>

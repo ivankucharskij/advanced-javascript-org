@@ -21,6 +21,7 @@ CREATE TABLE "Task" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "tags" TEXT[],
+    "userId" TEXT NOT NULL,
     "parentId" TEXT,
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
@@ -42,6 +43,9 @@ CREATE TABLE "User" (
 );
 
 -- CreateIndex
+CREATE INDEX "Task_userId_idx" ON "Task"("userId");
+
+-- CreateIndex
 CREATE INDEX "Task_status_idx" ON "Task"("status");
 
 -- CreateIndex
@@ -58,6 +62,9 @@ CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
 CREATE INDEX "User_status_idx" ON "User"("status");
+
+-- AddForeignKey
+ALTER TABLE "Task" ADD CONSTRAINT "Task_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Task" ADD CONSTRAINT "Task_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Task"("id") ON DELETE SET NULL ON UPDATE CASCADE;

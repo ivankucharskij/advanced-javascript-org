@@ -1,20 +1,6 @@
-import {
-  type GetTasks200DataItemPriority,
-  type GetTasks200DataItemStatus,
-  GetTasksPriority,
-  GetTasksStatus,
-} from "@repo/api-client";
+import { GetTasksPriority, GetTasksStatus } from "@repo/api-client";
 import { addYears, startOfDay } from "date-fns";
 import z from "zod";
-
-const priorityValues = Object.values(GetTasksPriority) as [
-  GetTasks200DataItemPriority,
-  ...GetTasks200DataItemPriority[],
-];
-const statusValues = Object.values(GetTasksStatus) as [
-  GetTasks200DataItemStatus,
-  ...GetTasks200DataItemStatus[],
-];
 
 export const AddTaskFormSchema = z.object({
   title: z
@@ -23,8 +9,8 @@ export const AddTaskFormSchema = z.object({
     .min(2, "Название слишком короткое")
     .max(100, "Название слишком длинное"),
   description: z.string().optional(),
-  priority: z.enum(priorityValues),
-  status: z.enum(statusValues),
+  priority: z.enum(GetTasksPriority),
+  status: z.enum(GetTasksStatus),
   dueDate: z
     .date()
     .nullable()
@@ -44,8 +30,8 @@ export type AddTaskFormFields = z.infer<typeof AddTaskFormSchema>;
 export const EditTaskFormSchema = z.object({
   title: z.string().trim().max(100, "Название слишком длинное").optional(),
   description: z.string().optional(),
-  priority: z.enum(priorityValues).optional().or(z.literal("")),
-  status: z.enum(statusValues).optional().or(z.literal("")),
+  priority: z.enum(GetTasksPriority).optional().or(z.literal("")),
+  status: z.enum(GetTasksStatus).optional().or(z.literal("")),
   dueDate: z
     .date()
     .nullable()

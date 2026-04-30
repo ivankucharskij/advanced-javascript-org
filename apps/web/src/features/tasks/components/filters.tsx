@@ -7,6 +7,7 @@ import {
   MenuItem,
   Select,
   type SelectChangeEvent,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { DesktopDatePicker, LocalizationProvider } from "@mui/x-date-pickers";
@@ -48,9 +49,15 @@ export default function FiltersBar() {
         <StatusEl />
         <DueDateStart />
         <DueDateEnd />
-        <IconButton onClick={resetFilters} sx={{ alignSelf: "end" }}>
-          <SearchOffOutlinedIcon />
-        </IconButton>
+        <Tooltip title="Сбросить фильтры">
+          <IconButton
+            aria-label="Сбросить фильтры"
+            onClick={resetFilters}
+            sx={{ alignSelf: "end" }}
+          >
+            <SearchOffOutlinedIcon />
+          </IconButton>
+        </Tooltip>
       </Box>
     </LocalizationProvider>
   );

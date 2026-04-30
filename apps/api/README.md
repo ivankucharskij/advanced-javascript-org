@@ -14,6 +14,11 @@
 From the repo root:
 
 ```bash
+cp apps/api/.env.example apps/api/.env
+cp packages/database/.env.example packages/database/.env
+pnpm db:up
+pnpm --filter @repo/database prisma:migrate:dev
+pnpm --filter @repo/database prisma:generate
 pnpm --filter api dev
 pnpm --filter api build
 pnpm --filter api start
@@ -73,7 +78,7 @@ Current task behavior:
 - task reads are scoped to the authenticated user
 - task writes are scoped to the authenticated user
 - parent task links must point to a task owned by the same user
-- bulk delete exists on `DELETE /tasks`
+- bulk delete exists on `DELETE /api/tasks`
 
 ## Environment
 
@@ -87,10 +92,18 @@ Main variables:
 
 - `PORT`
 - `AUTH_SECRET`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `ADMIN_FULL_NAME`
-- `ADMIN_BIRTH_DATE`
-- `DATABASE_URL`
 
-`DATABASE_URL` is typically provided by `packages/database/.env` in local development.
+Database connection settings are owned by `packages/database/.env`.
+
+## Seed
+
+Seed local demo users and tasks from the repo root:
+
+```bash
+pnpm seed
+```
+
+The seed command creates:
+
+- Admin: `admin@example.com` / `admin12345`
+- User: `user@example.com` / `user12345`

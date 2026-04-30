@@ -7,10 +7,10 @@ import { authRouter, usersRouter } from "./features/users/router.js";
 export const createRouter = () => {
   const router = new OpenAPIHono();
 
-  router.route("/", healthRouter);
-  router.route("/auth", authRouter);
-  router.route("/tasks", tasksRouter);
-  router.route("/users", usersRouter);
+  router.route("/api/", healthRouter);
+  router.route("/api/auth", authRouter);
+  router.route("/api/tasks", tasksRouter);
+  router.route("/api/users", usersRouter);
 
   return router;
 };

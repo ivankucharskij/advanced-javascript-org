@@ -29,7 +29,7 @@ export default function AddTask({
   return (
     <>
       <Dialog onClose={handleClose} open={open}>
-        <DialogTitle variant={"h5"}>Добавить товар</DialogTitle>
+        <DialogTitle variant={"h5"}>Добавить задачу</DialogTitle>
         <FormFields
           handleClose={handleClose}
           schema={AddTaskFormSchema}

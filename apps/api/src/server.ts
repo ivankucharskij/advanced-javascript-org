@@ -1,16 +1,34 @@
+import "dotenv/config";
+
 import { serve } from "@hono/node-server";
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { prisma } from "@repo/database/client";
+import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
+import { getEnv } from "./config/env.js";
 import { openApiDocumentConfig } from "./openapi.js";
 import { createRouter } from "./router.js";
 
-export const createServer = () => {
+export const createServer = (runtimeEnv = getEnv()) => {
   const app = new OpenAPIHono();
+  const webOrigins = [
+    runtimeEnv.WEB_ORIGIN,
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ].filter((origin): origin is string => Boolean(origin));
 
   app.use("*", logger());
+  app.use(
+    "/api/*",
+    cors({
+      origin: webOrigins,
+      allowHeaders: ["Content-Type", "Authorization"],
+      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+      credentials: true,
+    }),
+  );
   app.route("/", createRouter());
   app.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",
@@ -24,26 +42,28 @@ export const createServer = () => {
   return app;
 };
 
-const logDatabaseAvailabilityAtStartup = async () => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    console.info("Database running");
-  } catch {
-    console.warn("Database is not available");
-  }
+const assertDatabaseAvailable = async () => {
+  await prisma.$queryRaw`SELECT 1`;
 };
 
-export const startServer = () => {
-  const port = Number(process.env.PORT ?? 8080);
-  const app = createServer();
+export const startServer = async () => {
+  const runtimeEnv = getEnv();
+
+  await assertDatabaseAvailable();
+
+  const app = createServer(runtimeEnv);
 
   serve({
     fetch: app.fetch,
-    port,
+    port: runtimeEnv.PORT,
   });
 
-  console.log(`API listening on http://localhost:${port}`);
-  void logDatabaseAvailabilityAtStartup();
+  console.log(`API listening on http://localhost:${runtimeEnv.PORT}`);
 };
 
-startServer();
+startServer().catch((error) => {
+  const message = error instanceof Error ? error.message : "Unknown startup error";
+
+  console.error(`API failed to start: ${message}`);
+  process.exitCode = 1;
+});

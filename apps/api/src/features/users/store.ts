@@ -1,24 +1,11 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-
 import { prisma, type User as PrismaUser } from "@repo/database/client";
 
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
 import { PaginationQuery } from "../../shared/schemas.js";
+import { hashPassword, normalizeEmail, verifyPassword } from "./password.js";
 import type { LoginUserInput, RegisterUserInput, User } from "./schemas.js";
-
-const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@example.com";
-const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "admin12345";
-const DEFAULT_ADMIN_FULL_NAME =
-  process.env.ADMIN_FULL_NAME ?? "System Administrator";
-const DEFAULT_ADMIN_BIRTH_DATE = process.env.ADMIN_BIRTH_DATE ?? "1990-01-01";
-const AUTH_SECRET = process.env.AUTH_SECRET ?? "local-dev-auth-secret";
-
-const hashPassword = (password: string) => {
-  return createHash("sha256").update(password).digest("hex");
-};
-
-const normalizeEmail = (email: string) => email.trim().toLowerCase();
+import { createAccessToken, parseAccessToken } from "./tokens.js";
 
 const toPublicUser = (user: PrismaUser): User => {
   return {
@@ -33,64 +20,6 @@ const toPublicUser = (user: PrismaUser): User => {
   };
 };
 
-const createToken = (userId: string) => {
-  const payload = Buffer.from(JSON.stringify({ sub: userId }), "utf8").toString(
-    "base64url",
-  );
-  const signature = createHmac("sha256", AUTH_SECRET)
-    .update(payload)
-    .digest("base64url");
-
-  return `${payload}.${signature}`;
-};
-
-const parseToken = (token: string): { sub: string } | null => {
-  const [payload, signature] = token.split(".");
-
-  if (!payload || !signature) {
-    return null;
-  }
-
-  const expectedSignature = createHmac("sha256", AUTH_SECRET)
-    .update(payload)
-    .digest("base64url");
-
-  const providedBuffer = Buffer.from(signature);
-  const expectedBuffer = Buffer.from(expectedSignature);
-
-  if (
-    providedBuffer.length !== expectedBuffer.length ||
-    !timingSafeEqual(providedBuffer, expectedBuffer)
-  ) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
-      sub: string;
-    };
-  } catch {
-    return null;
-  }
-};
-
-const ensureDefaultAdmin = async () => {
-  await prisma.user.upsert({
-    where: {
-      email: normalizeEmail(DEFAULT_ADMIN_EMAIL),
-    },
-    update: {},
-    create: {
-      fullName: DEFAULT_ADMIN_FULL_NAME,
-      birthDate: new Date(`${DEFAULT_ADMIN_BIRTH_DATE}T00:00:00.000Z`),
-      email: normalizeEmail(DEFAULT_ADMIN_EMAIL),
-      password: hashPassword(DEFAULT_ADMIN_PASSWORD),
-      role: "ADMIN",
-      status: "ACTIVE",
-    },
-  });
-};
-
 export const usersStore = {
   async register(
     input: RegisterUserInput,
@@ -101,8 +30,6 @@ export const usersStore = {
       typeof HttpStatus.CREATED
     >
   > {
-    await ensureDefaultAdmin();
-
     const existingUser = await prisma.user.findUnique({
       where: {
         email: normalizeEmail(input.email),
@@ -121,7 +48,7 @@ export const usersStore = {
         fullName: input.fullName,
         birthDate: new Date(`${input.birthDate}T00:00:00.000Z`),
         email: normalizeEmail(input.email),
-        password: hashPassword(input.password),
+        password: await hashPassword(input.password),
         role: "USER",
         status: "ACTIVE",
       },
@@ -130,7 +57,7 @@ export const usersStore = {
     return createHttpResult({
       status: HttpStatus.CREATED,
       data: {
-        accessToken: createToken(user.id),
+        accessToken: await createAccessToken(user.id),
         user: toPublicUser(user),
       },
     });
@@ -144,15 +71,13 @@ export const usersStore = {
       typeof HttpStatus.OK
     >
   > {
-    await ensureDefaultAdmin();
-
     const user = await prisma.user.findUnique({
       where: {
         email: normalizeEmail(input.email),
       },
     });
 
-    if (!user || user.password !== hashPassword(input.password)) {
+    if (!user || !(await verifyPassword(user.password, input.password))) {
       return createHttpResult({
         message: "Invalid email or password",
         status: HttpStatus.UNAUTHORIZED,
@@ -169,7 +94,7 @@ export const usersStore = {
     return createHttpResult({
       status: HttpStatus.OK,
       data: {
-        accessToken: createToken(user.id),
+        accessToken: await createAccessToken(user.id),
         user: toPublicUser(user),
       },
     });
@@ -185,13 +110,13 @@ export const usersStore = {
   > {
     if (!authorizationHeader?.startsWith("Bearer ")) {
       return createHttpResult({
-        message: "Missing bearer token",
+        message: "Missing access token",
         status: HttpStatus.UNAUTHORIZED,
       });
     }
 
     const token = authorizationHeader.slice("Bearer ".length).trim();
-    const payload = parseToken(token);
+    const payload = await parseAccessToken(token);
 
     if (!payload?.sub) {
       return createHttpResult({
@@ -317,14 +242,21 @@ export const usersStore = {
   ): Promise<
     HttpResult<
       User,
-      typeof HttpStatus.FORBIDDEN | typeof HttpStatus.NOT_FOUND,
+      typeof HttpStatus.FORBIDDEN | typeof HttpStatus.NOT_FOUND | typeof HttpStatus.CONFLICT,
       typeof HttpStatus.OK
     >
   > {
-    if (currentUser.role !== "admin" && currentUser.id !== id) {
+    if (currentUser.role !== "admin") {
       return createHttpResult({
         message: "Forbidden",
         status: HttpStatus.FORBIDDEN,
+      });
+    }
+
+    if (currentUser.id === id) {
+      return createHttpResult({
+        message: "Admin cannot block themselves",
+        status: HttpStatus.CONFLICT,
       });
     }
 

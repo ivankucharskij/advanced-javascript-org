@@ -28,26 +28,94 @@ const hasCode = (error: unknown, code: string) => {
   return error instanceof Error && "code" in error && error.code === code;
 };
 
+const findOwnedTask = (currentUser: User, id: string) => {
+  return prisma.task.findFirst({
+    where: {
+      id,
+      userId: currentUser.id,
+    },
+  });
+};
+
+const isDescendantTask = async (
+  currentUser: User,
+  taskId: string,
+  possibleDescendantId: string,
+) => {
+  let currentId: string | null = possibleDescendantId;
+  const visited = new Set<string>();
+
+  while (currentId) {
+    if (currentId === taskId) {
+      return true;
+    }
+
+    if (visited.has(currentId)) {
+      return true;
+    }
+
+    visited.add(currentId);
+
+    const task = await findOwnedTask(currentUser, currentId);
+    currentId = task?.parentId ?? null;
+  }
+
+  return false;
+};
+
+const validateParentTask = async (
+  currentUser: User,
+  parentId: string | null | undefined,
+  taskId?: string,
+): Promise<HttpResult<null, typeof HttpStatus.NOT_FOUND | typeof HttpStatus.CONFLICT, typeof HttpStatus.OK>> => {
+  if (!parentId) {
+    return createHttpResult({
+      status: HttpStatus.OK,
+      data: null,
+    });
+  }
+
+  const parentTask = await findOwnedTask(currentUser, parentId);
+
+  if (!parentTask) {
+    return createHttpResult({
+      message: "Parent task not found",
+      status: HttpStatus.NOT_FOUND,
+    });
+  }
+
+  if (taskId && parentId === taskId) {
+    return createHttpResult({
+      message: "Task cannot be its own parent",
+      status: HttpStatus.CONFLICT,
+    });
+  }
+
+  if (taskId && (await isDescendantTask(currentUser, taskId, parentId))) {
+    return createHttpResult({
+      message: "Task parent would create a cycle",
+      status: HttpStatus.CONFLICT,
+    });
+  }
+
+  return createHttpResult({
+    status: HttpStatus.OK,
+    data: null,
+  });
+};
+
 export const tasksStore = {
   async post(
     currentUser: User,
     input: CreateTaskInput,
-  ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.CREATED>> {
+  ): Promise<
+    HttpResult<Task, typeof HttpStatus.NOT_FOUND | typeof HttpStatus.CONFLICT, typeof HttpStatus.CREATED>
+  > {
     try {
-      if (input.parentId) {
-        const parentTask = await prisma.task.findFirst({
-          where: {
-            id: input.parentId,
-            userId: currentUser.id,
-          },
-        });
+      const parentValidation = await validateParentTask(currentUser, input.parentId);
 
-        if (!parentTask) {
-          return createHttpResult({
-            message: "Parent task not found",
-            status: HttpStatus.NOT_FOUND,
-          });
-        }
+      if (!parentValidation.ok) {
+        return parentValidation;
       }
 
       const task = await prisma.task.create({
@@ -168,7 +236,9 @@ export const tasksStore = {
     currentUser: User,
     id: string,
     input: UpdateTaskInput,
-  ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.OK>> {
+  ): Promise<
+    HttpResult<Task, typeof HttpStatus.NOT_FOUND | typeof HttpStatus.CONFLICT, typeof HttpStatus.OK>
+  > {
     const cleanData = Object.fromEntries(
       Object.entries(input).filter(([, value]) => value !== undefined),
     ) as Partial<UpdateTaskInput>;
@@ -188,19 +258,15 @@ export const tasksStore = {
         });
       }
 
-      if (cleanData.parentId) {
-        const parentTask = await prisma.task.findFirst({
-          where: {
-            id: cleanData.parentId,
-            userId: currentUser.id,
-          },
-        });
+      if (cleanData.parentId !== undefined) {
+        const parentValidation = await validateParentTask(
+          currentUser,
+          cleanData.parentId,
+          existingTask.id,
+        );
 
-        if (!parentTask) {
-          return createHttpResult({
-            message: "Parent task not found",
-            status: HttpStatus.NOT_FOUND,
-          });
+        if (!parentValidation.ok) {
+          return parentValidation;
         }
       }
 

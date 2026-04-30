@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "ui": "tui",
+  "ui": "stream",
   "globalEnv": [
     "NODE_ENV",
     "OPENAPI_URL",
@@ -8,10 +8,7 @@
     "PORT",
     "DATABASE_URL",
     "AUTH_SECRET",
-    "ADMIN_EMAIL",
-    "ADMIN_PASSWORD",
-    "ADMIN_FULL_NAME",
-    "ADMIN_BIRTH_DATE"
+    "WEB_ORIGIN"
   ],
   "tasks": {
     "build": {

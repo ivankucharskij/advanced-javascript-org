@@ -211,6 +211,14 @@ export const usersOpenApi = {
         },
         description: "User not found",
       },
+      409: {
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+        description: "Admin cannot block themselves",
+      },
     },
     tags: usersTag,
   }),

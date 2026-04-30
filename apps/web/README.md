@@ -50,6 +50,10 @@ apps/web/src/
 Current feature split:
 
 ```text
+apps/web/src/features/auth/
+  components/
+  auth-form.schema.ts
+
 apps/web/src/features/tasks/
   components/
   hooks/
@@ -62,10 +66,10 @@ Notable files:
 
 - `package.json`
 - `tsconfig.json`
-- `next.config.js`
+- `next.config.ts`
 - `eslint.config.js`
 - `src/app/layout.tsx`
-- `src/theme.ts`
+- `src/theme/theme.ts`
 
 ## API Integration
 

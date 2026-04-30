@@ -9,6 +9,7 @@ import {
   Pagination,
   PaginationItem,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Table from "@mui/material/Table";
@@ -100,27 +101,35 @@ export default function TaskTable({
         </Typography>
 
         <Stack direction="row" spacing={1}>
-          <IconButton
-            color="error"
-            sx={{ borderRadius: "6px" }}
-            loading={isRemovingMany}
-            disabled={selected.size === 0}
-            onClick={handleRemoveMany}
-          >
-            <DeleteOutlinedIcon />
-          </IconButton>
+          <Tooltip title="Удалить выбранные задачи">
+            <span>
+              <IconButton
+                aria-label="Удалить выбранные задачи"
+                color="error"
+                sx={{ borderRadius: "6px" }}
+                loading={isRemovingMany}
+                disabled={selected.size === 0}
+                onClick={handleRemoveMany}
+              >
+                <DeleteOutlinedIcon />
+              </IconButton>
+            </span>
+          </Tooltip>
 
-          <Button
-            variant="outlined"
-            sx={{ minWidth: "42px", padding: "9px", borderRadius: "8px" }}
-            color="secondary"
-            onClick={() => {
-              resetSorting();
-              mutate();
-            }}
-          >
-            <Image src={refreshSvg} alt="Refresh" width={22} height={22} />
-          </Button>
+          <Tooltip title="Обновить список задач">
+            <Button
+              aria-label="Обновить список задач"
+              variant="outlined"
+              sx={{ minWidth: "42px", padding: "9px", borderRadius: "8px" }}
+              color="secondary"
+              onClick={() => {
+                resetSorting();
+                mutate();
+              }}
+            >
+              <Image src={refreshSvg} alt="Обновить" width={22} height={22} />
+            </Button>
+          </Tooltip>
           <Button
             startIcon={<AddCircleOutlinedIcon />}
             variant="contained"

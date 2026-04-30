@@ -9,7 +9,6 @@ export const SWRConfigWrapper = ({ children }: PropsWithChildren) => (
   <SWRConfig
     value={{
       onError: (error) => {
-        console.error({ error });
         if (!error) return;
 
         toast.error(
@@ -21,7 +20,7 @@ export const SWRConfigWrapper = ({ children }: PropsWithChildren) => (
             }}
           >
             <Typography variant="body2">
-              {error.message || "Something went wrong"}
+              {error.message || "Что-то пошло не так"}
             </Typography>
           </Box>,
         );

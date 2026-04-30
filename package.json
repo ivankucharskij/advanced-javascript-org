@@ -5,10 +5,9 @@
     "build": "turbo run build",
     "db:up": "docker compose -f packages/database/compose.yaml up -d",
     "dev": "turbo run dev",
+    "seed": "pnpm --filter api seed",
     "lint": "turbo run lint",
-    "generate:api-client": "pnpm --filter @repo/api-client generate",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "generate:api-client": "pnpm --filter @repo/api-client generate"
   },
   "devDependencies": {
     "prettier": "^3.8.3",

@@ -1,12 +1,10 @@
-"use client"; // Error boundaries must be Client Components
+"use client";
 
 export default function ErrorPage({ error }: { error: Error }) {
   return (
     <div>
-      <h2>Something went wrong!</h2>
-
+      <h2>Что-то пошло не так!</h2>
       {error.message}
-      {error.stack}
     </div>
   );
 }

@@ -1,5 +1,73 @@
 # Fullstack Monorepo
 
+## Dev Start
+
+Install dependencies:
+
+```bash
+pnpm install
+```
+
+Start Postgres:
+
+```bash
+pnpm db:up
+```
+
+Create local API env:
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+Create local database env:
+
+```bash
+cp packages/database/.env.example packages/database/.env
+```
+
+Apply migrations and generate the Prisma client:
+
+```bash
+pnpm --filter @repo/database prisma:migrate:dev
+pnpm --filter @repo/database prisma:generate
+```
+
+Generate API client types:
+
+```bash
+pnpm --filter api dev
+```
+
+Then, in another terminal:
+
+```bash
+pnpm generate:api-client
+```
+
+Seed local demo data:
+
+```bash
+pnpm seed
+```
+
+Start the API and web app with one command:
+
+```bash
+pnpm dev
+```
+
+Local URLs:
+
+- Web: `http://localhost:3000`
+- API: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger`
+
+Demo credentials:
+
+- Admin: `admin@example.com` / `admin12345`
+- User: `user@example.com` / `user12345`
+
 ## Overview
 
 This workspace contains:
@@ -40,11 +108,7 @@ Lint the workspace:
 pnpm lint
 ```
 
-Type-check tasks configured in Turbo:
-
-```bash
-pnpm check-types
-```
+TypeScript checks run as part of each package `lint` script.
 
 ## App Commands
 
@@ -99,6 +163,15 @@ When the API is running:
 - OpenAPI JSON: `http://localhost:8080/doc`
 - Swagger UI: `http://localhost:8080/swagger`
 
+## API Client
+
+The generated API types are written to `packages/api-client/src/generated`.
+Run this after the API is running:
+
+```bash
+pnpm generate:api-client
+```
+
 ## Environment
 
 Useful env files:
@@ -111,10 +184,9 @@ The API reads:
 
 - `PORT`
 - `AUTH_SECRET`
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-- `ADMIN_FULL_NAME`
-- `ADMIN_BIRTH_DATE`
+
+The database package reads:
+
 - `DATABASE_URL`
 
 The web app reads:

@@ -97,6 +97,14 @@ export const tasksOpenApi = {
         },
         description: "Parent task not found",
       },
+      409: {
+        content: {
+          "application/json": {
+            schema: tasksErrorResponseSchema,
+          },
+        },
+        description: "Invalid parent task relation",
+      },
     },
     tags: tasksTag,
   }),
@@ -181,6 +189,14 @@ export const tasksOpenApi = {
         },
         description: "Task not found",
       },
+      409: {
+        content: {
+          "application/json": {
+            schema: tasksErrorResponseSchema,
+          },
+        },
+        description: "Invalid parent task relation",
+      },
     },
     tags: tasksTag,
   }),
@@ -230,6 +246,14 @@ export const tasksOpenApi = {
           },
         },
         description: "Task not found",
+      },
+      409: {
+        content: {
+          "application/json": {
+            schema: tasksErrorResponseSchema,
+          },
+        },
+        description: "Invalid parent task relation",
       },
     },
     tags: tasksTag,

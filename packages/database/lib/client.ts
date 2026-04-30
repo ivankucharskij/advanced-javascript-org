@@ -12,7 +12,7 @@ import {
 
 const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-loadEnv({ path: path.join(packageDir, ".env") });
+loadEnv({ path: path.join(packageDir, ".env"), quiet: true });
 
 const connectionString = `${process.env.DATABASE_URL}`;
 
