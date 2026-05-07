@@ -71,6 +71,14 @@ Feature folders:
 - `src/features/tasks`
 - `src/features/users`
 
+Feature modules use resource-prefixed files:
+
+- `*.controller.ts` - Hono routes and HTTP response mapping
+- `*.service.ts` - business rules and authorization decisions
+- `*.repository.ts` - Prisma/database access
+- `*.schemas.ts` - request/response validation types
+- `*.openapi.ts` - route definitions for OpenAPI generation
+
 Shared API helpers:
 
 - `src/middleware/auth.ts`
@@ -85,7 +93,7 @@ Protected routes use `src/middleware/auth.ts`.
 That middleware:
 
 - reads the bearer token from `Authorization`
-- resolves the current user through `usersStore.authorize(...)`
+- resolves the current user through `usersService.authorize(...)`
 - stores the user on `c.var.currentUser`
 
 ## Tasks

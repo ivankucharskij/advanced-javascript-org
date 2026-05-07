@@ -1,6 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import { healthCheckResponseSchema } from "./schemas.js";
+import { healthCheckResponseSchema } from "./health.schemas.js";
 
 const appTag = ["App"];
 

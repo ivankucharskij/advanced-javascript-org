@@ -10,7 +10,7 @@ import {
   taskQuerySchema,
   tasksErrorResponseSchema,
   updateTaskSchema,
-} from "./schemas.js";
+} from "./tasks.schemas.js";
 
 const tasksTag = ["Tasks"];
 const bearerSecurity = [{ bearerAuth: [] }];

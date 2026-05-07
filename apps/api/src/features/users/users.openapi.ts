@@ -11,7 +11,7 @@ import {
   singleUserResponseSchema,
   userIdParamsSchema,
   userListResponseSchema,
-} from "./schemas.js";
+} from "./users.schemas.js";
 
 const authTag = ["Auth"];
 const usersTag = ["Users"];

@@ -1,32 +1,53 @@
-const getRequiredEnv = (name: "AUTH_SECRET" | "DATABASE_URL") => {
-  const value = process.env[name];
+import { z } from "zod";
 
-  if (!value) {
-    throw new Error(`${name} is required`);
+const emptyStringToUndefined = (value: unknown) =>
+  value === "" ? undefined : value;
+
+const envSchema = z.object({
+  AUTH_SECRET: z
+    .string()
+    .min(32, "AUTH_SECRET must be at least 32 characters"),
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is required").url(),
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+  PORT: z.preprocess(
+    (value) => (value === undefined || value === "" ? "8080" : value),
+    z.coerce.number().int().min(1).max(65535),
+  ),
+  WEB_ORIGIN: z.preprocess(
+    emptyStringToUndefined,
+    z.url().optional(),
+  ),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+let cachedEnv: Env | null = null;
+
+const formatEnvError = (error: z.ZodError) =>
+  error.issues
+    .map((issue) => {
+      const name = issue.path.join(".") || "env";
+
+      return `${name}: ${issue.message}`;
+    })
+    .join("; ");
+
+export const getEnv = () => {
+  if (cachedEnv) {
+    return cachedEnv;
   }
 
-  if (name === "AUTH_SECRET" && value.length < 32) {
-    throw new Error(`${name} must be at least 32 characters`);
+  const result = envSchema.safeParse(process.env);
+
+  if (!result.success) {
+    throw new Error(
+      `Invalid environment configuration: ${formatEnvError(result.error)}`,
+    );
   }
 
-  return value;
+  cachedEnv = result.data;
+
+  return cachedEnv;
 };
-
-const getPort = () => {
-  const rawPort = process.env.PORT ?? "8080";
-  const port = Number(rawPort);
-
-  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    throw new Error("PORT must be an integer between 1 and 65535");
-  }
-
-  return port;
-};
-
-export const getEnv = () =>
-  ({
-    AUTH_SECRET: getRequiredEnv("AUTH_SECRET"),
-    DATABASE_URL: getRequiredEnv("DATABASE_URL"),
-    PORT: getPort(),
-    WEB_ORIGIN: process.env.WEB_ORIGIN,
-  }) as const;

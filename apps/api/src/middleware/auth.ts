@@ -1,8 +1,8 @@
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
-import type { User } from "../features/users/schemas.js";
-import { usersStore } from "../features/users/store.js";
+import type { User } from "../features/users/users.schemas.js";
+import { usersService } from "../features/users/users.service.js";
 
 const AUTH_COOKIE_NAME = "accessToken";
 
@@ -14,7 +14,7 @@ export const authMiddleware = createMiddleware<{
   Variables: AuthVariables;
 }>(async (c, next) => {
   const accessToken = getCookie(c, AUTH_COOKIE_NAME);
-  const auth = await usersStore.authorize(
+  const auth = await usersService.authorize(
     c.req.header("Authorization") ??
       (accessToken ? `Bearer ${accessToken}` : undefined),
   );

@@ -1,10 +1,11 @@
-import { prisma, type User as PrismaUser } from "../../lib/prisma.js";
+import type { User as PrismaUser } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
 import { PaginationQuery } from "../../shared/schemas.js";
 import { hashPassword, normalizeEmail, verifyPassword } from "./password.js";
-import type { LoginUserInput, RegisterUserInput, User } from "./schemas.js";
 import { createAccessToken, parseAccessToken } from "./tokens.js";
+import { usersRepository } from "./users.repository.js";
+import type { LoginUserInput, RegisterUserInput, User } from "./users.schemas.js";
 
 const toPublicUser = (user: PrismaUser): User => {
   return {
@@ -19,7 +20,7 @@ const toPublicUser = (user: PrismaUser): User => {
   };
 };
 
-export const usersStore = {
+export const usersService = {
   async register(
     input: RegisterUserInput,
   ): Promise<
@@ -29,11 +30,8 @@ export const usersStore = {
       typeof HttpStatus.CREATED
     >
   > {
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email: normalizeEmail(input.email),
-      },
-    });
+    const email = normalizeEmail(input.email);
+    const existingUser = await usersRepository.findByEmail(email);
 
     if (existingUser) {
       return createHttpResult({
@@ -42,15 +40,11 @@ export const usersStore = {
       });
     }
 
-    const user = await prisma.user.create({
-      data: {
-        fullName: input.fullName,
-        birthDate: new Date(`${input.birthDate}T00:00:00.000Z`),
-        email: normalizeEmail(input.email),
-        password: await hashPassword(input.password),
-        role: "USER",
-        status: "ACTIVE",
-      },
+    const user = await usersRepository.create({
+      fullName: input.fullName,
+      birthDate: new Date(`${input.birthDate}T00:00:00.000Z`),
+      email,
+      password: await hashPassword(input.password),
     });
 
     return createHttpResult({
@@ -70,11 +64,7 @@ export const usersStore = {
       typeof HttpStatus.OK
     >
   > {
-    const user = await prisma.user.findUnique({
-      where: {
-        email: normalizeEmail(input.email),
-      },
-    });
+    const user = await usersRepository.findByEmail(normalizeEmail(input.email));
 
     if (!user || !(await verifyPassword(user.password, input.password))) {
       return createHttpResult({
@@ -124,11 +114,7 @@ export const usersStore = {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: payload.sub,
-      },
-    });
+    const user = await usersRepository.findById(payload.sub);
 
     if (!user) {
       return createHttpResult({
@@ -179,14 +165,8 @@ export const usersStore = {
     const skip = (safePage - 1) * safeLimit;
 
     const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        skip,
-        take: safeLimit,
-        orderBy: {
-          createdAt: "desc",
-        },
-      }),
-      prisma.user.count(),
+      usersRepository.findMany({ skip, take: safeLimit }),
+      usersRepository.count(),
     ]);
 
     return createHttpResult({
@@ -219,9 +199,7 @@ export const usersStore = {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
+    const user = await usersRepository.findById(id);
 
     if (!user) {
       return createHttpResult({
@@ -260,12 +238,7 @@ export const usersStore = {
     }
 
     try {
-      const blockedUser = await prisma.user.update({
-        where: { id },
-        data: {
-          status: "BLOCKED",
-        },
-      });
+      const blockedUser = await usersRepository.updateStatus(id, "BLOCKED");
 
       return createHttpResult({
         status: HttpStatus.OK,

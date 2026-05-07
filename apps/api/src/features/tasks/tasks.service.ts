@@ -1,14 +1,15 @@
-import { Prisma, prisma, type Task as PrismaTask } from "../../lib/prisma.js";
+import { Prisma, type Task as PrismaTask } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
-import type { User } from "../users/schemas.js";
+import type { User } from "../users/users.schemas.js";
+import { tasksRepository } from "./tasks.repository.js";
 import type {
   CreateTaskInput,
   DeleteManyTasksInput,
   Task,
   TaskQuery,
   UpdateTaskInput,
-} from "./schemas.js";
+} from "./tasks.schemas.js";
 
 const serializeTask = (task: PrismaTask): Task => {
   const { userId: _userId, ...rest } = task;
@@ -28,11 +29,9 @@ const hasCode = (error: unknown, code: string) => {
 };
 
 const findOwnedTask = (currentUser: User, id: string) => {
-  return prisma.task.findFirst({
-    where: {
-      id,
-      userId: currentUser.id,
-    },
+  return tasksRepository.findOwned({
+    id,
+    userId: currentUser.id,
   });
 };
 
@@ -103,7 +102,7 @@ const validateParentTask = async (
   });
 };
 
-export const tasksStore = {
+export const tasksService = {
   async post(
     currentUser: User,
     input: CreateTaskInput,
@@ -117,17 +116,15 @@ export const tasksStore = {
         return parentValidation;
       }
 
-      const task = await prisma.task.create({
-        data: {
-          title: input.title,
-          description: input.description ?? null,
-          priority: input.priority,
-          status: input.status,
-          dueDate: input.dueDate ? new Date(input.dueDate) : null,
-          tags: input.tags ?? [],
-          userId: currentUser.id,
-          parentId: input.parentId ?? null,
-        },
+      const task = await tasksRepository.create({
+        title: input.title,
+        description: input.description ?? null,
+        priority: input.priority,
+        status: input.status,
+        dueDate: input.dueDate ?? null,
+        tags: input.tags ?? [],
+        userId: currentUser.id,
+        parentId: input.parentId ?? null,
       });
 
       return createHttpResult({
@@ -189,13 +186,13 @@ export const tasksStore = {
       : undefined;
 
     const [tasks, total] = await Promise.all([
-      prisma.task.findMany({
+      tasksRepository.findMany({
         skip,
         take: safeLimit,
         where,
         orderBy,
       }),
-      prisma.task.count({ where }),
+      tasksRepository.count(where),
     ]);
 
     return {
@@ -212,11 +209,9 @@ export const tasksStore = {
     currentUser: User,
     id: string,
   ): Promise<HttpResult<Task, typeof HttpStatus.NOT_FOUND, typeof HttpStatus.OK>> {
-    const task = await prisma.task.findFirst({
-      where: {
-        id,
-        userId: currentUser.id,
-      },
+    const task = await tasksRepository.findOwned({
+      id,
+      userId: currentUser.id,
     });
 
     if (!task) {
@@ -243,11 +238,9 @@ export const tasksStore = {
     ) as Partial<UpdateTaskInput>;
 
     try {
-      const existingTask = await prisma.task.findFirst({
-        where: {
-          id,
-          userId: currentUser.id,
-        },
+      const existingTask = await tasksRepository.findOwned({
+        id,
+        userId: currentUser.id,
       });
 
       if (!existingTask) {
@@ -269,14 +262,8 @@ export const tasksStore = {
         }
       }
 
-      const task = await prisma.task.update({
-        where: { id },
-        data: {
-          ...cleanData,
-          ...(cleanData.dueDate !== undefined && {
-            dueDate: cleanData.dueDate ? new Date(cleanData.dueDate) : null,
-          }),
-        },
+      const task = await tasksRepository.update(id, {
+        ...cleanData,
       });
 
       return createHttpResult({
@@ -302,13 +289,9 @@ export const tasksStore = {
     }
   },
   async deleteMany(currentUser: User, input: DeleteManyTasksInput): Promise<{ count: number }> {
-    const result = await prisma.task.deleteMany({
-      where: {
-        userId: currentUser.id,
-        id: {
-          in: input.ids,
-        },
-      },
+    const result = await tasksRepository.deleteMany({
+      userId: currentUser.id,
+      ids: input.ids,
     });
 
     return {

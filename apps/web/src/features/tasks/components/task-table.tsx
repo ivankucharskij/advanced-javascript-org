@@ -23,11 +23,9 @@ import type {
   GetTasks200DataItem,
   GetTasksSortBy,
 } from "@repo/api-client";
-import Image from "next/image";
 import { type ChangeEvent, type MouseEvent, useState } from "react";
 import useSWRMutation from "swr/mutation";
 
-import refreshSvg from "@/assets/svg/refresh.svg";
 import AddTask from "@/features/tasks/components/add-task";
 import TaskHead from "@/features/tasks/components/task-head";
 import TaskRow from "@/features/tasks/components/task-row";
@@ -127,7 +125,7 @@ export default function TaskTable({
                 mutate();
               }}
             >
-              <Image src={refreshSvg} alt="Обновить" width={22} height={22} />
+              R
             </Button>
           </Tooltip>
           <Button

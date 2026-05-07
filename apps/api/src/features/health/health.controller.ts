@@ -1,6 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 
-import { healthOpenApi } from "./openapi.js";
+import { healthOpenApi } from "./health.openapi.js";
 
 export const healthRouter = new OpenAPIHono();
 
