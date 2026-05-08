@@ -19,7 +19,6 @@
     "@mui/material-nextjs": "next",
     "@mui/x-date-pickers": "^9.0.3",
     "@repo/api-client": "workspace:*",
-    "@repo/ui": "workspace:*",
     "axios": "^1.15.2",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",

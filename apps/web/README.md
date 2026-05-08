@@ -9,7 +9,6 @@ Current stack:
 - Next.js App Router
 - React 19
 - generated API types from `@repo/api-client`
-- shared UI imports from `@repo/ui`
 
 ## Run
 

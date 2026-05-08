@@ -1,5 +1,5 @@
 {
-  "name": "fullstack-monorepo",
+  "name": "node-next-hono-prisma",
   "private": true,
   "scripts": {
     "build": "turbo run build",
