@@ -1,6 +1,4 @@
-# Node Next Hono Prisma
-
-Имя репозитория: `node-next-hono-prisma-stack`.
+# Node Next Hono Prisma Monorepo
 
 Рабочее fullstack-приложение для управления задачами: авторизация, роли,
 CRUD задач, фильтры, OpenAPI-контракт, сгенерированный TypeScript API client,
