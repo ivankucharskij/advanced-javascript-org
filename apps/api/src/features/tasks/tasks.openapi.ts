@@ -1,5 +1,4 @@
 import { createRoute } from "@hono/zod-openapi";
-
 import {
   createTaskSchema,
   deleteManyTasksResponseSchema,
@@ -10,7 +9,7 @@ import {
   taskQuerySchema,
   tasksErrorResponseSchema,
   updateTaskSchema,
-} from "./tasks.schemas.js";
+} from "@repo/shared-types/features/tasks/tasks.schemas";
 
 const tasksTag = ["Tasks"];
 const bearerSecurity = [{ bearerAuth: [] }];

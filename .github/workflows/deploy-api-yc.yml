@@ -8,6 +8,8 @@ on:
       - "apps/api/**"
       - "packages/eslint-config/**"
       - "packages/typescript-config/**"
+      - "infra/api.Dockerfile"
+      - "infra/api.Dockerfile.dockerignore"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
@@ -55,7 +57,7 @@ jobs:
       - name: Build and push API image
         run: |
           IMAGE="cr.yandex/${REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
-          docker build -f apps/api/Dockerfile -t "$IMAGE" .
+          docker build -f infra/api.Dockerfile -t "$IMAGE" .
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 

@@ -1,5 +1,9 @@
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+} from "@repo/shared-types/features/tasks/tasks.schemas";
+
 import { Prisma, prisma } from "../../lib/prisma.js";
-import { CreateTaskInput, UpdateTaskInput } from "./tasks.schemas.js";
 
 export const tasksRepository = {
   count(where: Prisma.TaskWhereInput) {

@@ -1,9 +1,4 @@
 import { createRoute } from "@hono/zod-openapi";
-
-import {
-  errorResponseSchema,
-  paginationQuerySchema,
-} from "../../shared/schemas.js";
 import {
   authResponseSchema,
   loginUserSchema,
@@ -11,7 +6,11 @@ import {
   singleUserResponseSchema,
   userIdParamsSchema,
   userListResponseSchema,
-} from "./users.schemas.js";
+} from "@repo/shared-types/features/users/users.schemas";
+import {
+  errorResponseSchema,
+  paginationQuerySchema,
+} from "@repo/shared-types/shared/schemas";
 
 const authTag = ["Auth"];
 const usersTag = ["Users"];

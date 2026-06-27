@@ -1,0 +1,297 @@
+---
+title: Lodash Utility Implementations
+description: Recreate Lodash helpers like keyBy, omit, orderBy, pick, curry, difference, intersection, and union in vanilla JavaScript.
+---
+
+# Lodash Utility Implementations in JavaScript
+
+This page rebuilds Lodash-style helpers for object selection, collection indexing, sorting, currying, and array set operations.
+The examples cover `keyBy()`, `omit()`, `orderBy()`, `pick()`, `curry()`, `difference()`, `differenceBy()`, `intersection()`, and `union()`
+in plain JavaScript.
+
+## keyBy
+
+The [`_.keyBy()`](https://lodash.com/docs/4.17.15#keyBy) method creates an object composed of
+keys generated from the results of running each element in the collection through an iteratee
+function. The iteratee can be a function or property name.
+
+The implementation maps each item to a key, then stores the item under that key in the result object.
+
+```js filename="keyBy" copy
+function keyBy(collection, iteratee) {
+  const result = {};
+
+  for (const item of collection) {
+    const key =
+      typeof iteratee === "function" ? iteratee(item) : item[iteratee];
+    result[key] = item;
+  }
+
+  return result;
+}
+
+const array = [
+  { dir: "left", code: 97 },
+  { dir: "right", code: 100 },
+];
+
+const res1 = keyBy(array, ({ code }) => String.fromCharCode(code));
+console.log(res1);
+// { a: { dir: 'left', code: 97 }, d: { dir: 'right', code: 100 } }
+
+const res2 = keyBy(array, "dir");
+console.log(res2);
+// { left: { dir: 'left', code: 97 }, right: { dir: 'right', code: 100 } }
+```
+
+## omit
+
+The [`_.omit()`](https://lodash.com/docs/4.17.15#omit) method creates a shallow copy of an object without the
+specified properties. The properties to omit can be provided as a single key or an array of keys.
+
+The implementation creates a shallow copy first, then deletes the requested keys from the copy.
+
+```js filename="omit" copy
+function omit(obj, keys) {
+  const result = { ...obj };
+
+  if (!Array.isArray(keys)) {
+    delete result[keys];
+    return result;
+  }
+
+  for (const key of keys) {
+    delete result[key];
+  }
+
+  return result;
+}
+
+const user = {
+  name: "Alice",
+  age: 25,
+  email: "alice@example.com",
+  city: "Wonderland",
+};
+
+const omitted = omit(user, "age");
+console.log(omitted);
+// { name: 'Alice', email: 'alice@example.com', city: 'Wonderland' }
+
+const omitted2 = omit(user, ["age", "email"]);
+console.log(omitted2);
+// { name: 'Alice', city: 'Wonderland' }
+```
+
+## orderBy
+
+The [`_.orderBy()`](https://lodash.com/docs/4.17.15#orderBy) method sorts an array of objects based on
+one property. You can specify the sort order as either ascending (`"asc"`) or descending (`"desc"`).
+
+The implementation copies the array before sorting so the original input is not mutated.
+
+```js filename="orderBy" copy
+function orderBy(array, property, order = "asc") {
+  const multiplier = order === "asc" ? 1 : -1;
+  const copy = [...array];
+
+  return copy.sort((a, b) => {
+    if (a[property] < b[property]) return -1 * multiplier;
+    if (a[property] > b[property]) return 1 * multiplier;
+    return 0;
+  });
+}
+
+const users = [
+  { user: "barney", age: 36 },
+  { user: "fred", age: 40 },
+  { user: "pebbles", age: 1 },
+];
+
+const sortedByAgeAsc = orderBy(users, "age", "asc");
+console.log(sortedByAgeAsc);
+// [
+//   { user: 'pebbles', age: 1 },
+//   { user: 'barney', age: 36 },
+//   { user: 'fred', age: 40 }
+// ]
+
+const sortedByUserDesc = orderBy(users, "user", "desc");
+console.log(sortedByUserDesc);
+// [
+//   { user: 'pebbles', age: 1 },
+//   { user: 'fred', age: 40 },
+//   { user: 'barney', age: 36 }
+// ]
+```
+
+## pick
+
+The [`_.pick()`](https://lodash.com/docs/4.17.15#pick) method creates a new object by picking
+the specified properties from an existing object. It accepts either a single key or an array of keys to extract.
+
+The implementation reduces the requested keys into a new object and skips keys that do not exist on the source object.
+
+```js filename="pick" copy
+function pick(obj, keys) {
+  if (typeof keys === "string") {
+    return obj[keys] !== undefined ? { [keys]: obj[keys] } : {};
+  }
+
+  return (Array.isArray(keys) ? keys : []).reduce((result, key) => {
+    if (key in obj) {
+      result[key] = obj[key];
+    }
+    return result;
+  }, {});
+}
+
+const user = {
+  name: "Alice",
+  age: 25,
+  email: "alice@example.com",
+  city: "Wonderland",
+};
+
+const picked = pick(user, ["name", "email"]);
+console.log(picked);
+// { name: 'Alice', email: 'alice@example.com' }
+```
+
+## curry
+
+The [`_.curry()`](https://lodash.com/docs/4.17.15#curry) function in Lodash transforms a
+function into a curried version that can be called with a series of partial arguments. Instead of
+calling the function with all arguments at once, you can call it progressively, one argument at a time.
+
+The implementation keeps collecting arguments until it has enough to call the original function.
+
+```js filename="curry" copy
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn(...args);
+    } else {
+      return (...nextArgs) => curried(...args, ...nextArgs);
+    }
+  };
+}
+
+const sum = (a, b, c) => a + b + c;
+const curriedSum = curry(sum);
+
+console.log(curriedSum(1)(2)(3)); // 6
+console.log(curriedSum(1, 2)(3)); // 6
+console.log(curriedSum(1)(2, 3)); // 6
+```
+
+## difference
+
+The [`_.difference()`](https://lodash.com/docs/4.17.15#difference) method returns the elements from
+the first array that are not present in any of the other arrays provided. It computes the difference
+by using the `Set` data structure for efficient lookups.
+
+This implementation returns both sides of the difference: values from `arr1` missing in `arr2`, and values from `arr2` missing in `arr1`.
+
+```js filename="difference" copy
+const findDifference = function (arr1, arr2) {
+  const set1 = new Set(arr1);
+  const set2 = new Set(arr2);
+
+  const diffLeft = [];
+  const diffRight = [];
+
+  for (const item of set1) {
+    if (!set2.has(item)) diffLeft.push(item);
+  }
+
+  for (const item of set2) {
+    if (!set1.has(item)) diffRight.push(item);
+  }
+
+  return [diffLeft, diffRight];
+};
+
+const array1 = [2, 1, 3];
+const array2 = [2, 3];
+const result = findDifference(array1, array2);
+console.log(result); // [ [ 1 ], [] ]
+```
+
+## differenceBy
+
+The [`_.differenceBy()`](https://lodash.com/docs/4.17.15#differenceBy) method works like `difference()`,
+but allows you to compare elements by a specific property or transformation function. You pass a key or
+iteratee to compare the objects by their properties.
+
+```js filename="differenceBy" copy
+const differenceBy = (arr1, arr2, key) => {
+  const set2 = new Set(arr2.map((item) => item[key]));
+  const set1 = new Set(arr1.map((item) => item[key]));
+
+  const diffLeft = [];
+  const diffRight = [];
+
+  for (const item of arr1) {
+    if (!set2.has(item[key])) {
+      diffLeft.push(item);
+    }
+  }
+
+  for (const item of arr2) {
+    if (!set1.has(item[key])) {
+      diffRight.push(item);
+    }
+  }
+
+  return [diffLeft, diffRight];
+};
+
+const array1 = [{ x: 2 }, { x: 1 }, { x: 1 }];
+const array2 = [{ x: 1 }];
+const result = differenceBy(array1, array2, "x");
+console.log(result); // [ [ { x: 2 } ], [] ]
+```
+
+## intersection
+
+The [`_.intersection()`](https://lodash.com/docs/4.17.15#intersection) method
+computes the intersection of two or more arrays. It returns a new array containing the
+elements that are present in all provided arrays.
+
+This implementation converts both arrays to sets, then keeps only values that appear in both.
+
+```js filename="intersection" copy
+const intersection = function (nums1, nums2) {
+  const set1 = new Set(nums1);
+  const set2 = new Set(nums2);
+  const result = [];
+
+  for (const nums of set2) {
+    if (set1.has(nums)) {
+      result.push(nums);
+    }
+  }
+
+  return result;
+};
+
+console.log(intersection([2, 1], [2, 3])); // [ 2 ]
+```
+
+## union
+
+The [`_.union()`](https://lodash.com/docs/4.17.15#union) method creates a new array of unique values by
+combining all given arrays, preserving the order of elements.
+
+This implementation merges the inputs first, then converts the merged values through a `Set` to remove duplicates while keeping first-seen order.
+
+```js filename="union" copy
+const union = (...arrays) => {
+  return Array.from(new Set([].concat(...arrays)));
+};
+
+console.log(union([1, 2], [1, 7, 7], [3, 1]));
+// [ 1, 2, 7, 3 ]
+```
+

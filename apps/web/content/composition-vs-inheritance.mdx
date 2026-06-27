@@ -1,0 +1,82 @@
+---
+title: Composition vs Inheritance
+description: Compare composition and inheritance in JavaScript with examples for function composition, classes, and call stack behavior.
+---
+
+# Composition vs Inheritance in JavaScript
+
+Composition and inheritance are both reuse tools, but they create different constraints. The examples compare function composition, class inheritance, and the call stack mechanics behind recursive code.
+
+## Composition
+
+Composition builds larger behavior by combining smaller pieces. In function composition, each step receives a value, transforms it, and passes it to the next step. The trade-off is indirection: composition is useful only when the shared shape makes the code easier to change or test.
+
+```js filename="composition" copy
+const dateFunc = () => new Date();
+const textFunc = (date) => date.toDateString();
+const labelFunc = (text) => `Today ${text}`;
+const showLabelFunc = (label) => console.log(label);
+
+const date = dateFunc();
+const text = textFunc(date);
+const label = labelFunc(text);
+showLabelFunc(label); // Today Sat Sep 28 2024
+
+function pipe(...steps) {
+  return function runSteps() {
+    let result;
+    for (let i = 0; i < steps.length; i++) {
+      let step = steps[i];
+      result = step(result);
+    }
+    return result;
+  };
+}
+
+const showDateLabel = pipe(dateFunc, textFunc, labelFunc, showLabelFunc);
+showDateLabel(); // Today Sat Sep 28 2024
+```
+
+## Inheritance
+
+Inheritance reuses behavior through a parent/child relationship. The child class can call parent behavior with `super` and override pieces that need to change. This is direct and familiar, but class hierarchies can become hard to reshape when requirements change.
+
+```typescript filename="inheritance" copy
+// Base class
+class Vehicle {
+  private readonly _make: string;
+  private readonly _model: string;
+  private readonly _year: number;
+
+  constructor(make: string, model: string, year: number) {
+    this._make = make;
+    this._model = model;
+    this._year = year;
+  }
+
+  displayInfo(): string {
+    return `${this._year} ${this._make} ${this._model}`;
+  }
+}
+
+// Derived class
+class Car extends Vehicle {
+  private readonly _doors: number;
+
+  constructor(make: string, model: string, year: number, doors: number) {
+    super(make, model, year); // Call the constructor of the base class
+    this._doors = doors;
+  }
+
+  displayInfo(): string {
+    return `${super.displayInfo()} - ${this._doors} doors`;
+  }
+}
+
+const vehicle = new Vehicle("Toyota", "Corolla", 2020);
+console.log(vehicle.displayInfo()); // 2020 Toyota Corolla
+
+const car = new Car("Honda", "Civic", 2022, 4);
+console.log(car.displayInfo()); // 2022 Honda Civic - 4 doors
+```
+

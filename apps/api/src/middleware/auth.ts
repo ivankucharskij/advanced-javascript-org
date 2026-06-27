@@ -1,7 +1,7 @@
+import type { User } from "@repo/shared-types/features/users/users.schemas";
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
-import type { User } from "../features/users/users.schemas.js";
 import { usersService } from "../features/users/users.service.js";
 
 const AUTH_COOKIE_NAME = "accessToken";

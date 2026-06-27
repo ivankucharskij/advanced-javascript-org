@@ -34,7 +34,8 @@ Default local port:
 
 When the server is running:
 
-- OpenAPI JSON: `/doc`
+- OpenAPI JSON: `/openapi.json`
+- Legacy OpenAPI alias: `/doc`
 - Swagger UI: `/swagger`
 
 ## Docker
@@ -42,7 +43,7 @@ When the server is running:
 Build the API image from the repo root:
 
 ```bash
-docker build -f apps/api/Dockerfile -t fullstack-api .
+docker build -f infra/api.Dockerfile -t fullstack-api .
 ```
 
 Run it locally:
@@ -61,9 +62,10 @@ DATABASE_URL=postgresql://user:password@host:5432/db?sslmode=require
 
 Core files:
 
-- `src/server.ts` - app and server bootstrap
+- `src/app.ts` - Hono app, middleware, routes, Swagger/OpenAPI
+- `src/server.ts` - database check and server bootstrap
 - `src/router.ts` - top-level feature router mounting
-- `src/openapi.ts` - OpenAPI document metadata
+- `src/config/openapi.ts` - OpenAPI document metadata
 
 Feature folders:
 
@@ -84,7 +86,10 @@ Shared API helpers:
 - `src/middleware/auth.ts`
 - `src/shared/http-result.ts`
 - `src/shared/http-status.ts`
-- `src/shared/schemas.ts`
+
+Shared request/response schemas live in:
+
+- `packages/shared-types/src`
 
 ## Auth
 

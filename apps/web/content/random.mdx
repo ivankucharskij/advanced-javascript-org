@@ -1,0 +1,465 @@
+---
+title: Common JavaScript Utility Functions
+description: Learn practical JavaScript utilities like clsx, deepClone, retry, topological sort, filterMap, innerJoin, and reducer patterns.
+---
+
+# Common JavaScript Utility Patterns
+
+The utilities are grouped by the problem they solve: class-name composition, cloning, joining related data, retrying async work,
+reducer-style updates, shuffling, and dependency ordering. Treat them as patterns you can adapt, not as functions to copy blindly.
+
+## clsx
+
+`clsx` builds a class-name string from mixed inputs. It is useful when UI state decides which classes should be present.
+
+This custom implementation follows the core behavior of the [`clsx`](https://github.com/lukeed/clsx) library:
+
+- Skipping falsy values (`false`, `null`, `undefined`, `0`, `""`, `NaN`)
+- Joining strings as-is
+- Recursively flattening arrays
+- Including keys from objects whose values are truthy
+
+The result is a single space-separated string that can be passed to `className`.
+
+```js filename="clsx" copy
+function clsx(...args) {
+  const classes = [];
+
+  for (const arg of args) {
+    // Skip the current iteration if the argument is falsy
+    if (!arg) continue;
+
+    if (typeof arg === "string") {
+      classes.push(arg);
+    } else if (Array.isArray(arg)) {
+      classes.push(clsx(...arg)); // Recursively process arrays
+    } else if (typeof arg === "object") {
+      for (const key in arg) {
+        if (arg[key]) {
+          classes.push(key); // Push key if value is truthy
+        }
+      }
+    }
+  }
+
+  return classes.join(" "); // Join classes with a space
+}
+
+console.log(
+  clsx("base-class", { active: true, disabled: false }, [
+    "additional-class",
+    "another-class",
+  ]),
+); // base-class active additional-class another-class
+console.log(
+  clsx(null, false, "bar", undefined, { baz: null }, "", [[[{ one: 1 }]]]),
+); // bar one
+```
+
+## Deep Clone
+
+The `deepClone` function recursively copies all levels of an object or array, creating a fully independent clone.
+This avoids shared references, so changing a nested value in the clone does not affect the original JSON-compatible object.
+
+It handles:
+
+- Primitive types and `null`
+- Arrays using recursive `map`
+- Plain objects using recursive property traversal
+
+This version is meant for JSON-compatible data. It does not handle special object types like `Date`, `Map`, `Set`, or circular references.
+
+```js filename="deepClone" copy
+function deepClone(obj) {
+  if (obj === null || typeof obj !== "object") {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    // Recursively clone array elements
+    return obj.map(deepClone);
+  }
+
+  const clonedObj = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      // Recursively clone object properties
+      clonedObj[key] = deepClone(obj[key]);
+    }
+  }
+
+  return clonedObj;
+}
+
+const obj = { a: 1, b: [{ c: 2, d: 3 }] };
+const clonedObj = deepClone(obj);
+console.log(clonedObj); // { a: 1, b: [ { c: 2, d: 3 } ] }
+```
+
+## Filter by Related Property
+
+This utility filters a list by looking up related data from another list. It is the array equivalent of joining tables and then filtering by a field from the joined record.
+
+In this example, `objects` are filtered by the `class` of their related `object_type`.
+
+Highlights:
+
+- `groupBy()` helps group `object_types` by `class` for fast lookup.
+- `filterObjectsByClass()` efficiently filters items by matching related object type's class.
+- Uses TypeScript generics for reusability and type safety.
+
+```ts filename="filter by related" copy
+const objects = [
+  { id: 1, name: "Test 1", object_type: 1 },
+  { id: 2, name: "Test 2", object_type: 1 },
+  { id: 3, name: "Test 3", object_type: 2 },
+  { id: 4, name: "Test 4", object_type: 3 },
+];
+
+const object_types = [
+  { id: 1, class: "orange" },
+  { id: 2, class: "orange" },
+  { id: 3, class: "apple" },
+  { id: 4, class: "cheese" },
+];
+
+const groupBy = <T, K extends string | number | symbol>(
+  arr: T[],
+  callback: (item: T) => K,
+): Record<K, T[]> => {
+  return arr.reduce(
+    (acc: Record<K, T[]>, item: T) => {
+      const key = callback(item);
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+
+      return acc;
+    },
+    {} as Record<K, T[]>,
+  );
+};
+
+const filterObjectsByClass = <T>(
+  cls: string,
+  objects: (T & { object_type: number })[],
+  objectTypes: { id: number; class: string }[],
+): T[] => {
+  const result: T[] = [];
+
+  const objTypesByClass = groupBy(objectTypes, (item) => item.class);
+
+  for (const item of objects) {
+    if (
+      objTypesByClass[cls]?.find(
+        (objectType) => objectType.id === item.object_type,
+      )
+    ) {
+      result.push(item);
+    }
+  }
+
+  return result;
+};
+
+const filteredObjects = filterObjectsByClass("orange", objects, object_types);
+console.log(filteredObjects);
+
+// [
+//   { id: 1, name: 'Test 1', object_type: 1 },
+//   { id: 2, name: 'Test 2', object_type: 1 },
+//   { id: 3, name: 'Test 3', object_type: 2 }
+// ]
+```
+
+## filterMap
+
+`filterMap()` combines filtering and mapping in one `reduce()` pass. Use it when each kept item should also be transformed.
+
+This function takes:
+
+- an `array`,
+- a `filterBoolean` function to determine which elements to include,
+- and a `mapCallback` to transform each included item.
+
+```js filename="filterMap" copy
+export const filterMap = (array, filterBoolean, mapCallback) => {
+  return array.reduce((acc, item, idx) => {
+    if (filterBoolean(item)) {
+      acc.push(mapCallback(item, idx));
+    }
+    return acc;
+  }, []);
+};
+
+const people = [
+  { name: "Alice", age: 25, active: true },
+  { name: "Bob", age: 30, active: false },
+  { name: "Charlie", age: 35, active: true },
+];
+
+const activeNames = filterMap(
+  people,
+  (person) => person.active,
+  (person) => person.name,
+);
+
+console.log(activeNames); // ['Alice', 'Charlie']
+```
+
+## innerJoin
+
+This is a small [`innerJoin`](https://ramdajs.com/docs/#innerJoin) for arrays. It keeps records that match at least one value from another list according to a predicate.
+
+This approach is helpful for:
+
+- Matching entities across two datasets
+- Resolving references between relational data
+- Filtering records based on foreign key relations
+
+The example joins musician records by matching their `id` with an array of selected IDs.
+
+```js filename="innerJoin" copy
+function innerJoin(predicate, records, ids) {
+  return records.filter((record) => ids.some((id) => predicate(record, id)));
+}
+
+const result = innerJoin(
+  (record, id) => record.id === id,
+  [
+    { id: 824, name: "Richie Furay" },
+    { id: 956, name: "Dewey Martin" },
+    { id: 313, name: "Bruce Palmer" },
+    { id: 456, name: "Stephen Stills" },
+    { id: 177, name: "Neil Young" },
+  ],
+  [177, 456, 999],
+);
+
+console.log(result);
+// [{id: 456, name: 'Stephen Stills'}, {id: 177, name: 'Neil Young'}]
+```
+
+## Reducer Pattern with Actions
+
+This reducer handles task actions (`added`, `changed`, `deleted`) and returns the next task list for each action. Applying a list of actions with [`Array.prototype.reduce`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce) makes the state transition history explicit.
+
+```js filename="reducer" copy
+function tasksReducer(tasks, action) {
+  switch (action.type) {
+    case "added": {
+      return [
+        ...tasks,
+        {
+          id: action.id,
+          text: action.text,
+          done: false,
+        },
+      ];
+    }
+    case "changed": {
+      return tasks.map((t) => {
+        if (t.id === action.id) {
+          const { type, ...actionNoType } = action;
+          return actionNoType;
+        } else {
+          return t;
+        }
+      });
+    }
+    case "deleted": {
+      return tasks.filter((t) => t.id !== action.id);
+    }
+    default: {
+      throw Error("Unknown action: " + action.type);
+    }
+  }
+}
+
+const initialState = [];
+const actions = [
+  { type: "added", id: 1, text: "Visit Kafka Museum" },
+  { type: "added", id: 2, text: "Watch a puppet show" },
+  { type: "deleted", id: 1 },
+  { type: "added", id: 3, text: "Lennon Wall pic" },
+  { type: "changed", id: 3, text: "Lennon Wall", done: true },
+];
+const finalState = actions.reduce(tasksReducer, initialState);
+console.log(finalState);
+// [
+//     { id: 2, text: 'Watch a puppet show', done: false },
+//     { id: 3, text: 'Lennon Wall', done: true }
+// ]
+```
+
+## Retry with fixed delay
+
+This helper retries a failing request with a fixed delay between attempts. If every attempt fails, it throws the final error path explicitly instead of silently returning an invalid value.
+
+```js filename="fetchWithRetry" copy
+async function fetchWithRetry(url, retries, delay = 1000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error);
+
+      if (attempt === retries) {
+        throw new Error(`Failed to fetch after ${retries} retries`);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
+const res = await fetchWithRetry("https://pokeapi.co/api/v2/pokemon-color", 3);
+console.log(res);
+```
+
+## Shuffle (Fisher-Yates Algorithm)
+
+This is the [Fisher-Yates shuffle](https://en.wikipedia.org/wiki/Fisher–Yates_shuffle), a reliable way to randomize an array in place.
+The algorithm works by iterating the array from the end to the beginning,
+swapping the current element with a randomly selected one from earlier in the array (or itself).
+It ensures a uniform distribution of permutations.
+
+```js filename="shuffle" copy
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+const shuffledArray = [1, 2, 3, 4, 5];
+shuffle(shuffledArray);
+console.log(shuffledArray); // example: [ 2, 1, 4, 5, 3 ]
+```
+
+## Topological Sort
+
+This is a [topological sort](https://en.wikipedia.org/wiki/Topological_sorting) for items with dependencies. Each item can appear in the result only after its dependencies have already been added. If no item can be added during a pass, the dependency graph contains a cycle or a missing dependency.
+
+```js filename="topological sort" copy
+const cards = [
+  { id: 1, dependent: [6, 7, 8] },
+  { id: 2, dependent: [6] },
+  { id: 3, dependent: [] },
+  { id: 4, dependent: [6, 7, 8] },
+  { id: 5, dependent: [6, 8] },
+  { id: 6, dependent: [] },
+  { id: 7, dependent: [6] },
+  { id: 8, dependent: [7] },
+  { id: 9, dependent: [1] },
+  { id: 10, dependent: [9] },
+];
+
+const getOrderedCards = (cards) => {
+  const result = [];
+  const added = new Set();
+
+  while (result.length < cards.length) {
+    let addedInPass = false;
+
+    for (const card of cards) {
+      if (
+        !added.has(card.id) &&
+        card.dependent.every((dep) => added.has(dep))
+      ) {
+        result.push(card.id);
+        added.add(card.id);
+        addedInPass = true;
+      }
+    }
+
+    if (!addedInPass) {
+      throw new Error("Cannot resolve dependency order");
+    }
+  }
+
+  return result;
+};
+
+console.log(getOrderedCards(cards));
+// [
+//   3, 6, 7, 8,  1,
+//   2, 4, 5, 9, 10
+// ]
+```
+
+## Redux Pattern Implementation
+
+The store keeps state private, exposes `getState()`, and changes state only through `dispatch(action)`. A reducer receives the previous state and an action, then returns the next state. Subscribers are notified after each dispatch.
+
+This is the useful part of the Redux mental model: state transitions are explicit, predictable, and easy to test.
+
+```js filename="redux pattern" copy
+class Store {
+  constructor(reducer, initialState) {
+    this.reducer = reducer;
+    this.state = initialState;
+    this.listeners = [];
+  }
+
+  getState() {
+    return this.state;
+  }
+
+  dispatch(action) {
+    this.state = this.reducer(this.state, action);
+    this.listeners.forEach((listener) => listener());
+  }
+
+  subscribe(listener) {
+    this.listeners.push(listener);
+    return () => {
+      console.log("unsubscribed");
+      this.listeners = this.listeners.filter((l) => l !== listener);
+    };
+  }
+}
+
+// Example reducer function
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INCREMENT":
+      return { ...state, count: state.count + 1 };
+    case "DECREMENT":
+      return { ...state, count: state.count - 1 };
+    default:
+      return state;
+  }
+};
+
+const initialState = { count: 0 };
+
+const store = new Store(reducer, initialState);
+
+// Subscribe to state changes
+const unsubscribe = store.subscribe(() => {
+  console.log(store.getState());
+});
+
+// Dispatch actions
+console.log(store.getState());
+store.dispatch({ type: "INCREMENT" });
+store.dispatch({ type: "INCREMENT" });
+store.dispatch({ type: "DECREMENT" });
+
+// Unsubscribe from state changes
+unsubscribe();
+
+// { count: 0 }
+// { count: 1 }
+// { count: 2 }
+// { count: 1 }
+// unsubscribed
+```
+
+
+

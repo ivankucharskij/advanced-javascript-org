@@ -1,5 +1,6 @@
+import type { RegisterUserInput } from "@repo/shared-types/features/users/users.schemas";
+
 import { prisma } from "../../lib/prisma.js";
-import type { RegisterUserInput } from "./users.schemas.js";
 
 export const usersRepository = {
   count() {

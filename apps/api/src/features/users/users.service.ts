@@ -1,11 +1,16 @@
+import type {
+  LoginUserInput,
+  RegisterUserInput,
+  User,
+} from "@repo/shared-types/features/users/users.schemas";
+import type { PaginationQuery } from "@repo/shared-types/shared/schemas";
+
 import type { User as PrismaUser } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
 import { HttpStatus } from "../../shared/http-status.js";
-import { PaginationQuery } from "../../shared/schemas.js";
 import { hashPassword, normalizeEmail, verifyPassword } from "./password.js";
 import { createAccessToken, parseAccessToken } from "./tokens.js";
 import { usersRepository } from "./users.repository.js";
-import type { LoginUserInput, RegisterUserInput, User } from "./users.schemas.js";
 
 const toPublicUser = (user: PrismaUser): User => {
   return {

@@ -1,15 +1,16 @@
-import { Prisma, type Task as PrismaTask } from "../../lib/prisma.js";
-import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
-import { HttpStatus } from "../../shared/http-status.js";
-import type { User } from "../users/users.schemas.js";
-import { tasksRepository } from "./tasks.repository.js";
 import type {
   CreateTaskInput,
   DeleteManyTasksInput,
   Task,
   TaskQuery,
   UpdateTaskInput,
-} from "./tasks.schemas.js";
+} from "@repo/shared-types/features/tasks/tasks.schemas";
+import type { User } from "@repo/shared-types/features/users/users.schemas";
+
+import { Prisma, type Task as PrismaTask } from "../../lib/prisma.js";
+import { createHttpResult, type HttpResult } from "../../shared/http-result.js";
+import { HttpStatus } from "../../shared/http-status.js";
+import { tasksRepository } from "./tasks.repository.js";
 
 const serializeTask = (task: PrismaTask): Task => {
   const { userId: _userId, ...rest } = task;

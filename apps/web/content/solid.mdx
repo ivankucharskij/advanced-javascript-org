@@ -1,0 +1,287 @@
+---
+title: SOLID Principles in TypeScript
+description: Learn SOLID principles in TypeScript with practical examples for single responsibility, open-closed, Liskov substitution, interface segregation, and dependency inversion.
+---
+
+# SOLID Principles in TypeScript
+
+SOLID principles help keep TypeScript code focused, extensible, replaceable, and loosely coupled. The goal is not ceremony. The goal is to make each module easier to change without forcing unrelated code to change with it.
+
+- **Single responsibility principle** - a class or function should have one clear reason to change.
+- **Open/closed principle** - code should accept new behavior through abstractions instead of internal edits for every new case.
+- **Liskov substitution principle** - subtype implementations should work anywhere the base contract is expected.
+- **Interface segregation principle** - interfaces should stay small so callers are not forced to implement behavior they do not use.
+- **Dependency inversion principle** - high-level code should depend on abstractions, not concrete implementations.
+
+## Single responsibility principle
+
+Avoid classes that validate data, format output, and save records at the same time. Split unrelated reasons to change into separate units.
+
+```ts copy
+type User = {
+  id: number;
+  name: string;
+  email: string;
+};
+
+// bad
+class UserManager {
+  validate(user: User): boolean {
+    return user.email.includes("@");
+  }
+
+  format(user: User): string {
+    return `${user.name} <${user.email}>`;
+  }
+
+  save(user: User): void {
+    console.log("Saving user", user);
+  }
+}
+
+// good
+class UserValidator {
+  validate(user: User): boolean {
+    return user.email.includes("@");
+  }
+}
+
+class UserFormatter {
+  format(user: User): string {
+    return `${user.name} <${user.email}>`;
+  }
+}
+
+class UserRepository {
+  save(user: User): void {
+    console.log("Saving user", user);
+  }
+}
+```
+
+## Open/closed principle
+
+The first version hard-codes every discount type inside one function. Adding a new discount requires editing that function.
+The second version accepts a strategy, so new discount rules can be added without changing the checkout code.
+
+```ts copy
+type DiscountType = "none" | "student" | "vip";
+
+// bad
+function calculateTotal(amount: number, discountType: DiscountType): number {
+  switch (discountType) {
+    case "student":
+      return amount * 0.9;
+    case "vip":
+      return amount * 0.8;
+    default:
+      return amount;
+  }
+}
+
+// good
+interface DiscountStrategy {
+  apply(amount: number): number;
+}
+
+class NoDiscount implements DiscountStrategy {
+  apply(amount: number): number {
+    return amount;
+  }
+}
+
+class StudentDiscount implements DiscountStrategy {
+  apply(amount: number): number {
+    return amount * 0.9;
+  }
+}
+
+class VipDiscount implements DiscountStrategy {
+  apply(amount: number): number {
+    return amount * 0.8;
+  }
+}
+
+function calculateTotalWithStrategy(
+  amount: number,
+  discount: DiscountStrategy,
+): number {
+  return discount.apply(amount);
+}
+
+console.log(calculateTotalWithStrategy(100, new StudentDiscount())); // 90
+```
+
+## Liskov substitution principle
+
+If code expects something that can store files, every implementation of that contract should be usable without surprising the caller. A read-only store should not pretend to support writes.
+
+```ts copy
+// bad
+class FileStorage {
+  save(filename: string, content: string): void {
+    console.log(`Saving ${filename}: ${content}`);
+  }
+}
+
+class ReadOnlyStorage extends FileStorage {
+  save(): void {
+    throw new Error("Read-only storage cannot save files");
+  }
+}
+
+function backup(storage: FileStorage): void {
+  storage.save("backup.txt", "data");
+}
+
+backup(new ReadOnlyStorage()); // runtime error
+
+// good
+interface ReadableStorage {
+  read(filename: string): string;
+}
+
+interface WritableStorage {
+  save(filename: string, content: string): void;
+}
+
+class LocalFileStorage implements ReadableStorage, WritableStorage {
+  read(filename: string): string {
+    return `content from ${filename}`;
+  }
+
+  save(filename: string, content: string): void {
+    console.log(`Saving ${filename}: ${content}`);
+  }
+}
+
+class LocalReadOnlyStorage implements ReadableStorage {
+  read(filename: string): string {
+    return `content from ${filename}`;
+  }
+}
+
+function safeBackup(storage: WritableStorage): void {
+  storage.save("backup.txt", "data");
+}
+
+safeBackup(new LocalFileStorage());
+```
+
+## Interface segregation principle
+
+Do not force one interface to include every possible operation. Smaller interfaces make implementations easier to reuse and harder to misuse.
+
+```ts copy
+// bad
+interface Worker {
+  code(): void;
+  test(): void;
+  deploy(): void;
+}
+
+class Developer implements Worker {
+  code(): void {
+    console.log("Writing code");
+  }
+
+  test(): void {
+    console.log("Running tests");
+  }
+
+  deploy(): void {
+    throw new Error("Developers do not deploy in this team");
+  }
+}
+
+// good
+interface Coder {
+  code(): void;
+}
+
+interface Tester {
+  test(): void;
+}
+
+interface Deployer {
+  deploy(): void;
+}
+
+class FrontendDeveloper implements Coder, Tester {
+  code(): void {
+    console.log("Writing UI code");
+  }
+
+  test(): void {
+    console.log("Testing UI behavior");
+  }
+}
+
+class ReleaseEngineer implements Deployer {
+  deploy(): void {
+    console.log("Deploying release");
+  }
+}
+```
+
+## Dependency inversion principle
+
+High-level business code should not need to know whether authentication comes from Firebase, local storage, or another service. It should depend on an `AuthProvider` interface and receive the implementation from outside.
+
+```ts copy
+interface AuthProvider {
+  login(username: string, password: string): Promise<boolean>;
+  logout(): void;
+}
+
+class AuthService {
+  constructor(private readonly authProvider: AuthProvider) {}
+
+  async login(username: string, password: string): Promise<void> {
+    const success = await this.authProvider.login(username, password);
+
+    if (!success) {
+      throw new Error("Login failed");
+    }
+
+    console.log("Logged in successfully");
+  }
+
+  logout(): void {
+    this.authProvider.logout();
+    console.log("Logged out");
+  }
+}
+
+class FirebaseAuthProvider implements AuthProvider {
+  async login(username: string, password: string): Promise<boolean> {
+    console.log(`Logging in with Firebase: ${username}`);
+    return username === "user" && password === "password";
+  }
+
+  logout(): void {
+    console.log("Logging out with Firebase");
+  }
+}
+
+class LocalAuthProvider implements AuthProvider {
+  async login(username: string, password: string): Promise<boolean> {
+    console.log(`Logging in locally: ${username}`);
+    return username === "admin" && password === "1234";
+  }
+
+  logout(): void {
+    console.log("Logging out locally");
+  }
+}
+
+async function runAuthExample(): Promise<void> {
+  const firebaseAuth = new AuthService(new FirebaseAuthProvider());
+  const localAuth = new AuthService(new LocalAuthProvider());
+
+  await firebaseAuth.login("user", "password");
+  localAuth.logout();
+}
+
+runAuthExample().catch(console.error);
+```

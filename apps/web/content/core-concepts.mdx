@@ -1,0 +1,647 @@
+---
+title: Core Concepts and Patterns
+description: Practice JavaScript core behavior with this, object methods, loops, Map conversion, async generators, recursion, promises, Proxy, and closures.
+---
+
+# JavaScript Core Concepts and Patterns
+
+This page collects JavaScript examples that are useful to trace line by line: `this` binding, object methods, `bind()`, `call()`,
+loop increments, object and `Map` conversion, async generators, Fibonacci, the call stack, memoization, mixins, promise chains, `Proxy`,
+and closure behavior.
+
+## Understanding this
+
+`army.canJoin` depends on `this.minAge` and `this.maxAge`. When it is passed as a standalone callback, the object before the dot is gone, so `this` becomes `undefined`. You can fix that either by calling the callback with an explicit `thisArg`, or by wrapping the call in an arrow function that calls `army.canJoin(user)` directly.
+
+```js filename="this" copy
+Array.prototype.customFilter = function (callback, thisArg) {
+  let result = [];
+
+  for (let i = 0; i < this.length; i++) {
+    if (callback.call(thisArg, this[i], i, this)) {
+      result.push(this[i]);
+    }
+  }
+
+  return result;
+};
+
+Array.prototype.customFilterNoThis = function (callback) {
+  let result = [];
+
+  for (let i = 0; i < this.length; i++) {
+    if (callback(this[i], i, this)) {
+      result.push(this[i]);
+    }
+  }
+
+  return result;
+};
+
+const army = {
+  minAge: 18,
+  maxAge: 27,
+  canJoin(user) {
+    return user.age >= this.minAge && user.age < this.maxAge;
+  },
+};
+
+const users = [{ age: 16 }, { age: 20 }, { age: 23 }, { age: 30 }];
+
+const soldiers1 = users.customFilterNoThis(army.canJoin);
+// return user.age >= this.minAge && user.age < this.maxAge;
+// TypeError: Cannot read properties of undefined (reading 'minAge')
+const soldiers2 = users.customFilterNoThis((user) => army.canJoin(user));
+const soldiers3 = users.customFilter(army.canJoin, army);
+
+console.log(soldiers2); // [ { age: 20 }, { age: 23 } ]
+console.log(soldiers3); // [ { age: 20 }, { age: 23 } ]
+```
+
+## Object Methods and `this`
+
+Methods should usually read the current object through `this`, not through the variable that originally stored the object. If that variable is reassigned, the method can break even though another reference to the object still exists.
+
+```js filename="object method this" copy
+let user = {
+  name: "John",
+  sayHi() {
+    console.log(user.name);
+  },
+};
+
+const admin = user;
+user = null;
+
+admin.sayHi();
+// TypeError: Cannot read properties of null (reading 'name')
+```
+
+Using `this` makes the method depend on the call site instead:
+
+```js filename="object method this fix" copy
+let user = {
+  name: "John",
+  sayHi() {
+    console.log(this.name);
+  },
+};
+
+const admin = user;
+user = null;
+
+admin.sayHi(); // John
+```
+
+## Object Literals and `this`
+
+`this` inside a function is not created by an object literal in its return value. A property like `ref: this` reads `this` from the surrounding function call. A method like `ref()` receives `this` when it is called through the returned object.
+
+```js filename="object literal this" copy
+function makeUser() {
+  return {
+    name: "John",
+    ref: this,
+  };
+}
+
+const user = makeUser();
+console.log(user.ref?.name); // undefined
+
+function makeUserWithMethod() {
+  return {
+    name: "John",
+    ref() {
+      return this;
+    },
+  };
+}
+
+const user2 = makeUserWithMethod();
+console.log(user2.ref().name); // John
+```
+
+## Method Chaining with `this`
+
+Returning `this` from each method allows the next method call to keep working with the same object.
+
+```js filename="method chaining" copy
+const ladder = {
+  step: 0,
+  up() {
+    this.step++;
+    return this;
+  },
+  down() {
+    this.step--;
+    return this;
+  },
+  showStep() {
+    console.log(this.step);
+    return this;
+  },
+};
+
+ladder.up().up().down().showStep().down().showStep();
+// 1
+// 0
+```
+
+## Loop Behavior: Pre/Post Increment
+
+`++i` increments before the condition is checked. `i++` increments after the old value is used in the condition. That difference is visible in `while` loops because the condition and increment happen in the same expression.
+
+It also compares `for` loops using `i++` vs `++i`, which behave the same in this context, since the increment happens after the loop body executes.
+
+```js filename="for vs while" copy
+let i = 0;
+while (++i < 3) console.log(i);
+// 1, 2
+
+let i2 = 0;
+while (i2++ < 3) console.log(i2);
+// 1, 2, 3
+
+for (let i = 0; i < 3; i++) console.log(i);
+// 0, 1, 2
+
+for (let i = 0; i < 3; ++i) console.log(i);
+// 0, 1, 2
+```
+
+## Object and Map Conversion
+
+Use `Object.entries()` to turn an object into key/value pairs, and `Object.fromEntries()` to turn key/value pairs back into an object.
+
+These methods are useful when working with APIs or libraries that prefer one format over the other, or when you need key ordering and additional `Map` features.
+
+```js filename="Object to Map" copy
+const prices = Object.fromEntries([
+  ["banana", 1],
+  ["orange", 2],
+  ["meat", 4],
+]);
+
+console.log(prices);
+// { banana: 1, orange: 2, meat: 4 }
+
+const map = new Map();
+map.set("banana", 1);
+map.set("orange", 2);
+map.set("meat", 4);
+
+const arrayLikeMapEntries = map.entries();
+const arrayMapEntries = Array.from(arrayLikeMapEntries);
+
+const objectFromMap = Object.fromEntries(arrayMapEntries);
+console.log(objectFromMap);
+// { banana: 1, orange: 2, meat: 4 }
+
+const mapFromObject = new Map(Object.entries(objectFromMap));
+console.log(mapFromObject.get("meat")); // 4
+```
+
+## bind
+
+`bind()` creates a new function with `this` fixed to a specific object. That matters when an object method is passed to `setTimeout` or another callback API and would otherwise be called without its owner.
+
+```js filename="bind" copy
+const user = {
+  firstName: "John",
+  sayHi() {
+    console.log(`Hello, ${this.firstName}!`);
+  },
+};
+
+user.sayHi(); // Hello, John!
+setTimeout(user.sayHi, 0); // Hello, undefined!
+
+// solution 1
+setTimeout(function () {
+  user.sayHi(); // Hello, John!
+}, 0);
+// or shorter
+setTimeout(() => user.sayHi(), 0); // Hello, John!
+
+// solution 2
+const sayHi = user.sayHi.bind(user);
+// can run it without an object
+sayHi(); // Hello, John!
+setTimeout(sayHi, 0); // Hello, John!
+```
+
+## `call` with Regular and Arrow Functions
+
+Regular functions can receive an explicit `this` value with `.call()`. Arrow functions ignore `.call()` for `this` because they capture `this` from the surrounding scope when they are created.
+
+```js filename="call and arrows" copy
+const obj = {
+  value: 25,
+  regularMethod() {
+    return this.value;
+  },
+  arrowMethod: () => {
+    return this?.value;
+  },
+};
+
+const anotherObj = {
+  value: 50,
+};
+
+console.log(obj.regularMethod()); // 25
+console.log(obj.regularMethod.call(anotherObj)); // 50
+console.log(obj.arrowMethod()); // undefined
+console.log(obj.arrowMethod.call(anotherObj)); // undefined
+```
+
+## Class Methods and `this`
+
+Class prototype methods also use call-site `this`, so they can lose context when detached. Arrow methods stored as instance fields preserve the instance because the arrow function is created during construction.
+
+```js filename="class method this" copy
+class MyClass {
+  value = 40;
+
+  regularMethod() {
+    console.log(this);
+  }
+
+  arrowMethod = () => {
+    console.log(this);
+  };
+}
+
+const instance = new MyClass();
+
+instance.regularMethod();
+// MyClass { value: 40, arrowMethod: [Function: arrowMethod] }
+instance.arrowMethod();
+// MyClass { value: 40, arrowMethod: [Function: arrowMethod] }
+
+const regularFn = instance.regularMethod;
+const arrowFn = instance.arrowMethod;
+
+regularFn(); // undefined
+arrowFn();
+// MyClass { value: 40, arrowMethod: [Function: arrowMethod] }
+```
+
+## Inheriting Methods with `Object.create`
+
+`Object.create()` creates a new object whose prototype is another object. Methods found through the prototype chain still receive the calling object as `this`.
+
+```js filename="Object.create" copy
+const vehicle = {
+  getInfo() {
+    console.log(`${this.model} was made in ${this.year}`);
+  },
+};
+
+const myCar = Object.create(vehicle);
+myCar.model = "BMW";
+myCar.year = 2010;
+
+myCar.getInfo(); // BMW was made in 2010
+console.log(Object.getPrototypeOf(myCar) === vehicle); // true
+```
+
+## Async Generators
+
+An `async function*` can yield values over time. Here, each value waits one second before it is produced.
+The `generateSequence` function yields numbers from `start` to `end`, waiting one second between each using `await`.
+
+`for await...of` consumes the sequence one value at a time, which is the same pattern used for streams and controlled async iteration.
+
+```js filename="async generator" copy
+async function* generateSequence(start, end) {
+  for (let i = start; i <= end; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    yield i;
+  }
+}
+
+const timer = async (callback) => {
+  const generator = generateSequence(1, 5);
+  for await (let value of generator) {
+    callback(value);
+  }
+};
+
+timer(console.log).catch(console.error);
+// 1, 2, 3, 4, 5 (with delay between)
+```
+
+## Fibonacci
+
+The [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_number) is a series where each number is the sum of the two preceding ones:
+**`1, 1, 2, 3, 5, 8, 13, 21, ...`**
+
+Two implementations are shown because they teach different trade-offs:
+
+### Iterative Approach
+
+Efficient and suitable for large values of `n` (like 77). Uses a loop and keeps track of the last two values.
+
+```js filename="fibonacci" copy
+function fib(n) {
+  let a = 1;
+  let b = 1;
+  for (let i = 3; i <= n; i++) {
+    let c = a + b;
+    a = b;
+    b = c;
+  }
+  return b;
+}
+
+console.log(fib(3)); // 2
+console.log(fib(7)); // 13
+console.log(fib(77)); // 5527939700884757
+```
+
+### Recursive Approach
+
+Compact, but inefficient for large `n` because it repeats the same calculations many times. Use it to understand recursion, not for performance.
+
+```js filename="fibonacci recursive" copy
+function fib(n) {
+  return n <= 1 ? n : fib(n - 1) + fib(n - 2);
+}
+
+console.log(fib(3)); // 2
+console.log(fib(7)); // 13
+console.log(fib(77)); // -
+```
+
+## Function Stack
+
+The **call stack** tracks active function calls. When a function starts, it is pushed onto the stack. When it returns, it is popped off. Recursion is easier to understand when you separate the forward phase from the unwind phase.
+
+In the **forward phase**, the function calls accumulate as the recursion continues, with each new function invocation pushing
+itself onto the stack. In the **backward phase**, as functions start to return, they unwind and are popped from the stack, completing their execution.
+
+In this example, `foo` calls itself until it reaches the base case. Then each pending call resumes and finishes in reverse order.
+
+### Forward Phase
+
+1. Call `foo(2)` -> Stack: `[foo(2)]`.
+2. Call `foo(1)` -> Stack: `[foo(2), foo(1)]`.
+3. Call `foo(0)` -> Stack: `[foo(2), foo(1), foo(0)]`.
+4. Call `foo(-1)` -> Stack: `[foo(2), foo(1), foo(0), foo(-1)]`.
+
+### Backward Phase
+
+1. Return from `foo(-1)` -> Stack: `[foo(2), foo(1), foo(0)]`.
+2. Complete `foo(0)` -> Stack: `[foo(2), foo(1)]`.
+3. Complete `foo(1)` -> Stack: `[foo(2)]`.
+4. Complete `foo(2)` -> Stack: `[]`.
+
+```js filename="function stack" copy
+function foo(i) {
+  if (i < 0) {
+    return;
+  }
+  console.log(`begin: ${i}`);
+  foo(i - 1);
+  console.log(`end: ${i}`);
+}
+foo(2);
+
+// begin: 2
+// begin: 1
+// begin: 0
+// end: 0
+// end: 1
+// end: 2
+```
+
+## Memoize
+
+Memoization is an optimization technique that caches the result of function calls based on their input arguments.
+If the same inputs occur again, the cached result is returned instead of recalculating.
+
+The wrapper stores results in a `Map`. `JSON.stringify(args)` is used as a simple cache key, which works for small JSON-compatible arguments but is not a universal keying strategy.
+
+```js filename="memoize" copy
+function memoize(fn) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+
+    return result;
+  };
+}
+
+const adder = function (a, b) {
+  console.log(`Calculating ${a} + ${b}`);
+  return a + b;
+};
+
+const memoizedAdder = memoize(adder);
+const result1 = memoizedAdder(3, 4); // Calculating 3 + 4
+console.log(result1); // 7
+const result2 = memoizedAdder(3, 4);
+console.log(result2); // 7
+```
+
+## Mixins
+
+Mixins let classes share behavior without forcing them into the same inheritance chain. Here, `Object.assign()` copies `speak` and `walk` methods onto different prototypes.
+
+```js filename="mixins" copy
+// Define a mixin for shared behavior
+const CanSpeak = {
+  speak() {
+    console.log(`${this.name} says: ${this.message}`);
+  },
+};
+
+// Define another mixin
+const CanWalk = {
+  walk() {
+    console.log(`${this.name} is walking.`);
+  },
+};
+
+// Create a base class
+class Person {
+  constructor(name, message) {
+    this.name = name;
+    this.message = message;
+  }
+}
+
+// Apply mixins to the class
+Object.assign(Person.prototype, CanSpeak, CanWalk);
+
+// Create an instance of the class
+const john = new Person("John", "Hello, world!");
+
+// Use methods from mixins
+john.speak(); // Output: John says: Hello, world!
+john.walk(); // Output: John is walking.
+
+// Another example with a different class
+class Robot {
+  constructor(name, message) {
+    this.name = name;
+    this.message = message;
+  }
+}
+
+// Apply mixins to the Robot class
+Object.assign(Robot.prototype, CanSpeak, CanWalk);
+
+const r2d2 = new Robot("R2D2", "Beep boop");
+r2d2.speak(); // Output: R2D2 says: Beep boop
+r2d2.walk(); // Output: R2D2 is walking.
+```
+
+## Promise Chaining
+
+Each `.then()` receives the value returned by the previous step. Returning a promise from a handler pauses the chain until that promise resolves, which is what makes the delayed doubling sequence run in order.
+
+```js filename="promise chaining" copy
+new Promise(function (resolve, reject) {
+  setTimeout(() => resolve(1), 1000);
+})
+  .then(function (result) {
+    console.log(result); // 1
+
+    return new Promise((resolve, reject) => {
+      setTimeout(() => resolve(result * 2), 1000);
+    });
+  })
+  .then(function (result) {
+    console.log(result); // 2
+
+    return new Promise((resolve, reject) => {
+      setTimeout(() => resolve(result * 2), 1000);
+    });
+  })
+  .then(function (result) {
+    console.log(result); // 4
+  });
+// 1, 2, 4 with 1s between
+```
+
+## Promise Error Handling
+
+Promise chains catch errors that are thrown synchronously inside the chain. Errors thrown later from a timer are outside that chain unless you convert them into a rejection.
+
+```js filename="rethrow error" copy
+new Promise((resolve, reject) => {
+  throw new Error("Whoops!");
+})
+  .catch(function (error) {
+    if (error instanceof URIError) {
+      // handle it
+    } else {
+      console.log("Can't handle such error");
+
+      throw error;
+      // throwing this or another error jumps to the next catch
+    }
+  })
+  .then(function () {
+    /* doesn't run here */
+  })
+  .catch((error) => {
+    console.error(`The unknown error has occurred: ${error.message}`);
+    // don't return anything => execution goes the normal way
+  });
+
+// Can't handle such error
+// The unknown error has occurred: Whoops!
+```
+
+## Synchronous vs Asynchronous Errors in Promises
+
+Promises automatically catch **synchronous errors** thrown inside the executor.
+However, errors thrown **asynchronously** (e.g., inside `setTimeout`) are not
+caught unless explicitly wrapped in a rejecting `Promise` or a `try...catch` block inside async functions.
+
+```js filename="handling errors" copy
+new Promise(function (resolve, reject) {
+  throw new Error("Whoops!");
+}).catch((e) => console.error(e.message)); // Whoops!
+
+// There’s an “implicit try..catch” around the function code.
+// So all synchronous errors are handled.
+// But here the error is generated not while the executor is
+// running, but later. So the promise can’t handle it.
+
+new Promise(function (resolve, reject) {
+  setTimeout(() => {
+    throw new Error("Whoops!");
+  }, 1000);
+}).catch(console.error); // unhandled error ...
+```
+
+## Proxy
+
+A `Proxy` can intercept fundamental object operations. Here it intercepts property reads: known phrases return translations, and unknown phrases fall back to the original key.
+
+```js filename="Proxy" copy
+let dictionary = {
+  Hello: "Hola",
+  Bye: "Adiós",
+};
+
+dictionary = new Proxy(dictionary, {
+  get(target, phrase) {
+    // intercept reading a property from dictionary
+    if (phrase in target) {
+      // if we have it in the dictionary
+      return target[phrase]; // return the translation
+    } else {
+      // otherwise, return the non-translated phrase
+      return phrase;
+    }
+  },
+});
+
+// Look up arbitrary phrases in the dictionary!
+// At worst, they're not translated.
+console.log(dictionary["Hello"]); // Hola
+console.log(dictionary["Welcome to Proxy"]); // Welcome to Proxy
+```
+
+## Shooters: Closures & Lexical Scope
+
+Each returned function should remember the number it was created with. If every function closes over the same changing variable, they all read the final value. The fix is to create a new block-scoped value (`j`) for each iteration and close over that value instead.
+
+```js filename="lexical environment(scope)" copy
+function makeArmy() {
+  const shooters = [];
+
+  let i = 0;
+  while (i < 10) {
+    let j = i; // save local variable
+    const shooter = function () {
+      // create a shooter function,
+      return j; // that should show its number
+    };
+    shooters.push(shooter); // and add it to the array
+    i++;
+  }
+
+  // ...and return the array of shooters
+  return shooters;
+}
+
+const army = makeArmy();
+
+console.log(army[0]()); // 0
+console.log(army[1]()); // 1
+console.log(army[5]()); // 5
+```

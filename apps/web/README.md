@@ -1,105 +1,74 @@
-# Web App
+# advancedjavascript.org
 
-## Overview
+Advanced JavaScript documentation site built with Next.js, React, Fumadocs, MDX, TypeScript, Tailwind CSS, and pnpm.
 
-`apps/web` is the Next.js frontend in this workspace.
+The site teaches JavaScript behavior through focused articles and executable examples for arrays, promises, the event loop, data structures, utility functions, sorting, SOLID, composition, and interview-style edge cases.
 
-Current stack:
+## Getting Started
 
-- Next.js App Router
-- React 19
-- generated API types from `@repo/api-client`
-
-## Run
-
-From the repo root:
+Use Node.js 22 or newer and pnpm.
 
 ```bash
-pnpm --filter web dev
-pnpm --filter web build
-pnpm --filter web start
-pnpm --filter web lint
+pnpm install
+pnpm dev
 ```
 
-Default local URL:
+Open http://localhost:3000.
 
-```text
-http://localhost:3000
+## Scripts
+
+```bash
+pnpm dev          # start the Next.js dev server
+pnpm build        # build the production app
+pnpm start        # serve a production build
+pnpm types:check  # generate Fumadocs/Next types, then run TypeScript
+pnpm lint         # run ESLint
 ```
 
-## Structure
+## Project Structure
 
-Main source directory:
+- `content`: MDX documentation pages.
+- `src/app/(home)/page.tsx`: homepage with runnable JavaScript snippets.
+- `src/app/(home)/[...slug]`: root-level documentation routes, for example `/array-methods`.
+- `src/app/api/search/route.ts`: Fumadocs search route handler.
+- `src/app/og/[...slug]/route.tsx`: Open Graph image route for docs pages.
+- `src/components/home-code-runner.tsx`: client-side CodeMirror and Sandpack runner.
+- `src/components/snippet-code-runner.tsx`: server component that loads files from `src/snippets`.
+- `src/components/markdown.tsx`: Markdown renderer used for processed documentation text.
+- `src/lib/source.ts`: Fumadocs source loader and page helpers.
+- `src/lib/shared.ts`: app name, route constants, and GitHub config.
+- `source.config.ts`: Fumadocs MDX collection configuration.
 
-```text
-apps/web/src
+Generated directories such as `.next`, `.source`, and `node_modules` are not source files.
+
+## Content
+
+Add and edit documentation pages as MDX files under `content`. Keep frontmatter titles and descriptions aligned with the page H1, first paragraph, and section headings.
+
+After adding or moving MDX pages, run:
+
+```bash
+pnpm types:check
 ```
 
-Layout:
+## Dependency Notes
 
-```text
-apps/web/src/
-  app/               # Next.js routing only
-  features/          # feature code
-  lib/               # app/shared utilities
-  assets/            # static assets imported by the app
-  theme/             # MUI theme and design tokens
-```
+The current app uses Fumadocs, Next.js, React, Tailwind, CodeMirror, Sandpack, and supporting TypeScript/ESLint tooling.
 
-Current feature split:
+The package manifest also includes libraries that are not directly imported anywhere in the current source tree:
 
-```text
-apps/web/src/features/auth/
-  components/
-  auth-form.schema.ts
+- `@ai-sdk/react`
+- `@openrouter/ai-sdk-provider`
+- `@radix-ui/react-presence`
+- `ai`
+- `flexsearch`
+- `lucide-react`
+- `zod`
+- `prettier`
 
-apps/web/src/features/tasks/
-  components/
-  hooks/
-  task-form.schema.ts
-  task-labels.ts
-  types.ts
-```
+These libraries are only imported by local files that are currently not referenced by the app:
 
-Notable files:
+- `class-variance-authority` in `src/components/ui/button.tsx`
+- `hast-util-to-jsx-runtime`, `remark`, `remark-gfm`, `remark-rehype`, and `unist-util-visit` in `src/components/markdown.tsx`
 
-- `package.json`
-- `tsconfig.json`
-- `next.config.ts`
-- `eslint.config.js`
-- `src/app/layout.tsx`
-- `src/theme/theme.ts`
-
-## API Integration
-
-The web app is expected to talk to the API app in `apps/api`.
-
-Useful API local URLs:
-
-- API base: `http://localhost:8080`
-- OpenAPI JSON: `http://localhost:8080/doc`
-- Swagger UI: `http://localhost:8080/swagger`
-
-The web app currently reads:
-
-- `LOCAL_API_URL`
-
-For local development, put it in `apps/web/.env.local`:
-
-```env
-LOCAL_API_URL=http://localhost:8080
-```
-
-## Vercel
-
-Deploy `apps/web` as the Vercel project root.
-
-Set this environment variable in Vercel:
-
-```env
-LOCAL_API_URL=https://<your-yandex-api-url>
-```
-
-The app uses Next.js rewrites, so browser requests go to `/api/*` on the Vercel domain and Vercel proxies them to the API URL above.
-
-After Vercel creates the web domain, update the Yandex API `WEB_ORIGIN` environment variable to that exact origin and deploy a new API revision.
+Some packages may be intended peer/runtime support for Fumadocs or planned features, so verify before removing them.

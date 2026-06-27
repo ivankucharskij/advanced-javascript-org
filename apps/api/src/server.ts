@@ -1,46 +1,10 @@
 import "dotenv/config";
 
 import { serve } from "@hono/node-server";
-import { swaggerUI } from "@hono/swagger-ui";
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 
+import { createApp } from "./app.js";
 import { getEnv } from "./config/env.js";
-import { openApiDocumentConfig } from "./config/openapi.js";
 import { prisma } from "./lib/prisma.js";
-import { createRouter } from "./router.js";
-
-export const createServer = (runtimeEnv = getEnv()) => {
-  const app = new OpenAPIHono();
-  const webOrigins = [
-    runtimeEnv.WEB_ORIGIN,
-    "http://localhost:3000",
-    "http://localhost:3001",
-  ].filter((origin): origin is string => Boolean(origin));
-
-  app.use("*", logger());
-  app.use(
-    "/api/*",
-    cors({
-      origin: webOrigins,
-      allowHeaders: ["Content-Type", "Authorization"],
-      allowMethods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-      credentials: true,
-    }),
-  );
-  app.route("/", createRouter());
-  app.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
-    type: "http",
-    scheme: "bearer",
-    bearerFormat: "Bearer",
-  });
-
-  app.doc("/doc", openApiDocumentConfig);
-  app.get("/swagger", swaggerUI({ url: "/doc" }));
-
-  return app;
-};
 
 const assertDatabaseAvailable = async () => {
   await prisma.$queryRaw`SELECT 1`;
@@ -51,7 +15,7 @@ export const startServer = async () => {
 
   await assertDatabaseAvailable();
 
-  const app = createServer(runtimeEnv);
+  const app = createApp(runtimeEnv);
 
   serve({
     fetch: app.fetch,
@@ -62,7 +26,10 @@ export const startServer = async () => {
 };
 
 startServer().catch((error) => {
-  const message = error instanceof Error ? error.message : "Unknown startup error";
+  const message =
+    error instanceof Error
+      ? (error.stack ?? error.message)
+      : "Unknown startup error";
 
   console.error(`API failed to start: ${message}`);
   process.exitCode = 1;

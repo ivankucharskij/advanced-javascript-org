@@ -8,8 +8,7 @@
     "db:migrate:deploy": "pnpm --filter api prisma:migrate:deploy",
     "dev": "turbo run dev",
     "seed": "pnpm --filter api seed",
-    "lint": "turbo run lint",
-    "generate:api-client": "pnpm --filter @repo/api-client generate"
+    "lint": "turbo run lint"
   },
   "devDependencies": {
     "prettier": "^3.8.3",

@@ -1,31 +1,27 @@
-import "./theme.scss";
+import './global.css';
 
-import { Box } from "@mui/material";
-import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider } from "@mui/material/styles";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
-import { Toaster } from "react-hot-toast";
+import { RootProvider } from 'fumadocs-ui/provider/next';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
 
-import { SWRConfigWrapper } from "@/lib/swr-wrapper";
-import theme from "@/theme/theme";
+const inter = Inter({
+  subsets: ['latin'],
+});
 
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.WEB_ORIGIN ??
+  'http://localhost:3000';
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+};
+
+export default function Layout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body>
-        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <SWRConfigWrapper>
-              <Toaster position="bottom-center" />
-              <Box sx={{ height: "100vh" }}>{children}</Box>
-            </SWRConfigWrapper>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+    <html lang="en" className={inter.className} suppressHydrationWarning>
+      <body className="flex flex-col min-h-screen">
+        <RootProvider>{children}</RootProvider>
       </body>
     </html>
   );

@@ -1,0 +1,9 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "types": []
+  },
+  "include": ["src/**/*.ts", "env.d.ts"],
+  "exclude": ["dist", "node_modules"]
+}
