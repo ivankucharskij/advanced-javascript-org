@@ -57,6 +57,12 @@ jobs:
       - name: Configure Docker for Yandex Container Registry
         run: yc container registry configure-docker
 
+      - name: Ensure Serverless Container exists
+        run: |
+          if ! yc serverless container get --name "$CONTAINER_NAME" >/dev/null 2>&1; then
+            yc serverless container create --name "$CONTAINER_NAME"
+          fi
+
       - name: Build and push combined image
         run: |
           IMAGE="cr.yandex/${REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
