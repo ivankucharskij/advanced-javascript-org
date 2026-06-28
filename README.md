@@ -179,9 +179,9 @@ pnpm docker:run-api
 
 - Database: Neon PostgreSQL.
 - Runtime: Yandex Cloud Serverless Containers.
-- Public server: Next.js on `PORT`.
-- Internal API: Hono on `API_PORT`, default `8080`.
-- API routing: Next.js rewrites `/api/*` to `LOCAL_API_URL`, default `http://127.0.0.1:8080`.
+- Public server: Next.js on `PORT`, `8080` in Yandex Cloud.
+- Internal API: Hono on `API_PORT`, `8081` in Yandex Cloud.
+- API routing: Next.js rewrites `/api/*` to `LOCAL_API_URL`, `http://127.0.0.1:8081` in Yandex Cloud.
 
 ## Deploy Combined Container To Yandex Cloud
 
@@ -197,8 +197,9 @@ Required runtime env:
 AUTH_SECRET=<32+ character secret>
 DATABASE_URL=<Neon PostgreSQL URL>
 WEB_ORIGIN=<public app HTTPS origin>
-API_PORT=8080
-LOCAL_API_URL=http://127.0.0.1:8080
+PORT=8080
+API_PORT=8081
+LOCAL_API_URL=http://127.0.0.1:8081
 ```
 
 One-time setup:
@@ -239,8 +240,9 @@ yc serverless container revision deploy \
   --cores 1 \
   --execution-timeout 30s \
   --concurrency 8 \
-  --environment API_PORT=8080 \
-  --environment LOCAL_API_URL="http://127.0.0.1:8080" \
+  --environment PORT=8080 \
+  --environment API_PORT=8081 \
+  --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
   --environment DATABASE_URL="<DATABASE_URL>" \
   --environment WEB_ORIGIN="<WEB_ORIGIN>"

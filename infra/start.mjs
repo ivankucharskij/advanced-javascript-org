@@ -13,6 +13,15 @@ function startProcess(name, command, args, options = {}) {
 
   processes.push({ name, child });
 
+  child.on("error", (error) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    console.error(`${name} failed to start:`, error);
+    shutdown(1);
+  });
+
   child.on("exit", (code, signal) => {
     if (shuttingDown) {
       return;
@@ -26,6 +35,7 @@ function startProcess(name, command, args, options = {}) {
 
 function shutdown(code = 0) {
   shuttingDown = true;
+  process.exitCode = code;
 
   for (const { child } of processes) {
     if (!child.killed) {
@@ -47,8 +57,8 @@ function shutdown(code = 0) {
 process.on("SIGTERM", () => shutdown(0));
 process.on("SIGINT", () => shutdown(0));
 
-const publicPort = process.env.PORT ?? "3000";
-const apiPort = process.env.API_PORT ?? "8080";
+const publicPort = process.env.PORT ?? "8080";
+const apiPort = process.env.API_PORT ?? "8081";
 
 startProcess("api", "node", ["apps/api/dist/server.js"], {
   env: {

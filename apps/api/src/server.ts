@@ -32,5 +32,5 @@ startServer().catch((error) => {
       : "Unknown startup error";
 
   console.error(`API failed to start: ${message}`);
-  process.exitCode = 1;
+  process.exit(1);
 });

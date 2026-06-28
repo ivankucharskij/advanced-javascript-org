@@ -14,6 +14,7 @@ Run with an external database:
 ```bash
 docker run --rm \
   -p 3000:3000 \
+  -e PORT=3000 \
   -e DATABASE_URL='postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public' \
   -e AUTH_SECRET='local-dev-auth-secret-change-me-32-characters' \
   -e WEB_ORIGIN='http://localhost:3000' \
@@ -28,9 +29,9 @@ Required runtime environment:
 
 Optional runtime environment:
 
-- `PORT`: public Next.js port. Yandex Cloud Serverless Containers sets this automatically. Local default is `3000`.
-- `API_PORT`: internal API port, default `8080`.
-- `LOCAL_API_URL`: URL used by Next.js rewrites for `/api/*`, default `http://127.0.0.1:8080`.
+- `PORT`: public Next.js port. The combined Docker image defaults to `8080`; set `PORT=3000` for local host port mapping.
+- `API_PORT`: internal API port, default `8081` for the combined image.
+- `LOCAL_API_URL`: URL used by Next.js rewrites for `/api/*`, default `http://127.0.0.1:8081` for the combined image.
 
 Apply migrations against the same external database before starting or deploying:
 

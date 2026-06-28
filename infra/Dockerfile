@@ -16,6 +16,7 @@ COPY packages/typescript-config/package.json packages/typescript-config/package.
 RUN pnpm install --frozen-lockfile --ignore-scripts
 
 FROM deps AS builder
+ENV LOCAL_API_URL="http://127.0.0.1:8081"
 COPY . .
 RUN pnpm --filter api prisma:generate
 RUN pnpm --filter @repo/shared-types build
@@ -24,10 +25,10 @@ RUN pnpm --filter web build
 
 FROM base AS runner
 ENV NODE_ENV="production"
-ENV PORT="3000"
-ENV API_PORT="8080"
+ENV PORT="8080"
+ENV API_PORT="8081"
 ENV HOSTNAME="0.0.0.0"
-ENV LOCAL_API_URL="http://127.0.0.1:8080"
+ENV LOCAL_API_URL="http://127.0.0.1:8081"
 ENV NEXT_TELEMETRY_DISABLED="1"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -47,5 +48,5 @@ RUN addgroup --system --gid 1001 nodejs \
   && chown -R appuser:nodejs /app
 
 USER appuser
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "infra/start.mjs"]
