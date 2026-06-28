@@ -80,7 +80,6 @@ jobs:
             --cores 1 \
             --execution-timeout 30s \
             --concurrency 8 \
-            --environment PORT=8080 \
             --environment API_PORT=8081 \
             --environment LOCAL_API_URL="http://127.0.0.1:8081" \
             --environment AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \

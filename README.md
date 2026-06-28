@@ -197,7 +197,6 @@ Required runtime env:
 AUTH_SECRET=<32+ character secret>
 DATABASE_URL=<Neon PostgreSQL URL>
 WEB_ORIGIN=<public app HTTPS origin>
-PORT=8080
 API_PORT=8081
 LOCAL_API_URL=http://127.0.0.1:8081
 ```
@@ -240,7 +239,6 @@ yc serverless container revision deploy \
   --cores 1 \
   --execution-timeout 30s \
   --concurrency 8 \
-  --environment PORT=8080 \
   --environment API_PORT=8081 \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
