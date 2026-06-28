@@ -2,6 +2,8 @@ import type { HealthCheckResponse } from "@repo/shared-types";
 
 import { getEnv } from "@/lib/env-config";
 
+export const dynamic = "force-dynamic";
+
 type StaticHealthResult =
   | {
       data: HealthCheckResponse;
@@ -29,7 +31,7 @@ async function getStaticHealth(): Promise<StaticHealthResult> {
 
   try {
     const response = await fetch(url, {
-      cache: "force-cache",
+      cache: "no-store",
     });
     const text = await response.text();
 
@@ -67,8 +69,8 @@ export default async function StaticCheckApiPage() {
     <main style={{ padding: 24, fontFamily: "sans-serif" }}>
       <h1>Static API Check</h1>
       <p>
-        This page is statically prerendered. The API request runs on the server
-        during prerendering.
+        This page runs on the server. The API request is sent from Next.js to
+        the internal API at request time.
       </p>
       <dl>
         <dt>URL</dt>
