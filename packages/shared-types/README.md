@@ -1,7 +1,11 @@
 # Shared Types
 
 Compiled internal package for shared Zod schemas and inferred TypeScript types.
-It uses `tsdown` in unbundle mode so `dist` keeps the same feature-style folder structure as `src`.
+Consumers import from the single public entry point:
+
+```ts
+import { taskSchema, type Task } from "@repo/shared-types";
+```
 
 ```bash
 pnpm --filter @repo/shared-types build

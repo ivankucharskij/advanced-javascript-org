@@ -32,10 +32,12 @@ ENV NEXT_TELEMETRY_DISABLED="1"
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
+COPY packages/shared-types/package.json packages/shared-types/package.json
 RUN pnpm install --frozen-lockfile --prod --filter api --ignore-scripts
 
 COPY --from=builder /app/apps/api/dist apps/api/dist
 COPY --from=builder /app/apps/api/prisma apps/api/prisma
+COPY --from=builder /app/packages/shared-types/dist packages/shared-types/dist
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static apps/web/.next/static
 COPY infra/start.mjs infra/start.mjs

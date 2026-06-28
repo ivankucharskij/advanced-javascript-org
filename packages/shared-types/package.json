@@ -5,34 +5,14 @@
   "private": true,
   "exports": {
     ".": {
-      "types": "./dist/index.d.mts",
+      "types": "./src/index.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
-    },
-    "./features/health/health.schemas": {
-      "types": "./dist/features/health/health.schemas.d.mts",
-      "import": "./dist/features/health/health.schemas.mjs",
-      "default": "./dist/features/health/health.schemas.mjs"
-    },
-    "./features/tasks/tasks.schemas": {
-      "types": "./dist/features/tasks/tasks.schemas.d.mts",
-      "import": "./dist/features/tasks/tasks.schemas.mjs",
-      "default": "./dist/features/tasks/tasks.schemas.mjs"
-    },
-    "./features/users/users.schemas": {
-      "types": "./dist/features/users/users.schemas.d.mts",
-      "import": "./dist/features/users/users.schemas.mjs",
-      "default": "./dist/features/users/users.schemas.mjs"
-    },
-    "./shared/schemas": {
-      "types": "./dist/shared/schemas.d.mts",
-      "import": "./dist/shared/schemas.mjs",
-      "default": "./dist/shared/schemas.mjs"
     }
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "dev": "tsdown --watch --no-clean",
     "lint": "tsc --noEmit && eslint --fix"
   },
   "dependencies": {
@@ -44,6 +24,7 @@
     "@repo/typescript-config": "workspace:*",
     "eslint": "^9.39.1",
     "tsdown": "^0.22.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "unrun": "^0.3.1"
   }
 }

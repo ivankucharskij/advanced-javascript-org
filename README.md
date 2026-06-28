@@ -1,4 +1,4 @@
-# Fullstack Monorepo Runbook
+# advanced-javascript-org Runbook
 
 This file is the handoff document for local development, Docker, database migrations, and deployment.
 
@@ -9,10 +9,9 @@ apps/api                 Hono API, Prisma schema, migrations, Swagger/OpenAPI
 apps/web                 Next.js app
 packages/shared-types    compiled shared Zod schemas and inferred types
 infra/Dockerfile         combined web + API image
-infra/api.Dockerfile     API-only image for Yandex API deployment
+infra/api.Dockerfile     API-only image for local/debug use
 infra/postgres.compose.yaml
-.github/workflows/deploy-api-yc.yml
-Makefile
+.github/workflows/deploy-yc.yml
 ```
 
 ## Local Development
@@ -35,7 +34,7 @@ Create local API env if missing:
 cp apps/api/.env.example apps/api/.env
 ```
 
-Expected local `apps/api/.env`:
+Expected local `apps/api/.env` when running the API directly on the host:
 
 ```env
 PORT=8080
@@ -44,10 +43,16 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
 WEB_ORIGIN=http://localhost:3000
 ```
 
+When running the API in Docker against the local Postgres compose service, use:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public
+```
+
 Start local Postgres:
 
 ```bash
-make db-up
+pnpm db:up
 ```
 
 Apply local migrations and seed data:
@@ -87,11 +92,11 @@ The combined image runs Next.js as the public server on port `3000`; the API run
 Build and run:
 
 ```bash
-make build
-make run
+pnpm docker:build
+pnpm docker:run
 ```
 
-`make run` uses `apps/api/.env`, but overrides Docker-specific values:
+`pnpm docker:run` uses `apps/api/.env`, but overrides Docker-specific values:
 
 ```text
 PORT=3000
@@ -120,7 +125,7 @@ Use one Prisma migration history for all environments.
 Development flow:
 
 ```bash
-make db-up
+pnpm db:up
 pnpm db:migrate:dev
 pnpm seed
 ```
@@ -152,33 +157,33 @@ Rules:
 - Do not bake `DATABASE_URL` or `AUTH_SECRET` into Docker images.
 - Run migrations before deploying code that depends on new schema.
 
-## Make Commands
+## Local Commands
 
 ```bash
-make help
-make db-up
-make db-down
-make db-logs
-make build
-make run
-make build-api
-make run-api
-make push-api
-make migrate
-make check
+pnpm dev
+pnpm check
+pnpm db:up
+pnpm db:down
+pnpm db:logs
+pnpm db:migrate:dev
+pnpm db:migrate:deploy
+pnpm docker:build
+pnpm docker:run
+pnpm docker:build-api
+pnpm docker:run-api
 ```
 
 ## Deployment Architecture
 
-Current deployment target:
+`advanced-javascript-org` deploys to Yandex Cloud as one Serverless Container built from `infra/Dockerfile`.
 
 - Database: Neon PostgreSQL.
-- API: Yandex Cloud Serverless Containers, API-only image from `infra/api.Dockerfile`.
-- Web: Vercel, project root `apps/web`.
+- Runtime: Yandex Cloud Serverless Containers.
+- Public server: Next.js on `PORT`.
+- Internal API: Hono on `API_PORT`, default `8080`.
+- API routing: Next.js rewrites `/api/*` to `LOCAL_API_URL`, default `http://127.0.0.1:8080`.
 
-There is also `infra/Dockerfile` for running web + API in one container. If deployed to Yandex as a combined app, Yandex should route to Next.js on `PORT`, with API internal on `API_PORT`.
-
-## Deploy API To Yandex
+## Deploy Combined Container To Yandex Cloud
 
 Registry currently used:
 
@@ -186,13 +191,14 @@ Registry currently used:
 crp5emfit56tmpg5qp5l
 ```
 
-Required Yandex API env:
+Required runtime env:
 
 ```text
-PORT=8080
 AUTH_SECRET=<32+ character secret>
 DATABASE_URL=<Neon PostgreSQL URL>
-WEB_ORIGIN=<web app HTTPS origin>
+WEB_ORIGIN=<public app HTTPS origin>
+API_PORT=8080
+LOCAL_API_URL=http://127.0.0.1:8080
 ```
 
 One-time setup:
@@ -200,8 +206,8 @@ One-time setup:
 ```bash
 yc init
 yc container registry configure-docker
-yc serverless container create --name fullstack-api
-yc iam service-account create --name fullstack-api-sa
+yc serverless container create --name advanced-javascript-org
+yc iam service-account create --name advanced-javascript-org-sa
 yc config get folder-id
 yc iam service-account list
 ```
@@ -218,22 +224,23 @@ Manual deploy:
 
 ```bash
 pnpm db:migrate:deploy
-docker build -f infra/api.Dockerfile -t cr.yandex/crp5emfit56tmpg5qp5l/fullstack-api:latest .
-docker push cr.yandex/crp5emfit56tmpg5qp5l/fullstack-api:latest
+docker build -f infra/Dockerfile -t cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest .
+docker push cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest
 ```
 
 Deploy revision:
 
 ```bash
 yc serverless container revision deploy \
-  --container-name fullstack-api \
-  --image cr.yandex/crp5emfit56tmpg5qp5l/fullstack-api:latest \
+  --container-name advanced-javascript-org \
+  --image cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest \
   --service-account-id <SERVICE_ACCOUNT_ID> \
   --memory 512M \
   --cores 1 \
   --execution-timeout 30s \
   --concurrency 8 \
-  --environment PORT=8080 \
+  --environment API_PORT=8080 \
+  --environment LOCAL_API_URL="http://127.0.0.1:8080" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
   --environment DATABASE_URL="<DATABASE_URL>" \
   --environment WEB_ORIGIN="<WEB_ORIGIN>"
@@ -242,8 +249,8 @@ yc serverless container revision deploy \
 Allow public invocation once:
 
 ```bash
-yc serverless container allow-unauthenticated-invoke fullstack-api
-yc serverless container get fullstack-api
+yc serverless container allow-unauthenticated-invoke advanced-javascript-org
+yc serverless container get advanced-javascript-org
 ```
 
 Test:
@@ -252,50 +259,32 @@ Test:
 curl https://<container-url>/api/healthz
 ```
 
-## Deploy Web To Vercel
-
-Vercel settings:
-
-```text
-Project root: apps/web
-Framework: Next.js
-LOCAL_API_URL=https://<yandex-api-url>
-NEXT_PUBLIC_SITE_URL=https://<vercel-domain>
-```
-
-After Vercel deploys:
-
-1. Copy the Vercel origin, for example `https://your-app.vercel.app`.
-2. Set API `WEB_ORIGIN` to that exact origin.
-3. Deploy a new Yandex API revision.
-4. Test auth/API calls from the Vercel domain.
-
 ## GitHub Actions CI/CD
 
 Workflow:
 
 ```text
-.github/workflows/deploy-api-yc.yml
+.github/workflows/deploy-yc.yml
 ```
 
 Triggers:
 
-- Push to `main` when API/deployment files change.
+- Push to `main` when app, shared package, infra, or deployment files change.
 - Manual `workflow_dispatch`.
 
 It:
 
 - installs Yandex Cloud CLI
 - authenticates with service account JSON
-- builds `infra/api.Dockerfile`
-- pushes `cr.yandex/<registry-id>/fullstack-api:<commit-sha>`
+- builds `infra/Dockerfile`
+- pushes `cr.yandex/<registry-id>/advanced-javascript-org:<commit-sha>`
 - deploys a new Serverless Container revision
 
 GitHub repository variables:
 
 ```text
 YC_REGISTRY_ID=crp5emfit56tmpg5qp5l
-YC_CONTAINER_NAME=fullstack-api
+YC_CONTAINER_NAME=advanced-javascript-org
 ```
 
 GitHub repository secrets:
@@ -344,12 +333,12 @@ Combined Docker image starts Next on the wrong port:
 
 - `PORT` must be the public Next.js port.
 - API internal port is `API_PORT`.
-- `make run` already overrides this.
+- `pnpm docker:run` already overrides this for local Docker.
 
-Yandex API returns CORS errors:
+Yandex Cloud app returns CORS errors:
 
-- Set `WEB_ORIGIN` to the exact deployed web origin.
-- Deploy a new API revision.
+- Set `WEB_ORIGIN` to the exact public app origin.
+- Deploy a new container revision after changing env.
 
 Yandex push auth fails:
 

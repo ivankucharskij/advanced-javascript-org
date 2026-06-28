@@ -1,4 +1,4 @@
-name: Deploy API to Yandex Cloud
+name: Deploy to Yandex Cloud
 
 on:
   push:
@@ -6,26 +6,29 @@ on:
       - main
     paths:
       - "apps/api/**"
+      - "apps/web/**"
+      - "packages/shared-types/**"
       - "packages/eslint-config/**"
       - "packages/typescript-config/**"
-      - "infra/api.Dockerfile"
-      - "infra/api.Dockerfile.dockerignore"
+      - "infra/Dockerfile"
+      - "infra/Dockerfile.dockerignore"
+      - "infra/start.mjs"
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "turbo.json"
-      - ".github/workflows/deploy-api-yc.yml"
+      - ".github/workflows/deploy-yc.yml"
   workflow_dispatch:
 
 env:
   REGISTRY_ID: ${{ vars.YC_REGISTRY_ID }}
-  IMAGE_NAME: fullstack-api
+  IMAGE_NAME: advanced-javascript-org
   CONTAINER_NAME: ${{ vars.YC_CONTAINER_NAME }}
   SERVICE_ACCOUNT_ID: ${{ secrets.YC_SERVICE_ACCOUNT_ID }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  deploy-api:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -54,10 +57,10 @@ jobs:
       - name: Configure Docker for Yandex Container Registry
         run: yc container registry configure-docker
 
-      - name: Build and push API image
+      - name: Build and push combined image
         run: |
           IMAGE="cr.yandex/${REGISTRY_ID}/${IMAGE_NAME}:${IMAGE_TAG}"
-          docker build -f infra/api.Dockerfile -t "$IMAGE" .
+          docker build -f infra/Dockerfile -t "$IMAGE" .
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
@@ -71,6 +74,8 @@ jobs:
             --cores 1 \
             --execution-timeout 30s \
             --concurrency 8 \
+            --environment API_PORT=8080 \
+            --environment LOCAL_API_URL="http://127.0.0.1:8080" \
             --environment AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
             --environment DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --environment WEB_ORIGIN="${{ secrets.WEB_ORIGIN }}"

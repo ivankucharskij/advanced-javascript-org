@@ -1,4 +1,4 @@
-import type { RegisterUserInput } from "@repo/shared-types/features/users/users.schemas";
+import type { RegisterUserInput } from "@repo/shared-types";
 
 import { prisma } from "../../lib/prisma.js";
 

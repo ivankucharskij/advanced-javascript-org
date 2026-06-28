@@ -7,5 +7,4 @@ export default defineConfig({
   format: ["esm"],
   sourcemap: true,
   target: "es2022",
-  unbundle: true,
 });

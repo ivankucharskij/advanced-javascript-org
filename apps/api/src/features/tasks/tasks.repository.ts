@@ -1,7 +1,7 @@
 import type {
   CreateTaskInput,
   UpdateTaskInput,
-} from "@repo/shared-types/features/tasks/tasks.schemas";
+} from "@repo/shared-types";
 
 import { Prisma, prisma } from "../../lib/prisma.js";
 

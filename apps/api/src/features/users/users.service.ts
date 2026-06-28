@@ -1,9 +1,9 @@
 import type {
   LoginUserInput,
+  PaginationQuery,
   RegisterUserInput,
   User,
-} from "@repo/shared-types/features/users/users.schemas";
-import type { PaginationQuery } from "@repo/shared-types/shared/schemas";
+} from "@repo/shared-types";
 
 import type { User as PrismaUser } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";

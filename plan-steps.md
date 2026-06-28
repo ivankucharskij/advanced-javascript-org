@@ -150,9 +150,9 @@ Database schema matches the challenge product and no longer models todos.
 ### Test
 
 ```bash
-make db-up
+pnpm db:up
 pnpm db:migrate:dev
-pnpm db:generate
+pnpm prisma:generate
 pnpm --filter api build
 ```
 
@@ -453,18 +453,18 @@ pnpm lint
 
 ### Result
 
-Local Docker, Yandex API deploy, and Vercel web deploy remain documented and working.
+Local Docker and the combined Yandex Cloud container deploy remain documented and working.
 
 ### Test
 
 ```bash
-make build
-make run
+pnpm docker:build
+pnpm docker:run
 curl http://localhost:3000/api/healthz
 ```
 
 For API-only:
 
 ```bash
-make build-api
+pnpm docker:build-api
 ```

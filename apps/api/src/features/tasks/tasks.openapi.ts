@@ -9,7 +9,7 @@ import {
   taskQuerySchema,
   tasksErrorResponseSchema,
   updateTaskSchema,
-} from "@repo/shared-types/features/tasks/tasks.schemas";
+} from "@repo/shared-types";
 
 const tasksTag = ["Tasks"];
 const bearerSecurity = [{ bearerAuth: [] }];

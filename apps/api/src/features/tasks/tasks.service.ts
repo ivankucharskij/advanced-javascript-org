@@ -4,8 +4,8 @@ import type {
   Task,
   TaskQuery,
   UpdateTaskInput,
-} from "@repo/shared-types/features/tasks/tasks.schemas";
-import type { User } from "@repo/shared-types/features/users/users.schemas";
+  User,
+} from "@repo/shared-types";
 
 import { Prisma, type Task as PrismaTask } from "../../lib/prisma.js";
 import { createHttpResult, type HttpResult } from "../../shared/http-result.js";

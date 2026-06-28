@@ -1,4 +1,4 @@
-import type { User } from "@repo/shared-types/features/users/users.schemas";
+import type { User } from "@repo/shared-types";
 import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 

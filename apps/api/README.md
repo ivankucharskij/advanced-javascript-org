@@ -43,13 +43,13 @@ When the server is running:
 Build the API image from the repo root:
 
 ```bash
-docker build -f infra/api.Dockerfile -t fullstack-api .
+docker build -f infra/api.Dockerfile -t advanced-javascript-org-api .
 ```
 
 Run it locally:
 
 ```bash
-docker run --env-file apps/api/.env -p 8080:8080 fullstack-api
+docker run --env-file apps/api/.env -p 8080:8080 advanced-javascript-org-api
 ```
 
 When using Docker `--env-file`, keep values unquoted:

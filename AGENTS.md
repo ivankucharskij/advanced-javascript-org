@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guidance for agents working in `C:\Projects\fullstack-monorepo`.
+Guidance for agents working in `C:\projects\advanced-javascript-org`.
 
 ## Project Shape
 
@@ -24,9 +24,9 @@ pnpm --filter web build
 pnpm --filter api build
 pnpm db:migrate:dev
 pnpm db:migrate:deploy
-make db-up
-make build
-make run
+pnpm db:up
+pnpm docker:build
+pnpm docker:run
 ```
 
 ## Important Conventions

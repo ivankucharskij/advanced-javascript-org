@@ -1,5 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
-import { healthCheckResponseSchema } from "@repo/shared-types/features/health/health.schemas";
+import { healthCheckResponseSchema } from "@repo/shared-types";
 
 const appTag = ["App"];
 
