@@ -26,6 +26,16 @@ Required runtime environment:
 - `DATABASE_URL`: external PostgreSQL connection string.
 - `AUTH_SECRET`: at least 32 characters.
 - `WEB_ORIGIN`: public web origin for API CORS.
+- `GOOGLE_CLIENT_ID`: Google OAuth client id.
+- `GOOGLE_CLIENT_SECRET`: Google OAuth client secret.
+- `GOOGLE_REDIRECT_URI`: public Google OAuth callback URL, ending in `/api/auth/google/callback`.
+
+Product/runtime notes:
+
+- The user-facing practice experience is flashcards.
+- Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- Auth is Google OAuth only. Do not configure local email/password accounts.
+- Guest sessions are temporary progress buffers and are discarded after Google login merge.
 
 Optional runtime environment:
 

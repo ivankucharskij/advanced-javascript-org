@@ -41,6 +41,9 @@ PORT=8080
 AUTH_SECRET=local-dev-auth-secret-change-me-32-characters
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
 WEB_ORIGIN=http://localhost:3000
+GOOGLE_CLIENT_ID=<google oauth client id>
+GOOGLE_CLIENT_SECRET=<google oauth client secret>
+GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
 ```
 
 When running the API in Docker against the local Postgres compose service, use:
@@ -78,12 +81,15 @@ OpenAPI JSON:     http://localhost:8080/openapi.json
 API check page:   http://localhost:3000/check-api
 ```
 
-Demo users after `pnpm seed`:
+`pnpm seed` does not create demo email/password users. Auth users are created through Google OAuth.
 
-```text
-admin@example.com / admin12345
-user@example.com  / user12345
-```
+Product notes:
+
+- User-facing practice UX is flashcards.
+- Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- Auth is Google OAuth only: no local email/password registration/login.
+- Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
+- Progress is stored in `ChallengeProgress` with `needsReview`, `answeredCount`, and `correctCount`; there is no answer-attempt history table.
 
 ## Docker Local Run
 
@@ -197,6 +203,9 @@ Required runtime env:
 AUTH_SECRET=<32+ character secret>
 DATABASE_URL=<Neon PostgreSQL URL>
 WEB_ORIGIN=<public app HTTPS origin>
+GOOGLE_CLIENT_ID=<google oauth client id>
+GOOGLE_CLIENT_SECRET=<google oauth client secret>
+GOOGLE_REDIRECT_URI=<public api callback URL>/api/auth/google/callback
 API_PORT=8081
 LOCAL_API_URL=http://127.0.0.1:8081
 ```
@@ -243,7 +252,10 @@ yc serverless container revision deploy \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
   --environment DATABASE_URL="<DATABASE_URL>" \
-  --environment WEB_ORIGIN="<WEB_ORIGIN>"
+  --environment WEB_ORIGIN="<WEB_ORIGIN>" \
+  --environment GOOGLE_CLIENT_ID="<GOOGLE_CLIENT_ID>" \
+  --environment GOOGLE_CLIENT_SECRET="<GOOGLE_CLIENT_SECRET>" \
+  --environment GOOGLE_REDIRECT_URI="<GOOGLE_REDIRECT_URI>"
 ```
 
 Allow public invocation once:
@@ -297,6 +309,9 @@ YC_SERVICE_ACCOUNT_ID
 AUTH_SECRET
 DATABASE_URL
 WEB_ORIGIN
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
 ```
 
 The Actions service account needs these folder roles:

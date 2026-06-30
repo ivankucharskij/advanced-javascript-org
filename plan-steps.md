@@ -9,7 +9,7 @@ Work one step at a time. After each step, stop, test, and record the result befo
 - Confirm current API and web builds still pass.
 - Remove generated frontend client package from the active workspace.
 - Confirm the target direction:
-  - shared Zod schemas in `packages/schemas`
+  - shared Zod schemas in `packages/shared-types`
   - Swagger/OpenAPI remains inside `apps/api`
   - frontend uses direct fetchers + React Query, not generated API client/types
 
@@ -21,7 +21,7 @@ Clear contract direction before changing schema or auth.
 packages/shared-types  shared Zod schemas and inferred types
 apps/api               imports schemas and exposes Swagger/OpenAPI
 apps/web/src/api       fetchers and React Query hooks
-generated client      removed
+generated client       removed
 ```
 
 Actual result:
@@ -37,54 +37,34 @@ pnpm --filter api build
 pnpm --filter web build
 ```
 
-## Step 2: Add Shared Types Package And React Query Foundation
+## Step 2: Shared Types And React Query Foundation
 
 ### Todo
 
 - Make `apps/api` the clear owner of Swagger/OpenAPI.
 - Remove the root generated API client command from the active workflow.
 - Keep future API behavior checks as JetBrains/WebStorm `.http` request files, not unit tests.
-- Add `packages/shared-types`.
-- Use `tsdown` as the package build tool.
-- Add watch script for better DX.
+- Add/build `packages/shared-types` with `tsdown`.
 - Add shared schemas/types for:
   - health response
-  - auth user/session shape
-  - challenge DTOs
+  - auth profile / `/api/me`
+  - flashcard DTOs
 - Add React Query to `apps/web`.
 - Add a single frontend API layer under `apps/web/src/api`.
 - Fully type the health request first as the smallest vertical slice.
 
 ### Result
 
-Shared schemas and frontend data fetching foundation exist before building larger challenge APIs.
+Shared schemas and frontend data fetching foundation exist before building flashcard APIs.
 
-Shared-types sub-step actual result:
+Actual result so far:
 
 - Added `packages/shared-types` as a compiled internal package.
-- Used `tsdown` in unbundle mode so `dist` keeps the same feature-style folder structure as `src`.
-- Copied API schemas into:
-  - `packages/shared-types/src/shared/schemas.ts`
-  - `packages/shared-types/src/features/health/health.schemas.ts`
-  - `packages/shared-types/src/features/tasks/tasks.schemas.ts`
-  - `packages/shared-types/src/features/users/users.schemas.ts`
-- API now imports schemas and DTO types from `@repo/shared-types`.
-- Deleted duplicated API schema files from `apps/api/src`.
-- Aligned API/shared-types on `zod@4.4.3`.
-- Removed old generated frontend client package.
-- Dockerfiles now include and build `@repo/shared-types`.
-- Schema declarations use manual DTO types plus compact schema exports so API type-checking stays fast.
-
-Swagger/OpenAPI sub-step actual result:
-
-- `apps/api` is now the clear owner of Swagger/OpenAPI.
-- Hono app creation moved to `apps/api/src/app.ts`.
-- `apps/api/src/server.ts` now only checks DB availability and starts the server.
-- Canonical OpenAPI JSON URL is `http://localhost:8080/openapi.json`.
-- Legacy `/doc` alias still works for now.
-- Swagger UI reads from `/openapi.json`.
-- Removed old generated-client script from the active workflow.
-- README files now point to API-owned Swagger/OpenAPI.
+- API imports schemas and DTO types from `@repo/shared-types`.
+- API owns Swagger/OpenAPI.
+- Old generated frontend client workflow was removed.
+- Challenge schemas are the backend/API contract. User-facing copy can call them flashcards.
+- Old user schemas were replaced with auth schemas.
 
 ### Test
 
@@ -94,31 +74,7 @@ pnpm --filter api build
 pnpm --filter web build
 ```
 
-Actual commands now:
-
-```bash
-pnpm --filter @repo/shared-types build
-pnpm --filter api build
-pnpm --filter web build
-```
-
-Manual:
-
-- Open `http://localhost:8080/swagger`.
-- Open `http://localhost:8080/openapi.json`.
-- Open `http://localhost:3000/check-api`.
-- Confirm health request still works.
-
-Swagger/OpenAPI sub-step verified:
-
-```text
-pnpm --filter api build
-GET http://localhost:8080/openapi.json -> 200 application/json
-GET http://localhost:8080/doc          -> 200 application/json
-GET http://localhost:8080/swagger      -> 200 text/html
-```
-
-## Step 3: Reshape Prisma Schema
+## Step 3: Reshape Prisma Schema For Flashcards
 
 ### Todo
 
@@ -126,26 +82,35 @@ GET http://localhost:8080/swagger      -> 200 text/html
   - `Task`
   - `Priority`
   - `Status`
-- Reshape `User` for the product:
-  - `email`
-  - `fullName`
-  - optional `avatarUrl`
-  - optional `password`
+- Remove app-native user account fields:
+  - `password`
   - `role`
   - `status`
-- Add:
-  - `OAuthAccount`
-  - `GuestSession`
+- Keep `User` only as the internal learner/account row owned by Google auth.
+- Keep `OAuthAccount` as the Google identity link.
+- Keep `GuestSession` only as a temporary anonymous progress buffer:
+  - no `userId`
+  - no long-term relation to `User`
+  - destroy/discard after merge on login
+- Model flashcard content:
   - `Challenge`
   - `ChallengeOption`
-  - `ChallengeAttempt`
   - `ChallengeProgress`
-  - `ChallengeStatus`
+- Do not add `difficulty`.
+- Add Prisma ERD generator if useful for visual inspection.
 - Create a destructive dev migration. Old todo data is not worth preserving.
 
-### Result
+### Current Schema Direction
 
-Database schema matches the challenge product and no longer models todos.
+The schema intentionally keeps `Challenge*` names. In UI copy, each challenge is presented as a flashcard.
+
+Important behavior:
+
+- One flashcard presentation accepts one answer.
+- Wrong answer increments `answeredCount`, sets `needsReview = true`, reveals the correct answer, then moves on.
+- Correct answer increments `answeredCount` and `correctCount`, sets `needsReview = false`, then moves on.
+- No second chance on the same card presentation.
+- Review mode selects cards where `needsReview = true`.
 
 ### Test
 
@@ -160,6 +125,13 @@ Optional inspection:
 
 ```bash
 pnpm --filter api exec prisma studio
+pnpm --filter api prisma:generate
+```
+
+ERD output:
+
+```text
+apps/api/prisma/ERD.svg
 ```
 
 ## Step 4: Remove Old Todo API Surface
@@ -169,12 +141,19 @@ pnpm --filter api exec prisma studio
 - Remove old task feature files from `apps/api/src/features/tasks`.
 - Remove task router registration.
 - Remove task-specific schemas/services/repositories.
-- Keep health and users/auth only.
+- Remove old task shared schemas.
 - Remove old task frontend leftovers if still present.
 
 ### Result
 
-The backend is no longer half todo app, half challenge app.
+The backend is no longer half todo app, half flashcard app.
+
+Actual result:
+
+- Old task feature files were deleted.
+- `/api/tasks` router registration was removed.
+- Shared task schemas were deleted/unexported.
+- API and web builds passed at the time this step was completed.
 
 ### Test
 
@@ -184,9 +163,20 @@ pnpm --filter web build
 curl http://localhost:8080/api/healthz
 ```
 
-## Step 5: Hono-Native Google Auth And Profile Control
+## Step 5: Google-Only Auth Feature
 
 ### Todo
+
+- Remove old `users` feature as an API surface.
+- Remove custom email/password auth:
+  - `/api/auth/register`
+  - `/api/auth/login`
+  - password hashing/verification
+- Add auth feature module:
+
+```text
+apps/api/src/features/auth
+```
 
 - Install Hono OAuth provider package:
 
@@ -211,26 +201,42 @@ GET /api/me
 ```
 
 - On Google callback:
-  - find/create user
+  - find/create internal `User`
   - create/link `OAuthAccount`
-  - attach existing `GuestSession` progress to user
-  - set existing `accessToken` cookie
-  - redirect to `/challenges`
-- Add a dismissible top-right auth prompt on `/challenges` only for unauthorized users.
-- Prompt contains a Google auth button.
-- Authenticated users should not see this prompt.
-- User can close/dismiss the prompt and continue practicing as guest.
-- Do not do background/silent Google authorization.
-- OAuth redirect happens only after the user clicks the Google button or reaches the 50-answer auth gate.
+  - merge current guest progress into the user
+  - delete/discard guest session
+  - clear guest cookie
+  - set `accessToken` cookie
+  - redirect to `/flashcards`
 - Keep auth checks fast: validate token first; fetch full user only when endpoint logic needs DB user state.
 
 ### Result
 
-User can authorize with Google, profile state is visible in the UI, and protected/optional-auth API paths can identify the user.
+User can authorize with Google, profile state is visible through `/api/me`, and optional/protected API paths can identify the user.
+
+Actual result so far:
+
+- Old users/email-password feature was removed from active source.
+- New auth feature skeleton exists with `/api/me` and token authorization.
+- Google redirect/callback still need implementation.
+- Next implementation work:
+  - Add `@hono/oauth-providers` to `apps/api`.
+  - Implement `GET /api/auth/google`.
+  - Implement `GET /api/auth/google/callback`.
+  - In the callback, read the Google profile, find/create `User`, link `OAuthAccount`, merge current guest progress into the user, delete/discard the guest session, clear the guest cookie, set the `accessToken` cookie, and redirect to `/flashcards`.
+  - Keep the existing `GET /api/me` route.
+- Before continuing, review and intentionally keep or revise the untracked migration folder:
+
+```text
+apps/api/prisma/migrations/20260630082212/
+```
 
 ### Test
 
 ```bash
+pnpm db:up
+pnpm db:migrate:dev
+pnpm prisma:generate
 pnpm --filter api build
 pnpm --filter web build
 pnpm dev
@@ -241,11 +247,10 @@ Manual:
 - Open `http://localhost:3000/login`.
 - Click Google login.
 - Complete Google flow.
-- Confirm redirect to `/challenges`.
-- Confirm profile icon reflects auth state.
-- Check `/api/me` from browser or curl with cookie.
+- Confirm redirect to `/flashcards`.
+- Confirm `/api/me` returns the authenticated profile.
 
-## Step 6: Challenge Management API For Swagger
+## Step 6: Flashcard Management API For Swagger
 
 ### Todo
 
@@ -263,19 +268,21 @@ PATCH  /api/challenges/:id
 DELETE /api/challenges/:id
 ```
 
-- Challenge shape should support existing course content and `console.log(...)` style tasks:
+- Challenge/flashcard shape:
   - `topicSlug`
   - `title`
   - `prompt`
   - `code`
+  - `order`
   - 3 options
   - one correct option
   - feedback per option
-- No admin UI for now. Add/manage challenges through Swagger.
+- No `difficulty`.
+- No admin UI for now. Add/manage flashcards through Swagger.
 
 ### Result
 
-Challenges can be added to the DB manually through Swagger without seeds or admin UI.
+Challenges/flashcards can be added to the DB manually through Swagger without seeds or admin UI.
 
 ### Test
 
@@ -287,10 +294,10 @@ pnpm dev
 Manual:
 
 - Open `http://localhost:8080/swagger`.
-- Create one challenge.
-- Verify it exists in Prisma Studio or via a temporary list endpoint if implemented.
+- Create one flashcard.
+- Verify it exists in Prisma Studio or through a temporary list endpoint if implemented.
 
-## Step 7: Public Challenge Session API With Guest Progress
+## Step 7: Public Flashcard Flow API With Guest Progress
 
 ### Todo
 
@@ -298,24 +305,27 @@ Manual:
 
 ```text
 GET  /api/challenges/dashboard
-GET  /api/challenges/session?mode=practice
-GET  /api/challenges/session?mode=review
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
 POST /api/challenges/:id/answer
 ```
 
-- Create/read `GuestSession` from cookie for anonymous users.
-- Save all attempts for both guests and users.
+- Create/read one `GuestSession` from cookie for anonymous users.
 - Update `ChallengeProgress` after each answer:
-  - correct count
-  - wrong count
-  - status
-  - next review timing
-  - last answered time
-- Return enough data for dashboard and challenge player.
+  - every answer increments `answeredCount`
+  - correct answer increments `correctCount`
+  - correct answer clears `needsReview`
+  - wrong answer sets `needsReview`
+- Return enough data for the player to show:
+  - selected answer result
+  - correct option
+  - feedback/explanation
+  - next-card availability
+- Do not allow a second answer after a wrong answer on the same card presentation.
 
 ### Result
 
-Users can practice without auth, and their progress persists through a guest cookie.
+Users can practice without auth, wrong cards are tracked, and progress persists through the current guest cookie until login or destruction.
 
 ### Test
 
@@ -326,23 +336,25 @@ pnpm dev
 
 Manual:
 
-- Create a challenge in Swagger.
-- Open dashboard/session endpoints without logging in.
-- Answer challenge.
-- Refresh and confirm progress persists.
-- Check guest session/progress rows in Prisma Studio.
+- Create several flashcards in Swagger.
+- Open next-card endpoint without logging in.
+- Answer one correctly and one incorrectly.
+- Confirm the wrong card appears in review mode.
+- Confirm a wrong answer reveals the correct answer and cannot be re-answered in the same presentation.
+- Log in and confirm guest progress merges into the Google account.
+- Confirm the guest session is discarded after merge.
 
-## Step 8: Login UI And 50-Challenge Auth Gate
+## Step 8: Login UI And 50-Answer Auth Gate
 
 ### Todo
 
 - Add `/login`.
 - Add "Continue with Google".
-- Redirect logged-in users to `/challenges`.
-- On `/challenges`, show the dismissible Google auth prompt only for guest/unauthorized users.
-- Let guests practice until 50 answered challenges.
+- Redirect logged-in users to `/flashcards`.
+- Show dismissible Google auth prompt only for guests.
+- Let guests practice until 50 answered flashcards.
 - After 50 answers, block further practice and ask for Google auth.
-- After login, attach guest progress to the user and continue.
+- After login, merge current guest progress into the user and continue.
 
 ### Result
 
@@ -352,31 +364,30 @@ The app supports the intended acquisition flow: start immediately, require auth 
 
 - Practice as guest.
 - Confirm progress saves.
-- Simulate/reach 50 answered challenges.
+- Simulate/reach 50 answered flashcards.
 - Confirm auth gate appears.
 - Log in with Google.
 - Confirm progress is still present under the user.
 
-## Step 9: Challenges Dashboard UI
+## Step 9: Flashcards Dashboard UI
 
 ### Todo
 
-- Replace placeholder quiz with the product dashboard.
-- Choose and document styling approach/libraries before implementation.
+- Replace placeholder quiz/challenge UI with the flashcards dashboard.
 - Show:
-  - greeting
-  - today progress
-  - practice count
-  - review count
+  - greeting/profile control
+  - answered today
+  - total answered
+  - remaining/new count
+  - wrong/review count
   - topic progress
-  - profile control
 - Add buttons:
   - Practice
-  - Review
+  - Review wrong cards
 
 ### Result
 
-`/challenges` is the main learning dashboard and matches the reference direction without copying it blindly.
+`/flashcards` is the main learning dashboard.
 
 ### Test
 
@@ -386,38 +397,41 @@ pnpm --filter web build
 
 Manual:
 
-- Open `/challenges`.
+- Open `/flashcards`.
 - Confirm dashboard loads from API.
 - Confirm guest/auth states render correctly.
 - Practice/review buttons route correctly.
 
-## Step 10: Challenge Session UI
+## Step 10: Endless Flashcard Player UI
 
 ### Todo
 
-- Add `/challenges/practice`.
-- Add `/challenges/review`.
-- Implement challenge player:
+- Add `/flashcards/practice`.
+- Add `/flashcards/review`.
+- Implement flashcard player:
   - prompt
   - code block
-  - answer options
-  - green/red feedback
-  - explanation
+  - 3 answer options
+  - immediate green/red feedback
+  - correct answer reveal on wrong answers
+  - explanation/feedback
   - next button
-  - progress bar
+  - progress indicator
   - close button
 - Use React Query mutations for answers.
+- Lock answer options after the first answer for that card presentation.
 
 ### Result
 
-User can complete practice and review sessions with saved progress.
+User can keep answering flashcards one after another, and wrong-card review works without retrying the same card immediately.
 
 ### Test
 
 - Start practice.
 - Answer correct and incorrect options.
-- Refresh and confirm progress persisted.
-- Start review and confirm missed/due challenges appear.
+- Confirm wrong answer locks choices and reveals correct answer.
+- Click next and confirm a new card appears.
+- Start review and confirm previously wrong cards appear.
 - Confirm auth gate after 50 guest answers.
 
 ## Step 11: Confirm Generated Client Removal
@@ -426,6 +440,7 @@ User can complete practice and review sessions with saved progress.
 
 - Confirm generated-client references are gone from docs/workflows.
 - Confirm web uses shared schemas and local API fetchers.
+- Confirm shared contracts use auth/challenge naming and no old users/tasks naming.
 
 ### Result
 
@@ -447,7 +462,7 @@ pnpm lint
 
 - Ensure combined Docker image still builds.
 - Ensure API-only Yandex image still builds if kept.
-- Update README if commands changed.
+- Update README if commands/routes changed.
 - Update GitHub Actions if package paths changed.
 - Check env docs for Google OAuth and shared schemas.
 

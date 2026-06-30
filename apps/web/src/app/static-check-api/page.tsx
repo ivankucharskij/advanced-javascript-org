@@ -1,4 +1,5 @@
 import type { HealthCheckResponse } from "@repo/shared-types";
+import ky from "ky";
 
 import { getEnv } from "@/lib/env-config";
 
@@ -20,19 +21,16 @@ type StaticHealthResult =
       url: string;
     };
 
-const getHealthUrl = () => {
-  const apiUrl = getEnv().LOCAL_API_URL;
-  return `${apiUrl.replace(/\/$/, "")}/api/healthz`;
-};
-
 async function getStaticHealth(): Promise<StaticHealthResult> {
-  const url = getHealthUrl();
+  const api = ky.create({
+    cache: "no-store",
+    prefix: getEnv().LOCAL_API_URL,
+    throwHttpErrors: false,
+  });
   const fetchedAt = new Date().toISOString();
 
   try {
-    const response = await fetch(url, {
-      cache: "no-store",
-    });
+    const response = await api.get("api/healthz");
     const text = await response.text();
 
     if (!response.ok) {
@@ -40,7 +38,7 @@ async function getStaticHealth(): Promise<StaticHealthResult> {
         error: `${response.status} ${response.statusText}\n\n${text}`,
         fetchedAt,
         ok: false,
-        url,
+        url: response.url,
       };
     }
 
@@ -50,14 +48,14 @@ async function getStaticHealth(): Promise<StaticHealthResult> {
       ok: true,
       status: response.status,
       statusText: response.statusText,
-      url,
+      url: response.url,
     };
   } catch (error) {
     return {
       error: error instanceof Error ? error.message : "Unknown error",
       fetchedAt,
       ok: false,
-      url,
+      url: "api/healthz",
     };
   }
 }

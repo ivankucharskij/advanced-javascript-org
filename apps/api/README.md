@@ -17,7 +17,7 @@ From the repo root:
 cp apps/api/.env.example apps/api/.env
 pnpm db:up
 pnpm db:migrate:dev
-pnpm db:generate
+pnpm prisma:generate
 pnpm --filter api dev
 pnpm --filter api build
 pnpm --filter api start
@@ -37,6 +37,22 @@ When the server is running:
 - OpenAPI JSON: `/openapi.json`
 - Legacy OpenAPI alias: `/doc`
 - Swagger UI: `/swagger`
+
+## Prisma
+
+Generate the Prisma client from the repo root:
+
+```bash
+pnpm prisma:generate
+```
+
+`prisma generate` also runs the ERD generator configured in `prisma/schema.prisma` and writes:
+
+```text
+apps/api/prisma/ERD.svg
+```
+
+The ERD generator uses Mermaid CLI and Puppeteer to render the SVG.
 
 ## Docker
 
@@ -70,8 +86,8 @@ Core files:
 Feature folders:
 
 - `src/features/health`
-- `src/features/tasks`
-- `src/features/users`
+- `src/features/auth`
+- `src/features/challenges` planned/current challenge API surface for the flashcard UX
 
 Feature modules use resource-prefixed files:
 
@@ -97,20 +113,42 @@ Protected routes use `src/middleware/auth.ts`.
 
 That middleware:
 
-- reads the bearer token from `Authorization`
-- resolves the current user through `usersService.authorize(...)`
+- reads the bearer token from `Authorization` or the `accessToken` cookie
+- resolves the current user through `authService.authorize(...)`
 - stores the user on `c.var.currentUser`
 
-## Tasks
+Auth is Google-only:
 
-Tasks belong to a specific user.
+- Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`.
+- Do not add custom email/password register/login.
+- `User` is the internal learner/account row.
+- `OAuthAccount` links the Google identity to `User`.
 
-Current task behavior:
+## Challenges / Flashcards
 
-- task reads are scoped to the authenticated user
-- task writes are scoped to the authenticated user
-- parent task links must point to a task owned by the same user
-- bulk delete exists on `DELETE /api/tasks`
+The product UX is flashcards, but backend/schema naming intentionally uses `Challenge*`.
+
+Planned API routes:
+
+```text
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
+POST /api/challenges/:id/answer
+POST /api/challenges
+PATCH /api/challenges/:id
+DELETE /api/challenges/:id
+```
+
+Progress is stored in `ChallengeProgress`, not attempt history:
+
+- `needsReview`: true after a wrong answer, false after a correct answer.
+- `answeredCount`: incremented on every answer.
+- `correctCount`: incremented on correct answers.
+
+There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
+
+Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into the authenticated user and discard the guest session.
 
 ## Environment
 
@@ -125,6 +163,10 @@ Main variables:
 - `PORT`
 - `AUTH_SECRET`
 - `DATABASE_URL`
+- `WEB_ORIGIN`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
 
 Run this before deploying the API container to apply existing migrations to the configured database:
 
@@ -134,13 +176,10 @@ pnpm db:migrate:deploy
 
 ## Seed
 
-Seed local demo users and tasks from the repo root:
+Run the seed command from the repo root:
 
 ```bash
 pnpm seed
 ```
 
-The seed command creates:
-
-- Admin: `admin@example.com` / `admin12345`
-- User: `user@example.com` / `user12345`
+The seed command does not create demo email/password users. Auth users are created through Google OAuth.

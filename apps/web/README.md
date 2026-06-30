@@ -2,7 +2,7 @@
 
 Advanced JavaScript documentation site built with Next.js, React, Fumadocs, MDX, TypeScript, Tailwind CSS, and pnpm.
 
-The site teaches JavaScript behavior through focused articles and executable examples for arrays, promises, the event loop, data structures, utility functions, sorting, SOLID, composition, and interview-style edge cases.
+The site teaches JavaScript behavior through focused articles, executable examples, and a planned flashcard practice product backed by the API.
 
 ## Getting Started
 
@@ -30,6 +30,7 @@ pnpm lint         # run ESLint
 - `content`: MDX documentation pages.
 - `src/app/(home)/page.tsx`: homepage with runnable JavaScript snippets.
 - `src/app/(home)/[...slug]`: root-level documentation routes, for example `/array-methods`.
+- `/flashcards`: target route family for the flashcard practice UX.
 - `src/app/api/search/route.ts`: Fumadocs search route handler.
 - `src/app/og/[...slug]/route.tsx`: Open Graph image route for docs pages.
 - `src/components/home-code-runner.tsx`: client-side CodeMirror and Sandpack runner.
@@ -54,6 +55,12 @@ pnpm types:check
 ## Dependency Notes
 
 The current app uses Fumadocs, Next.js, React, Tailwind, CodeMirror, Sandpack, and supporting TypeScript/ESLint tooling.
+
+Product direction:
+
+- User-facing practice copy should say flashcards.
+- Backend/API contracts intentionally use `Challenge*` naming and `/api/challenges/*`.
+- Google OAuth is the only auth flow. Do not add local email/password login forms.
 
 The package manifest also includes libraries that are not directly imported anywhere in the current source tree:
 

@@ -37,18 +37,24 @@ pnpm docker:run
 - `apps/web/next.config.mjs` must keep the `/api/:path*` rewrite.
 - Fumadocs content lives in `apps/web/content`.
 - Generated folders like `.next`, `.source`, `node_modules`, and Prisma generated output should not be hand-edited.
+- Product UX is JavaScript flashcard practice, but backend/schema naming intentionally keeps `Challenge*`.
+- Do not reintroduce todos/tasks, custom email/password auth, admin/roles, user status/blocking, difficulty, or answer-attempt history.
+- `ChallengeProgress` is the per-user/per-guest card state: `needsReview`, `answeredCount`, and `correctCount`.
 
 ## Web Notes
 
 - Root docs pages are served from `apps/web/content/*.mdx`.
 - Homepage is `apps/web/src/app/(home)/page.tsx`.
-- Quiz/challenge UI starts at `apps/web/src/app/challenges/page.tsx`.
+- Flashcard UI should live under `/flashcards` routes. Existing challenge UI code may be transitional and should be adapted, not expanded as a separate product.
 - Use `pnpm --filter web build` after routing or Next config changes.
 
 ## API Notes
 
 - API env lives in `apps/api/.env` for local dev.
 - Health endpoint is `/api/healthz`.
+- Auth is Google OAuth only. Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`; do not add local register/login.
+- Flashcard APIs use `/api/challenges/*` and `Challenge*` contracts.
+- Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into `User` and discard the guest session.
 - API startup checks DB connectivity.
 - Run migrations before starting code that expects new schema.
 
