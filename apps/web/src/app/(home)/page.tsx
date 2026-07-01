@@ -1,8 +1,15 @@
 import { HomeLayout } from "fumadocs-ui/layouts/home";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SnippetCodeRunner } from "@/components/snippet-code-runner";
 import { baseOptions } from "@/lib/layout.shared";
+
+export const metadata: Metadata = {
+  title: "Advanced JavaScript",
+  description:
+    "Practice JavaScript with focused code snippets covering arrays, promises, the event loop, data structures, utility functions, and common interview edge cases.",
+};
 
 export default function HomePage() {
   return (
@@ -15,12 +22,12 @@ export default function HomePage() {
           practical <span className="text-brand">code</span>.
         </h1>
         <p className="text-2xl tracking-tight leading-snug font-light col-span-full md:text-3xl xl:text-4xl">
-          Study <span className="text-brand font-medium">JavaScript</span>{" "}
-          behavior with focused snippets for arrays, promises, the event loop,
-          data structures, utility functions, and interview-style edge cases.
-          Read the code, predict the output, then compare your reasoning with
-          concise explanations. The topics focus on the JavaScript questions
-          companies ask most often in interviews.
+          Practice <span className="text-brand font-medium">JavaScript</span>{" "}
+          with focused code snippets covering arrays, promises, the event loop,
+          data structures, utility functions, and common interview edge cases.
+          Read each snippet, predict the output, then check your reasoning
+          against a concise explanation. The questions are based on the
+          JavaScript topics that come up most often in interviews.
         </p>
         <SnippetCodeRunner
           snippetFile="event-loop-microtasks.js"

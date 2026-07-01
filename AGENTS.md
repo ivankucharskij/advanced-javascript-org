@@ -23,6 +23,8 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 https://hono.dev/docs/
 
+https://www.fumadocs.dev/
+
 ## Common Commands
 
 Run from the repo root unless noted otherwise:
