@@ -5,6 +5,29 @@ import Link from "next/link";
 import { SnippetCodeRunner } from "@/components/snippet-code-runner";
 import { baseOptions } from "@/lib/layout.shared";
 
+const homeLinks = [
+  {
+    text: "Core Concepts",
+    url: "/core-concepts",
+    active: "nested-url" as const,
+  },
+  {
+    text: "Event Loop",
+    url: "/event-loop",
+    active: "nested-url" as const,
+  },
+  {
+    text: "Promises",
+    url: "/promises",
+    active: "nested-url" as const,
+  },
+  {
+    text: "Data Structures",
+    url: "/map-and-set",
+    active: "nested-url" as const,
+  },
+];
+
 export const metadata: Metadata = {
   title: "Advanced JavaScript",
   description:
@@ -13,7 +36,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <HomeLayout {...baseOptions()}>
+    <HomeLayout {...baseOptions()} links={homeLinks}>
       <div className="grid grid-cols-1 gap-4 md:gap-10 px-6 mx-auto w-full max-w-350 lg:grid-cols-2 mt-2 md:mt-4">
         <h1 className="text-4xl my-4 md:my-8 leading-tight font-medium xl:text-5xl col-span-full">
           Advanced JavaScript
