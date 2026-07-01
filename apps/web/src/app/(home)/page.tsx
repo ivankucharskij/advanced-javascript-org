@@ -39,6 +39,45 @@ export default function HomePage() {
           inputHeight={500}
           outputHeight={40}
         />
+        <section className="col-span-full grid gap-6 md:grid-cols-3">
+          <div>
+            <h2 className="text-xl font-medium tracking-tight">
+              What you can practice
+            </h2>
+            <p className="mt-3 text-base leading-7 text-fd-muted-foreground">
+              Work through the parts of JavaScript that are essential but hard
+              to understand: array methods, promise chains, microtasks, sorting
+              callbacks, maps and sets, object references, recursion, and small
+              utility functions. The examples are short enough to read
+              carefully, but they still cover the behavior that every
+              professional developer needs to understand to work effectively.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-xl font-medium tracking-tight">
+              Built for sharper interviews
+            </h2>
+            <p className="mt-3 text-base leading-7 text-fd-muted-foreground">
+              This is for developers who already write JavaScript and want to
+              dive deeper. It is useful before any interview: almost all
+              companies ask questions about the event loop and &#39;this&#39;,
+              so it&#39;s always better to be prepared if you&#39;re looking for
+              a job.
+            </p>
+          </div>
+          <div>
+            <h2 className="text-xl font-medium tracking-tight">
+              Why these topics matter
+            </h2>
+            <p className="mt-3 text-base leading-7 text-fd-muted-foreground">
+              Most JavaScript mistakes come from small assumptions: when a
+              callback runs, whether a value was copied or shared, how coercion
+              changes a comparison, or how Promise.all works. These pages focus
+              on those details because they show up in real code reviews,
+              production bugs, and everyday web development tasks.
+            </p>
+          </div>
+        </section>
         <ul className="rounded-2xl text-sm p-6 bg-origin-border shadow-lg border bg-fd-card flex flex-col gap-6 col-span-full mb-8">
           <li>
             <span className="flex flex-row items-center gap-2 font-medium pb-1">
