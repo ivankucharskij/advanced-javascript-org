@@ -3,7 +3,7 @@ import "./global.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
-import { getEnv } from "@/lib/env-config";
+import { ORIGIN } from "@/lib/shared";
 
 import { Providers } from "./providers";
 
@@ -11,10 +11,8 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const siteUrl = getEnv().WEB_ORIGIN;
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: ORIGIN,
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {

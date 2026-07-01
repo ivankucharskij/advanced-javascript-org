@@ -4,6 +4,5 @@ declare namespace NodeJS {
     NODE_ENV?: "development" | "production" | "test";
     OPENAPI_URL?: string;
     PORT?: string;
-    WEB_ORIGIN?: string;
   }
 }

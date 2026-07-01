@@ -8,7 +8,6 @@ const withDefaultUrl = (defaultValue: string) =>
 
 const envSchema = z.object({
   LOCAL_API_URL: withDefaultUrl("http://localhost:8080"),
-  WEB_ORIGIN: withDefaultUrl("http://localhost:3000"),
 });
 
 export type Env = z.infer<typeof envSchema>;
