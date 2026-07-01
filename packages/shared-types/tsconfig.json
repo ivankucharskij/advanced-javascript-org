@@ -1,7 +1,21 @@
 {
-  "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
     "ignoreDeprecations": "6.0",
+    "incremental": false,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "NodeNext",
+    "moduleDetection": "force",
+    "moduleResolution": "NodeNext",
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022",
     "types": []
   },
   "include": ["src/**/*.ts", "env.d.ts"],

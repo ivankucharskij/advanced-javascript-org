@@ -13,6 +13,16 @@ This is a pnpm/Turborepo monorepo with:
 
 The root `README.md` is the operational runbook. Read it first for local dev, Docker, migrations, deploy, and CI/CD.
 
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
+
+https://hono.dev/docs/
+
 ## Common Commands
 
 Run from the repo root unless noted otherwise:
@@ -63,3 +73,4 @@ pnpm docker:run
 - Do not commit secrets.
 - Do not revert user changes unless explicitly asked.
 - Keep edits scoped; this repo often has a dirty working tree.
+- Never edit `pnpm-lock.yaml` manually. Only let pnpm update lockfiles through pnpm commands.

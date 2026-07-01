@@ -97,7 +97,6 @@ pnpm --filter web build
   - `ChallengeOption`
   - `ChallengeProgress`
 - Do not add `difficulty`.
-- Add Prisma ERD generator if useful for visual inspection.
 - Create a destructive dev migration. Old todo data is not worth preserving.
 
 ### Current Schema Direction
@@ -125,13 +124,6 @@ Optional inspection:
 
 ```bash
 pnpm --filter api exec prisma studio
-pnpm --filter api prisma:generate
-```
-
-ERD output:
-
-```text
-apps/api/prisma/ERD.svg
 ```
 
 ## Step 4: Remove Old Todo API Surface

@@ -46,14 +46,6 @@ Generate the Prisma client from the repo root:
 pnpm prisma:generate
 ```
 
-`prisma generate` also runs the ERD generator configured in `prisma/schema.prisma` and writes:
-
-```text
-apps/api/prisma/ERD.svg
-```
-
-The ERD generator uses Mermaid CLI and Puppeteer to render the SVG.
-
 ## Docker
 
 Build the API image from the repo root:

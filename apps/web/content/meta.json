@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "---Content---",
+    "...",
+    "!privacy-policy",
+    "!terms-of-service",
+    "---Legal---",
+    "privacy-policy",
+    "terms-of-service"
+  ]
+}
