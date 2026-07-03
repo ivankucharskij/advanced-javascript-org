@@ -1,5 +1,12 @@
 import { prisma } from "../../lib/prisma.js";
 
+type UpsertGoogleUserInput = {
+  avatarUrl: string | null;
+  email: string;
+  fullName: string;
+  providerAccountId: string;
+};
+
 export const authRepository = {
   findUserById(id: string) {
     return prisma.user.findUnique({
@@ -8,19 +15,7 @@ export const authRepository = {
       },
     });
   },
-  findUserByEmail(email: string) {
-    return prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-  },
-  upsertGoogleUser(input: {
-    email: string;
-    fullName: string;
-    avatarUrl: string | null;
-    providerAccountId: string;
-  }) {
+  upsertGoogleUser(input: UpsertGoogleUserInput) {
     return prisma.user.upsert({
       where: {
         email: input.email,

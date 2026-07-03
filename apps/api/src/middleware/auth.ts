@@ -3,8 +3,7 @@ import { getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
 import { authService } from "../features/auth/auth.service.js";
-
-const AUTH_COOKIE_NAME = "accessToken";
+import { AUTH_COOKIE_NAME } from "../shared/constants.js";
 
 export type AuthVariables = {
   currentUser: User;

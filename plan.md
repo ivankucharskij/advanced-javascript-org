@@ -70,7 +70,7 @@ Flow:
 9. Merge current `GuestSession` progress into the `User`.
 10. Delete/discard the guest session and clear the guest cookie.
 11. Set `accessToken` cookie.
-12. Redirect to the flashcard practice experience.
+12. Return the typed auth response. The web app decides where to navigate next.
 
 Required env:
 
@@ -225,6 +225,7 @@ Keep `Challenge*` names in code and database. Use "flashcard" in user-facing cop
 /flashcards/practice endless practice flow
 /flashcards/review   wrong-card review flow
 /login               Google login
+/check-auth          temporary manual auth verification page
 ```
 
 Also add a dismissible auth prompt:

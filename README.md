@@ -78,10 +78,11 @@ Web:              http://localhost:3000
 API health:       http://localhost:8080/api/healthz
 Swagger:          http://localhost:8080/swagger
 OpenAPI JSON:     http://localhost:8080/openapi.json
-API check page:   http://localhost:3000/check-api
+Auth check page:  http://localhost:3000/check-auth
 ```
 
 `pnpm seed` does not create demo email/password users. Auth users are created through Google OAuth.
+`/check-auth` is the temporary auth verification page. It starts Google OAuth through browser navigation and checks `/api/me` with the auth cookie.
 
 Product notes:
 
@@ -369,3 +370,9 @@ Migration fails in CI/prod:
 ```bash
 pnpm --filter api exec prisma migrate status
 ```
+
+Google OAuth callback returns `502 Google OAuth provider is unavailable` locally:
+
+- The API exchanges the Google code server-side through Node `fetch` to `https://oauth2.googleapis.com/token`.
+- If `curl https://oauth2.googleapis.com/token` works but Node `fetch` times out, the problem is local Node outbound networking, often VPN/firewall/DNS routing.
+- Verify from the same shell with `node -e "fetch('https://oauth2.googleapis.com/token').then(r=>console.log(r.status)).catch(console.error)"`.

@@ -18,6 +18,9 @@ docker run --rm \
   -e DATABASE_URL='postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public' \
   -e AUTH_SECRET='local-dev-auth-secret-change-me-32-characters' \
   -e WEB_ORIGIN='http://localhost:3000' \
+  -e GOOGLE_CLIENT_ID='<google oauth client id>' \
+  -e GOOGLE_CLIENT_SECRET='<google oauth client secret>' \
+  -e GOOGLE_REDIRECT_URI='http://localhost:3000/api/auth/google/callback' \
   advanced-javascript-org
 ```
 

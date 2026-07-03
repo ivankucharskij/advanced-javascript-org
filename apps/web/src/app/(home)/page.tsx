@@ -42,7 +42,7 @@ export default function HomePage() {
           Advanced JavaScript
           <br className="md:hidden" /> explained through
           <br />
-          practical <span className="text-brand">code</span>.
+          <span className="text-brand">code snippets</span>.
         </h1>
         <p className="text-2xl tracking-tight leading-snug font-light col-span-full md:text-3xl xl:text-4xl">
           Practice <span className="text-brand font-medium">JavaScript</span>{" "}

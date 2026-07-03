@@ -13,6 +13,13 @@ export type MeResponse = {
   data: User;
 };
 
+export type GoogleCallbackResponse = {
+  data: {
+    accessToken: string;
+    user: User;
+  };
+};
+
 export const userSchema: z.ZodType<User> = z.object({
   id: z.uuid(),
   fullName: z.string().min(1),
@@ -25,3 +32,11 @@ export const userSchema: z.ZodType<User> = z.object({
 export const meResponseSchema: z.ZodType<MeResponse> = z.object({
   data: userSchema,
 });
+
+export const googleCallbackResponseSchema: z.ZodType<GoogleCallbackResponse> =
+  z.object({
+    data: z.object({
+      accessToken: z.string().min(1),
+      user: userSchema,
+    }),
+  });

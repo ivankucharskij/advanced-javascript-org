@@ -6,6 +6,9 @@ const emptyStringToUndefined = (value: unknown) =>
 const envSchema = z.object({
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   DATABASE_URL: z.url().min(1, "DATABASE_URL is required"),
+  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
+  GOOGLE_REDIRECT_URI: z.url().min(1, "GOOGLE_REDIRECT_URI is required"),
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

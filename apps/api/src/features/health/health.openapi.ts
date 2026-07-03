@@ -1,19 +1,16 @@
 import { createRoute } from "@hono/zod-openapi";
 import { healthCheckResponseSchema } from "@repo/shared-types";
 
-const appTag = ["App"];
+import { jsonContent } from "../../shared/http.js";
 
+const appTag = ["App"];
 export const healthOpenApi = {
   getHealth: createRoute({
     method: "get",
     path: "/healthz",
     responses: {
       200: {
-        content: {
-          "application/json": {
-            schema: healthCheckResponseSchema,
-          },
-        },
+        content: jsonContent(healthCheckResponseSchema),
         description: "Health check",
       },
     },

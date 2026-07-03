@@ -65,8 +65,10 @@ pnpm docker:run
 - API env lives in `apps/api/.env` for local dev.
 - Health endpoint is `/api/healthz`.
 - Auth is Google OAuth only. Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`; do not add local register/login.
+- `/check-auth` is the temporary web auth verification page. Keep auth-related manual checks there until the real `/login` and `/flashcards` flows replace it.
 - Flashcard APIs use `/api/challenges/*` and `Challenge*` contracts.
 - Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into `User` and discard the guest session.
+- Shared API HTTP helpers live in `apps/api/src/shared/http.ts`.
 - API startup checks DB connectivity.
 - Run migrations before starting code that expects new schema.
 

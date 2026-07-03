@@ -92,8 +92,8 @@ Feature modules use resource-prefixed files:
 Shared API helpers:
 
 - `src/middleware/auth.ts`
-- `src/shared/http-result.ts`
-- `src/shared/http-status.ts`
+- `src/shared/http.ts` - HTTP statuses, typed results/bodies, and OpenAPI JSON content helper
+- `src/shared/constants.ts` - shared API constants such as auth cookie settings
 
 Shared request/response schemas live in:
 
@@ -115,6 +115,9 @@ Auth is Google-only:
 - Do not add custom email/password register/login.
 - `User` is the internal learner/account row.
 - `OAuthAccount` links the Google identity to `User`.
+- `GET /api/auth/google` starts OAuth and must be opened as browser navigation, not Swagger `Execute`.
+- `GET /api/auth/google/callback` validates the Google profile, upserts the user, links `OAuthAccount`, sets the `accessToken` cookie, and returns the shared `googleCallbackResponseSchema` response.
+- Local Google token exchange can fail if Node cannot reach `https://oauth2.googleapis.com/token`; this is reported as `502`.
 
 ## Challenges / Flashcards
 

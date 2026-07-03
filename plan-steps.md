@@ -199,7 +199,7 @@ GET /api/me
   - delete/discard guest session
   - clear guest cookie
   - set `accessToken` cookie
-  - redirect to `/flashcards`
+  - return the typed auth response; the frontend decides where to navigate next
 - Keep auth checks fast: validate token first; fetch full user only when endpoint logic needs DB user state.
 
 ### Result
@@ -209,14 +209,17 @@ User can authorize with Google, profile state is visible through `/api/me`, and 
 Actual result so far:
 
 - Old users/email-password feature was removed from active source.
-- New auth feature skeleton exists with `/api/me` and token authorization.
-- Google redirect/callback still need implementation.
-- Next implementation work:
-  - Add `@hono/oauth-providers` to `apps/api`.
-  - Implement `GET /api/auth/google`.
-  - Implement `GET /api/auth/google/callback`.
-  - In the callback, read the Google profile, find/create `User`, link `OAuthAccount`, merge current guest progress into the user, delete/discard the guest session, clear the guest cookie, set the `accessToken` cookie, and redirect to `/flashcards`.
-  - Keep the existing `GET /api/me` route.
+- `@hono/oauth-providers` is installed in `apps/api`.
+- `/api/auth/google`, `/api/auth/google/callback`, and `/api/me` are implemented and included in OpenAPI.
+- Google callback validates the Google profile in `authService`, upserts `User`, links `OAuthAccount`, sets the `accessToken` cookie, and returns the shared `googleCallbackResponseSchema` response.
+- Auth middleware reads `Authorization` or the `accessToken` cookie.
+- Shared API HTTP/OpenAPI helpers are consolidated in `apps/api/src/shared/http.ts`.
+- Temporary `/check-auth` web page starts Google OAuth and checks `/api/me`.
+- Local Node networking to Google may intermittently fail; provider token exchange failures return `502`.
+- Remaining implementation work:
+  - Merge current guest progress into the user on Google callback.
+  - Delete/discard the guest session and clear the guest cookie after merge.
+  - Replace `/check-auth` with the real `/login` and `/flashcards` flows when those steps are reached.
 - Before continuing, review and intentionally keep or revise the untracked migration folder:
 
 ```text
@@ -236,11 +239,11 @@ pnpm dev
 
 Manual:
 
-- Open `http://localhost:3000/login`.
+- Open `http://localhost:3000/check-auth`.
 - Click Google login.
 - Complete Google flow.
-- Confirm redirect to `/flashcards`.
-- Confirm `/api/me` returns the authenticated profile.
+- Confirm callback returns the auth response and sets the cookie.
+- Click "Check current user" and confirm `/api/me` returns the authenticated profile.
 
 ## Step 6: Flashcard Management API For Swagger
 
