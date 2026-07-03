@@ -84,4 +84,7 @@ jobs:
             --environment LOCAL_API_URL="http://127.0.0.1:8081" \
             --environment AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
             --environment DATABASE_URL="${{ secrets.DATABASE_URL }}" \
-            --environment WEB_ORIGIN="${{ secrets.WEB_ORIGIN }}"
+            --environment WEB_ORIGIN="${{ secrets.WEB_ORIGIN }}" \
+            --environment GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+            --environment GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            --environment GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}"
