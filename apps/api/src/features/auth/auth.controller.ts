@@ -12,6 +12,10 @@ import {
   AUTH_COOKIE_NAME,
 } from "../../shared/constants.js";
 import { HttpStatus } from "../../shared/http.js";
+import {
+  clearGuestSessionCookie,
+  getGuestSessionId,
+} from "../guest-sessions/guest-sessions.controller.js";
 import { authOpenApi } from "./auth.openapi.js";
 import { authService } from "./auth.service.js";
 
@@ -59,7 +63,10 @@ authRouter.openapi(
 authRouter.openapi(
   { ...authOpenApi.googleCallback, middleware: googleOAuthMiddleware },
   async (c) => {
-    const auth = await authService.signInWithGoogle(c.get("user-google"));
+    const auth = await authService.signInWithGoogle(
+      c.get("user-google"),
+      getGuestSessionId(c),
+    );
 
     if (!auth.ok) {
       return c.json({ message: auth.message }, auth.status);
@@ -74,6 +81,10 @@ authRouter.openapi(
       sameSite: "Lax",
       secure: runtimeEnv.NODE_ENV === "production",
     });
+
+    if (auth.data.guestSessionMerge.discarded) {
+      clearGuestSessionCookie(c);
+    }
 
     return c.json(
       googleCallbackResponseSchema.parse({ data: auth.data }),

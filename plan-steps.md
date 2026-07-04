@@ -279,6 +279,30 @@ DELETE /api/challenges/:id
 
 Challenges/flashcards can be added to the DB manually through Swagger without seeds or admin UI.
 
+Actual result:
+
+- Added `apps/api/src/features/challenges` with controller, OpenAPI routes, service, and repository.
+- Added Swagger-visible management endpoints:
+  - `GET /api/challenges`
+  - `POST /api/challenges`
+  - `PATCH /api/challenges/:id`
+  - `DELETE /api/challenges/:id`
+- `GET /api/challenges` supports pagination and filters:
+  - `page`
+  - `limit`
+  - `topicSlug`
+  - `slug`
+  - `q` for title/prompt/code search
+  - `sortBy`
+  - `sortDirection`
+- Challenge management endpoints require an authenticated user, but no roles/admin model was added.
+- Create/update responses return the full challenge with answer metadata for manual Swagger inspection.
+- Delete removes challenge progress and options before deleting the challenge.
+- Duplicate slugs return `409`; missing challenges return `404`.
+- Unauthenticated challenge creation returns `401`.
+- Authenticated challenge create/delete smoke test passed with a temporary local user/token; the test challenge and user were deleted.
+- Shared types, API, and web builds passed.
+
 ### Test
 
 ```bash

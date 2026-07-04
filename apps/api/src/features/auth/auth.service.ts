@@ -7,6 +7,7 @@ import {
   type HttpResult,
   HttpStatus,
 } from "../../shared/http.js";
+import { guestSessionsService } from "../guest-sessions/guest-sessions.service.js";
 import { authRepository } from "./auth.repository.js";
 import { createAccessToken, parseAccessToken } from "./tokens.js";
 
@@ -20,6 +21,11 @@ type GoogleProfile = {
 
 type GoogleSignInResult = {
   accessToken: string;
+  guestSessionMerge: {
+    discarded: boolean;
+    guestSessionId: string | null;
+    mergedProgressCount: number;
+  };
   user: User;
 };
 
@@ -46,7 +52,12 @@ export const authService = {
   async authorize(
     authorizationHeader?: string,
   ): Promise<
-    HttpResult<User, typeof HttpStatus.UNAUTHORIZED, typeof HttpStatus.OK>
+    HttpResult<
+      User,
+      never,
+      typeof HttpStatus.UNAUTHORIZED,
+      typeof HttpStatus.OK
+    >
   > {
     if (!authorizationHeader?.startsWith("Bearer ")) {
       return createHttpResult({
@@ -81,9 +92,11 @@ export const authService = {
   },
   async signInWithGoogle(
     googleProfile: GoogleProfile | undefined,
+    guestSessionId?: string,
   ): Promise<
     HttpResult<
       GoogleSignInResult,
+      never,
       typeof HttpStatus.UNAUTHORIZED,
       typeof HttpStatus.OK
     >
@@ -107,15 +120,20 @@ export const authService = {
     const user = await authRepository.upsertGoogleUser({
       avatarUrl: parsedGoogleProfile.data.picture ?? null,
       email: parsedGoogleProfile.data.email,
-      fullName:
-        parsedGoogleProfile.data.name ?? parsedGoogleProfile.data.email,
+      fullName: parsedGoogleProfile.data.name ?? parsedGoogleProfile.data.email,
       providerAccountId: parsedGoogleProfile.data.id,
     });
+
+    const guestSessionMerge = await guestSessionsService.mergeIntoUser(
+      user.id,
+      guestSessionId,
+    );
 
     return createHttpResult({
       status: HttpStatus.OK,
       data: {
         accessToken: await createAccessToken(user.id),
+        guestSessionMerge,
         user: toPublicUser(user),
       },
     });

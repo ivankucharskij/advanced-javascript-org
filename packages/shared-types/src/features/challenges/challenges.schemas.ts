@@ -1,5 +1,12 @@
 import { z } from "@hono/zod-openapi";
 
+import {
+  type PaginationMeta,
+  paginationMetaSchema,
+  type PaginationQuery,
+  paginationQuerySchema,
+} from "../../shared/schemas.js";
+
 export type ChallengeSessionMode = "practice" | "review";
 
 export type ChallengeOption = {
@@ -15,11 +22,11 @@ export type ChallengeOptionWithAnswer = ChallengeOption & {
 
 export type Challenge = {
   id: string;
+  snippetId: string;
   slug: string;
   topicSlug: string;
   title: string;
   prompt: string;
-  code: string;
   order: number;
   options: ChallengeOption[];
   createdAt: string;
@@ -39,10 +46,10 @@ export type CreateChallengeOptionInput = {
 
 export type CreateChallengeInput = {
   slug: string;
+  snippetId: string;
   topicSlug: string;
   title: string;
   prompt: string;
-  code: string;
   order: number;
   options: CreateChallengeOptionInput[];
 };
@@ -112,6 +119,20 @@ export type SingleChallengeResponse = {
   data: ChallengeWithAnswer;
 };
 
+export type ChallengeListResponse = {
+  data: ChallengeWithAnswer[];
+  meta: PaginationMeta;
+};
+
+export type ChallengeListQuery = PaginationQuery & {
+  q?: string;
+  slug?: string;
+  snippetId?: string;
+  sortBy: "createdAt" | "order" | "slug" | "title" | "topicSlug" | "updatedAt";
+  sortDirection: "asc" | "desc";
+  topicSlug?: string;
+};
+
 export type DeleteChallengeResponse = {
   id: string;
 };
@@ -136,11 +157,11 @@ export const challengeOptionWithAnswerSchema: z.ZodType<ChallengeOptionWithAnswe
 
 export const challengeSchema: z.ZodType<Challenge> = z.object({
   id: z.uuid(),
+  snippetId: z.uuid(),
   slug: z.string().min(1),
   topicSlug: z.string().min(1),
   title: z.string().min(1),
   prompt: z.string().min(1),
-  code: z.string().min(1),
   order: z.number().int(),
   options: z.array(challengeOptionSchema).length(3),
   createdAt: z.iso.datetime(),
@@ -150,11 +171,11 @@ export const challengeSchema: z.ZodType<Challenge> = z.object({
 export const challengeWithAnswerSchema: z.ZodType<ChallengeWithAnswer> =
   z.object({
     id: z.uuid(),
+    snippetId: z.uuid(),
     slug: z.string().min(1),
     topicSlug: z.string().min(1),
     title: z.string().min(1),
     prompt: z.string().min(1),
-    code: z.string().min(1),
     order: z.number().int(),
     options: z.array(challengeOptionWithAnswerSchema).length(3),
     createdAt: z.iso.datetime(),
@@ -171,10 +192,10 @@ export const createChallengeOptionSchema: z.ZodType<CreateChallengeOptionInput> 
 
 const challengeMutationBaseSchema = z.object({
   slug: z.string().min(1),
+  snippetId: z.uuid(),
   topicSlug: z.string().min(1),
   title: z.string().min(1),
   prompt: z.string().min(1),
-  code: z.string().min(1),
   order: z.number().int(),
   options: z.array(createChallengeOptionSchema).length(3),
 });
@@ -267,6 +288,23 @@ export const singleChallengeResponseSchema: z.ZodType<SingleChallengeResponse> =
   z.object({
     data: challengeWithAnswerSchema,
   });
+
+export const challengeListResponseSchema: z.ZodType<ChallengeListResponse> =
+  z.object({
+    data: z.array(challengeWithAnswerSchema),
+    meta: paginationMetaSchema,
+  });
+
+export const challengeListQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().min(1).optional(),
+  slug: z.string().trim().min(1).optional(),
+  snippetId: z.uuid().optional(),
+  sortBy: z
+    .enum(["createdAt", "order", "slug", "title", "topicSlug", "updatedAt"])
+    .default("topicSlug"),
+  sortDirection: z.enum(["asc", "desc"]).default("asc"),
+  topicSlug: z.string().trim().min(1).optional(),
+});
 
 export const deleteChallengeResponseSchema: z.ZodType<DeleteChallengeResponse> =
   z.object({

@@ -69,6 +69,8 @@ pnpm docker:run
 - Flashcard APIs use `/api/challenges/*` and `Challenge*` contracts.
 - Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into `User` and discard the guest session.
 - Shared API HTTP helpers live in `apps/api/src/shared/http.ts`.
+- API services should return shared HTTP helper result types (`createHttpResult`, `HttpResult`, `SuccessHttpResult`) rather than ad hoc objects.
+- API controllers should translate service results into explicit JSON responses. Do not `throw new Error(result.message)` for normal service-result handling; return `c.json({ message }, status)` for declared error responses.
 - API startup checks DB connectivity.
 - Run migrations before starting code that expects new schema.
 

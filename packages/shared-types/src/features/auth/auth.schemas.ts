@@ -16,6 +16,11 @@ export type MeResponse = {
 export type GoogleCallbackResponse = {
   data: {
     accessToken: string;
+    guestSessionMerge: {
+      discarded: boolean;
+      guestSessionId: string | null;
+      mergedProgressCount: number;
+    };
     user: User;
   };
 };
@@ -37,6 +42,11 @@ export const googleCallbackResponseSchema: z.ZodType<GoogleCallbackResponse> =
   z.object({
     data: z.object({
       accessToken: z.string().min(1),
+      guestSessionMerge: z.object({
+        discarded: z.boolean(),
+        guestSessionId: z.uuid().nullable(),
+        mergedProgressCount: z.number().int().min(0),
+      }),
       user: userSchema,
     }),
   });

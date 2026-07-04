@@ -45,20 +45,37 @@ model GuestSession {
 }
 
 model Challenge {
-  id         String   @id @default(uuid())
-  slug       String   @unique
-  topicSlug  String
-  title      String
-  prompt     String
-  code       String
-  order      Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  snippetId String
+  slug      String   @unique
+  topicSlug String
+  title     String
+  prompt    String
+  order     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  snippet  ChallengeSnippet @relation(fields: [snippetId], references: [id])
   options  ChallengeOption[]
   progress ChallengeProgress[]
 
+  @@index([snippetId])
   @@index([topicSlug, order])
+}
+
+model ChallengeSnippet {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  topicSlug String
+  title     String
+  language  String
+  code      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challenges Challenge[]
+
+  @@index([topicSlug])
 }
 
 model ChallengeOption {
