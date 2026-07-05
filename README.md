@@ -79,6 +79,7 @@ API health:       http://localhost:8080/api/healthz
 Swagger:          http://localhost:8080/swagger
 OpenAPI JSON:     http://localhost:8080/openapi.json
 Auth check page:  http://localhost:3000/check-auth
+Snippet test:     http://localhost:3000/snippet-test
 ```
 
 `pnpm seed` does not create demo email/password users. Auth users are created through Google OAuth.
@@ -88,6 +89,8 @@ Product notes:
 
 - User-facing practice UX is flashcards.
 - Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- Reusable code snippets are stored as `ChallengeSnippet` records. `Challenge` records store questions and point to snippets through `snippetId`, so one snippet can have multiple questions.
+- `snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
 - Auth is Google OAuth only: no local email/password registration/login.
 - Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
 - Progress is stored in `ChallengeProgress` with `needsReview`, `answeredCount`, and `correctCount`; there is no answer-attempt history table.
@@ -141,6 +144,7 @@ When changing `apps/api/prisma/schema.prisma`:
 
 ```bash
 pnpm db:migrate:dev
+pnpm prisma:generate
 ```
 
 Commit both:

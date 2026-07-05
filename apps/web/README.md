@@ -31,6 +31,7 @@ pnpm lint         # run ESLint
 - `src/app/(home)/page.tsx`: homepage with runnable JavaScript snippets.
 - `src/app/(home)/[...slug]`: root-level documentation routes, for example `/array-methods`.
 - `src/app/check-auth/page.tsx`: temporary auth verification page for Google OAuth and `/api/me`.
+- `src/app/snippet-test/page.tsx`: temporary page for rendering one snippet/question before the real flashcard route exists.
 - `/flashcards`: target route family for the flashcard practice UX.
 - `src/app/api/search/route.ts`: Fumadocs search route handler.
 - `src/app/og/[...slug]/route.tsx`: Open Graph image route for docs pages.
@@ -61,6 +62,9 @@ Product direction:
 
 - User-facing practice copy should say flashcards.
 - Backend/API contracts intentionally use `Challenge*` naming and `/api/challenges/*`.
+- Reusable code snippets are backend `ChallengeSnippet` records and should be rendered as the code context for one or more challenge questions.
+- Use Fumadocs code rendering, currently `fumadocs-ui/components/dynamic-codeblock`, for snippet code styling.
+- Use the shared client `fetchers` object from `src/lib/fetchers.ts` for API calls.
 - Google OAuth is the only auth flow. Do not add local email/password login forms.
 - Start OAuth with browser navigation to `/api/auth/google`; do not start it with `fetch`, because Google redirects are cross-origin browser navigations.
 

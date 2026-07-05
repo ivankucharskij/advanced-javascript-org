@@ -79,7 +79,9 @@ Feature folders:
 
 - `src/features/health`
 - `src/features/auth`
-- `src/features/challenges` planned/current challenge API surface for the flashcard UX
+- `src/features/guest-sessions`
+- `src/features/challenge-snippets` reusable code snippet CRUD
+- `src/features/challenges` challenge/question CRUD for the flashcard UX
 
 Feature modules use resource-prefixed files:
 
@@ -123,15 +125,23 @@ Auth is Google-only:
 
 The product UX is flashcards, but backend/schema naming intentionally uses `Challenge*`.
 
-Planned API routes:
+Current content authoring model:
+
+- `ChallengeSnippet` stores reusable code: `slug`, `topicSlug`, `title`, `language`, and `code`.
+- `Challenge` stores a question and points at a snippet through `snippetId`.
+- Multiple challenges can reference the same snippet.
+- Keep snippet content drafts in the repo root `snippets.md` while editing manually.
+
+Current CRUD routes:
 
 ```text
-GET  /api/challenges/dashboard
-GET  /api/challenges/next?mode=practice
-GET  /api/challenges/next?mode=review
-POST /api/challenges/:id/answer
-POST /api/challenges
-PATCH /api/challenges/:id
+GET    /api/challenge-snippets
+POST   /api/challenge-snippets
+PATCH  /api/challenge-snippets/:id
+DELETE /api/challenge-snippets/:id
+GET    /api/challenges
+POST   /api/challenges
+PATCH  /api/challenges/:id
 DELETE /api/challenges/:id
 ```
 
@@ -144,6 +154,15 @@ Progress is stored in `ChallengeProgress`, not attempt history:
 There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
 
 Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into the authenticated user and discard the guest session.
+
+Planned practice routes can be added later:
+
+```text
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
+POST /api/challenges/:id/answer
+```
 
 ## Environment
 

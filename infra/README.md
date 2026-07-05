@@ -37,6 +37,7 @@ Product/runtime notes:
 
 - The user-facing practice experience is flashcards.
 - Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- Reusable code examples are stored as `ChallengeSnippet` rows, and challenge questions reference snippets by `snippetId`.
 - Auth is Google OAuth only. Do not configure local email/password accounts.
 - Guest sessions are temporary progress buffers and are discarded after Google login merge.
 

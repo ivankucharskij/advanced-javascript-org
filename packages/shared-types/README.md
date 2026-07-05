@@ -10,7 +10,9 @@ import { challengeSchema, meResponseSchema, type Challenge } from "@repo/shared-
 Current contract areas:
 
 - `features/auth`: Google-authenticated profile contracts such as `/api/me` and the Google callback response.
-- `features/challenges`: backend challenge contracts used to power the flashcard UX.
+- `features/guest-sessions`: anonymous guest-session contracts used before Google login.
+- `features/challenge-snippets`: reusable snippet CRUD contracts.
+- `features/challenges`: challenge/question contracts used to power the flashcard UX.
 - `features/health`: health check response.
 - `shared`: common response and pagination helpers.
 

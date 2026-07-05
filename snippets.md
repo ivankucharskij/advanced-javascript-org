@@ -4,13 +4,14 @@ Source: `apps/web/content/*.mdx`, excluding legal pages.
 
 Edit this file manually before turning snippets into database seed data. Each section is one reusable `ChallengeSnippet` candidate.
 
-Total snippets: 109
+Total snippets: 78
 
 ## 1. concat
 
 slug: concat
 topicSlug: array-methods
-title: Array.concat
+title: Implement Array.prototype.concat
+description: Combines the receiver with arrays or individual values and returns a new array.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.concat
 sourceSnippet: concat
@@ -36,7 +37,8 @@ Array.prototype.myConcat = function (...arrays) {
 
 slug: fill
 topicSlug: array-methods
-title: Array.fill
+title: Implement Array.prototype.fill
+description: Mutates an array by writing one value across a normalized start and end range.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.fill
 sourceSnippet: fill
@@ -64,7 +66,8 @@ Array.prototype.customFill = function (value, start = 0, end = this.length) {
 
 slug: pop
 topicSlug: array-methods
-title: Array.pop
+title: Implement Array.prototype.pop
+description: Removes the last array element by shortening length and returns the removed value.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.pop
 sourceSnippet: pop
@@ -89,7 +92,8 @@ Array.prototype.customPop = function () {
 
 slug: push
 topicSlug: array-methods
-title: Array.push
+title: Implement Array.prototype.push
+description: Appends each argument to an array and returns the updated length.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.push
 sourceSnippet: push
@@ -109,7 +113,8 @@ Array.prototype.customPush = function () {
 
 slug: reverse
 topicSlug: array-methods
-title: Array.reverse
+title: Implement Array.prototype.reverse
+description: Swaps elements from both ends of an array to reverse it in place.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.reverse
 sourceSnippet: reverse
@@ -133,7 +138,8 @@ Array.prototype.customReverse = function () {
 
 slug: shift
 topicSlug: array-methods
-title: Array.shift
+title: Implement Array.prototype.shift
+description: Removes the first array element by shifting remaining values left.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.shift
 sourceSnippet: shift
@@ -159,7 +165,8 @@ Array.prototype.customShift = function () {
 
 slug: unshift
 topicSlug: array-methods
-title: Array.unshift
+title: Implement Array.prototype.unshift
+description: Prepends values by shifting existing elements right and returns the new length.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.unshift
 sourceSnippet: unshift
@@ -188,7 +195,8 @@ Array.prototype.customUnshift = function (...elements) {
 
 slug: splice
 topicSlug: array-methods
-title: Array.splice
+title: Implement Array.prototype.splice
+description: Normalizes splice arguments, removes a segment, inserts new items, and returns deleted values.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.splice
 sourceSnippet: splice
@@ -241,7 +249,8 @@ Array.prototype.customSplice = function (
 
 slug: filter
 topicSlug: array-methods
-title: Array.filter
+title: Implement Array.prototype.filter
+description: Builds a new array containing only items that pass the callback predicate.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.filter
 sourceSnippet: filter
@@ -265,7 +274,8 @@ Array.prototype.myFilter = function (callback) {
 
 slug: flat
 topicSlug: array-methods
-title: Array.flat
+title: Implement Array.prototype.flat
+description: Recursively flattens nested arrays up to a requested depth.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.flat
 sourceSnippet: flat
@@ -294,7 +304,8 @@ Array.prototype.customFlat = function (depth = 1) {
 
 slug: flatmap
 topicSlug: array-methods
-title: Array.flatMap
+title: Implement Array.prototype.flatMap
+description: Maps each item and flattens array results by one level.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.flatMap
 sourceSnippet: flatMap
@@ -322,7 +333,8 @@ Array.prototype.customFlatMap = function (callback, thisArg) {
 
 slug: join
 topicSlug: array-methods
-title: Array.join
+title: Implement Array.prototype.join
+description: Concatenates array values into a string with a configurable separator.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.join
 sourceSnippet: join
@@ -348,7 +360,8 @@ Array.prototype.customJoin = function (separator = ",") {
 
 slug: map
 topicSlug: array-methods
-title: Array.map
+title: Implement Array.prototype.map
+description: Transforms every array item with a callback and returns the mapped values.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.map
 sourceSnippet: map
@@ -373,7 +386,8 @@ Array.prototype.customMap = function (callbackFn) {
 
 slug: reduce
 topicSlug: array-methods
-title: Array.reduce
+title: Implement Array.prototype.reduce
+description: Accumulates array values with an optional initial accumulator.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.reduce
 sourceSnippet: reduce
@@ -397,7 +411,8 @@ Array.prototype.customReduce = function (callback, initialValue) {
 
 slug: slice
 topicSlug: array-methods
-title: Array.slice
+title: Implement Array.prototype.slice
+description: Copies a normalized index range into a new array without mutating the source.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.slice
 sourceSnippet: slice
@@ -429,7 +444,8 @@ Array.prototype.customSlice = function (start = 0, end) {
 
 slug: find
 topicSlug: array-methods
-title: Array.find
+title: Implement Array.prototype.find
+description: Returns the first item that satisfies a predicate callback.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.find
 sourceSnippet: find
@@ -449,7 +465,8 @@ Array.prototype.customFind = function (callback) {
 
 slug: findlast
 topicSlug: array-methods
-title: Array.findLast
+title: Implement Array.prototype.findLast
+description: Scans from the end to return the last item that satisfies a predicate callback.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.findLast
 sourceSnippet: findLast
@@ -469,7 +486,8 @@ Array.prototype.customFindLast = function (callback) {
 
 slug: at
 topicSlug: array-methods
-title: Array.at
+title: Implement Array.prototype.at
+description: Reads an array value by index, including negative offsets from the end.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.at
 sourceSnippet: at
@@ -489,7 +507,8 @@ Array.prototype.customAt = function (index) {
 
 slug: every
 topicSlug: array-methods
-title: Array.every
+title: Implement Array.prototype.every
+description: Checks whether all array items satisfy a predicate callback.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.every
 sourceSnippet: every
@@ -511,7 +530,8 @@ Array.prototype.customEvery = function (callback) {
 
 slug: includes
 topicSlug: array-methods
-title: Array.includes
+title: Implement Array.prototype.includes
+description: Searches an array using SameValueZero equality, including NaN matching.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.includes
 sourceSnippet: includes
@@ -550,7 +570,8 @@ Array.prototype.customIncludes = function (searchElement, fromIndex = 0) {
 
 slug: some
 topicSlug: array-methods
-title: Array.some
+title: Implement Array.prototype.some
+description: Checks whether at least one array item satisfies a predicate callback.
 sourceFile: apps/web/content/array-methods.mdx
 sourceSection: Array.some
 sourceSnippet: some
@@ -572,7 +593,8 @@ Array.prototype.customSome = function (callback) {
 
 slug: composition
 topicSlug: composition-vs-inheritance
-title: Composition
+title: Function Composition Pipeline
+description: Composes small functions into a pipeline that builds and displays a date label.
 sourceFile: apps/web/content/composition-vs-inheritance.mdx
 sourceSection: Composition
 sourceSnippet: composition
@@ -583,11 +605,6 @@ const dateFunc = () => new Date();
 const textFunc = (date) => date.toDateString();
 const labelFunc = (text) => `Today ${text}`;
 const showLabelFunc = (label) => console.log(label);
-
-const date = dateFunc();
-const text = textFunc(date);
-const label = labelFunc(text);
-showLabelFunc(label); // Today Sat Sep 28 2024
 
 function pipe(...steps) {
   return function runSteps() {
@@ -601,57 +618,15 @@ function pipe(...steps) {
 }
 
 const showDateLabel = pipe(dateFunc, textFunc, labelFunc, showLabelFunc);
-showDateLabel(); // Today Sat Sep 28 2024
-```
-
-## 23. inheritance
-
-slug: inheritance
-topicSlug: composition-vs-inheritance
-title: Inheritance
-sourceFile: apps/web/content/composition-vs-inheritance.mdx
-sourceSection: Inheritance
-sourceSnippet: inheritance
-language: typescript
-
-```typescript
-// Base class
-class Vehicle {
-  private readonly _make: string;
-  private readonly _model: string;
-  private readonly _year: number;
-
-  constructor(make: string, model: string, year: number) {
-    this._make = make;
-    this._model = model;
-    this._year = year;
-  }
-
-  displayInfo(): string {
-    return `${this._year} ${this._make} ${this._model}`;
-  }
-}
-
-// Derived class
-class Car extends Vehicle {
-  private readonly _doors: number;
-
-  constructor(make: string, model: string, year: number, doors: number) {
-    super(make, model, year); // Call the constructor of the base class
-    this._doors = doors;
-  }
-
-  displayInfo(): string {
-    return `${super.displayInfo()} - ${this._doors} doors`;
-  }
-}
+showDateLabel();
 ```
 
 ## 24. this
 
 slug: this
 topicSlug: core-concepts
-title: Understanding this
+title: thisArg in Array Callbacks
+description: Compares callback invocation with and without an explicit thisArg binding.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Understanding this
 sourceSnippet: this
@@ -695,13 +670,16 @@ const users = [{ age: 16 }, { age: 20 }, { age: 23 }, { age: 30 }];
 const soldiers1 = users.customFilterNoThis(army.canJoin);
 const soldiers2 = users.customFilterNoThis((user) => army.canJoin(user));
 const soldiers3 = users.customFilter(army.canJoin, army);
+
+console.log(soldiers1, soldiers2, soldiers3)
 ```
 
 ## 25. object-method-this
 
 slug: object-method-this
 topicSlug: core-concepts
-title: Object Methods and `this`
+title: Broken Object Method Receiver
+description: Shows why closing over an object variable can break after reassignment.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Object Methods and `this`
 sourceSnippet: object method this
@@ -725,7 +703,8 @@ admin.sayHi();
 
 slug: object-method-this-fix
 topicSlug: core-concepts
-title: Object Methods and `this`
+title: Object Method Receiver with this
+description: Uses this inside an object method so the method works after reassignment.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Object Methods and `this`
 sourceSnippet: object method this fix
@@ -749,7 +728,8 @@ admin.sayHi();
 
 slug: object-literal-this
 topicSlug: core-concepts
-title: Object Literals and `this`
+title: Object Literals and this Binding
+description: Contrasts storing this during object creation with returning this from a method.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Object Literals and `this`
 sourceSnippet: object literal this
@@ -783,7 +763,8 @@ console.log(user2.ref().name);
 
 slug: method-chaining
 topicSlug: core-concepts
-title: Method Chaining with `this`
+title: Method Chaining with this
+description: Returns this from object methods to support chained state updates.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Method Chaining with `this`
 sourceSnippet: method chaining
@@ -813,7 +794,8 @@ ladder.up().up().down().showStep().down().showStep();
 
 slug: for-vs-while
 topicSlug: core-concepts
-title: Loop Behavior: Pre/Post Increment
+title: Pre-Increment vs Post-Increment in Loops
+description: Compares pre-increment and post-increment behavior in loops.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Loop Behavior: Pre/Post Increment
 sourceSnippet: for vs while
@@ -836,6 +818,7 @@ for (let i = 0; i < 3; ++i) console.log(i);
 slug: object-to-map
 topicSlug: core-concepts
 title: Object and Map Conversion
+description: Converts between objects, Map entries, arrays of entries, and Map instances.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Object and Map Conversion
 sourceSnippet: Object to Map
@@ -869,7 +852,8 @@ console.log(mapFromObject.get("meat"));
 
 slug: bind
 topicSlug: core-concepts
-title: bind
+title: Lost Method Receiver in setTimeout
+description: Demonstrates how passing a method loses its receiver in an asynchronous callback.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: bind
 sourceSnippet: bind
@@ -883,15 +867,16 @@ const user = {
   },
 };
 
-user.sayHi(); // Hello, John!
-setTimeout(user.sayHi, 0); // Hello, undefined!
+user.sayHi();
+setTimeout(user.sayHi, 0);
 ```
 
 ## 32. call-and-arrows
 
 slug: call-and-arrows
 topicSlug: core-concepts
-title: `call` with Regular and Arrow Functions
+title: call with Regular and Arrow Functions
+description: Compares how call affects regular methods versus arrow functions.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: `call` with Regular and Arrow Functions
 sourceSnippet: call and arrows
@@ -913,11 +898,12 @@ const anotherObj = {
 };
 ```
 
-## 34. object-create
+## 33. object-create
 
 slug: object-create
 topicSlug: core-concepts
-title: Inheriting Methods with `Object.create`
+title: Prototype Inheritance with Object.create
+description: Creates an object with a prototype method and reads instance-specific properties.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Inheriting Methods with `Object.create`
 sourceSnippet: Object.create
@@ -935,11 +921,12 @@ myCar.model = "BMW";
 myCar.year = 2010;
 ```
 
-## 35. async-generator
+## 34. async-generator
 
 slug: async-generator
 topicSlug: core-concepts
-title: Async Generators
+title: Async Generator Sequence
+description: Yields asynchronous values over time and consumes them with for await.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Async Generators
 sourceSnippet: async generator
@@ -961,11 +948,12 @@ const timer = async (callback) => {
 };
 ```
 
-## 38. function-stack
+## 35. function-stack
 
 slug: function-stack
 topicSlug: core-concepts
-title: Function Stack
+title: Recursive Call Stack Order
+description: Shows recursive call-stack order by logging before and after nested calls.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Function Stack
 sourceSnippet: function stack
@@ -982,11 +970,12 @@ function foo(i) {
 }
 ```
 
-## 43. handling-errors
+## 36. handling-errors-sync
 
-slug: handling-errors
+slug: handling-errors-sync
 topicSlug: core-concepts
-title: Synchronous vs Asynchronous Errors in Promises
+title: Synchronous Errors in Promise Executors
+description: Catches a synchronous throw inside the Promise executor with catch.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Synchronous vs Asynchronous Errors in Promises
 sourceSnippet: handling errors
@@ -998,11 +987,12 @@ new Promise(function (resolve, reject) {
 }).catch((e) => console.error(e.message));
 ```
 
-## 43. handling-errors2
+## 37. handling-errors-async
 
-slug: handling-errors
+slug: handling-errors-async
 topicSlug: core-concepts
-title: Synchronous vs Asynchronous Errors in Promises
+title: Asynchronous Errors Outside Promise Chains
+description: Shows that an error thrown inside a later timer is not caught by the original promise chain.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Synchronous vs Asynchronous Errors in Promises
 sourceSnippet: handling errors
@@ -1016,11 +1006,12 @@ new Promise(function (resolve, reject) {
 }).catch(console.error);
 ```
 
-## 45. lexical-environment-scope
+## 38. lexical-environment-scope-fixed
 
-slug: lexical-environment-scope
+slug: lexical-environment-scope-fixed
 topicSlug: core-concepts
-title: Shooters: Closures & Lexical Scope
+title: Closure Capture in Loops
+description: Captures a loop variable per iteration so each closure returns the expected value.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Shooters: Closures & Lexical Scope
 sourceSnippet: lexical environment(scope)
@@ -1044,11 +1035,12 @@ function makeArmy() {
 }
 ```
 
-## 45. lexical-environment-2
+## 39. lexical-environment-scope-broken
 
-slug: lexical-environment-scope
+slug: lexical-environment-scope-broken
 topicSlug: core-concepts
-title: Shooters: Closures & Lexical Scope
+title: Broken Closure Scope in Loops
+description: Shows a closure bug caused by referencing a variable outside its lexical scope.
 sourceFile: apps/web/content/core-concepts.mdx
 sourceSection: Shooters: Closures & Lexical Scope
 sourceSnippet: lexical environment(scope)
@@ -1071,11 +1063,12 @@ function makeArmy() {
 }
 ```
 
-## 48. output-every-second
+## 40. output-every-second
 
 slug: output-every-second
 topicSlug: debounce-throttle
-title: Output Every Second
+title: Interval-Based Number Printer
+description: Prints a range of numbers once per second using setInterval.
 sourceFile: apps/web/content/debounce-throttle.mdx
 sourceSection: Output Every Second
 sourceSnippet: -
@@ -1101,11 +1094,12 @@ function printNumbers(from, to) {
 printNumbers(5, 10);
 ```
 
-## 49. output-every-second-2
+## 41. output-every-second-2
 
 slug: output-every-second-2
 topicSlug: debounce-throttle
-title: Output Every Second
+title: Timeout-Based Number Printer
+description: Prints a range of numbers once per second using recursive setTimeout.
 sourceFile: apps/web/content/debounce-throttle.mdx
 sourceSection: Output Every Second
 sourceSnippet: -
@@ -1129,11 +1123,12 @@ function printNumbers(from, to) {
 printNumbers(5, 10);
 ```
 
-## 50. debounce
+## 42. debounce
 
 slug: debounce
 topicSlug: debounce-throttle
-title: Throttle and Debounce Decorators
+title: Implement debounce
+description: Delays function execution until calls stop for the configured interval.
 sourceFile: apps/web/content/debounce-throttle.mdx
 sourceSection: Throttle and Debounce Decorators
 sourceSnippet: debounce
@@ -1157,11 +1152,12 @@ const startTime = Date.now();
 const f = debounce(timeLoggedConsoleLog, 500);
 ```
 
-## 51. throttle
+## 43. throttle
 
 slug: throttle
 topicSlug: debounce-throttle
-title: Throttle and Debounce Decorators
+title: Implement throttle
+description: Allows one function call per interval while ignoring extra calls.
 sourceFile: apps/web/content/debounce-throttle.mdx
 sourceSection: Throttle and Debounce Decorators
 sourceSnippet: throttle
@@ -1187,11 +1183,12 @@ const startTime = Date.now();
 const f = throttle(timeLoggedConsoleLog, 500);
 ```
 
-## 52. dictionary-of-nested
+## 44. dictionary-of-nested
 
 slug: dictionary-of-nested
 topicSlug: dictionary-of-nested
-title: Plain JavaScript: Nested Loop Approach
+title: Nested Dictionary with Loops
+description: Builds nested lookup dictionaries from a fixed three-level data structure.
 sourceFile: apps/web/content/dictionary-of-nested.mdx
 sourceSection: Plain JavaScript: Nested Loop Approach
 sourceSnippet: dictionary of nested
@@ -1270,11 +1267,12 @@ function createNestedDictionary(data) {
 const nestedDictionary = createNestedDictionary(data);
 ```
 
-## 53. dictionary-of-nested-2
+## 45. dictionary-of-nested-2
 
 slug: dictionary-of-nested-2
 topicSlug: dictionary-of-nested
-title: Recursive Helper: `mapToDictionary()`
+title: Nested Dictionary with Recursion
+description: Builds nested lookup dictionaries recursively from configurable child keys.
 sourceFile: apps/web/content/dictionary-of-nested.mdx
 sourceSection: Recursive Helper: `mapToDictionary()`
 sourceSnippet: dictionary of nested
@@ -1345,11 +1343,12 @@ function mapToDictionary(data, keys) {
 const nestedDictionary = mapToDictionary(data, ["subcategories", "items"]);
 ```
 
-## 55. promise-all-and-the-event-loop
+## 46. promise-all-and-the-event-loop
 
 slug: promise-all-and-the-event-loop
 topicSlug: event-loop
-title: Promise.all and the Event Loop
+title: Promise.all and Event Loop Timing
+description: Combines resolved and delayed promises to inspect Promise.all scheduling.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Promise.all and the Event Loop
 sourceSnippet: -
@@ -1394,11 +1393,12 @@ Promise.all([promise4, promise5]).then((values) => {
 });
 ```
 
-## 56. promise-chaining-and-microtask-queue-order
+## 47. promise-chaining-and-microtask-queue-order
 
 slug: promise-chaining-and-microtask-queue-order
 topicSlug: event-loop
-title: Promise Chaining and Microtask Queue Order
+title: Promise Chain Microtask Order
+description: Shows the order of chained promise handlers in the microtask queue.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Promise Chaining and Microtask Queue Order
 sourceSnippet: -
@@ -1412,11 +1412,12 @@ promise1.then(() => console.log(1)).then(() => console.log(2));
 promise2.then(() => console.log(3)).then(() => console.log(4));
 ```
 
-## 57. let-in-loops-with-settimeout
+## 48. let-in-loops-with-settimeout
 
 slug: let-in-loops-with-settimeout
 topicSlug: event-loop
-title: `let` in Loops with `setTimeout`
+title: let in Loops with setTimeout
+description: Uses block-scoped loop variables so delayed callbacks log distinct values.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: `let` in Loops with `setTimeout`
 sourceSnippet: -
@@ -1430,11 +1431,12 @@ for (let i = 0; i < 4; i++) {
 }
 ```
 
-## 58. promise-lifecycle-and-event-loop-timing
+## 49. promise-lifecycle-and-event-loop-timing
 
 slug: promise-lifecycle-and-event-loop-timing
 topicSlug: event-loop
-title: Promise Lifecycle and Event Loop Timing
+title: Promise Lifecycle Timing
+description: Traces promise construction, resolution, and handler execution order.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Promise Lifecycle and Event Loop Timing
 sourceSnippet: -
@@ -1456,11 +1458,12 @@ setTimeout(() => {
 console.log("Promise (pending)", promise);
 ```
 
-## 59. async-function-and-timer-execution-order
+## 50. async-function-and-timer-execution-order
 
 slug: async-function-and-timer-execution-order
 topicSlug: event-loop
-title: Async Function and Timer Execution Order
+title: Async Function and Timer Ordering
+description: Compares async function continuation timing with timers and script execution.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Async Function and Timer Execution Order
 sourceSnippet: -
@@ -1484,11 +1487,12 @@ await run();
 console.log("script");
 ```
 
-## 60. blocking-the-event-loop-with-a-while-loop
+## 51. blocking-the-event-loop-with-a-while-loop
 
 slug: blocking-the-event-loop-with-a-while-loop
 topicSlug: event-loop
 title: Blocking the Event Loop with a While Loop
+description: Blocks the main thread to show how synchronous work delays timers.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Blocking the Event Loop with a While Loop
 sourceSnippet: -
@@ -1510,11 +1514,12 @@ while (true) {
 }
 ```
 
-## 61. script-microtasks-and-macrotasks-in-execution-order
+## 52. script-microtasks-and-macrotasks-in-execution-order
 
 slug: script-microtasks-and-macrotasks-in-execution-order
 topicSlug: event-loop
-title: Script, Microtasks, and Macrotasks in Execution Order
+title: Script, Microtask, and Macrotask Order
+description: Interleaves script logs, promise jobs, queued microtasks, and timers.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Script, Microtasks, and Macrotasks in Execution Order
 sourceSnippet: -
@@ -1551,11 +1556,12 @@ queueMicrotask(() => {
 console.log("After Promise constructor");
 ```
 
-## 62. blocking-inside-async-callbacks
+## 53. blocking-inside-async-callbacks
 
 slug: blocking-inside-async-callbacks
 topicSlug: event-loop
-title: Blocking Inside Async Callbacks
+title: Blocking Work Inside Async Callbacks
+description: Shows that synchronous work inside an async callback still blocks later tasks.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Blocking Inside Async Callbacks
 sourceSnippet: -
@@ -1587,11 +1593,12 @@ function simulateNonBlocking() {
 simulateNonBlocking();
 ```
 
-## 63. nested-microtasks-in-macrotasks
+## 54. nested-microtasks-in-macrotasks
 
 slug: nested-microtasks-in-macrotasks
 topicSlug: event-loop
-title: Nested Microtasks in Macrotasks
+title: Nested Microtasks Inside Macrotasks
+description: Demonstrates how microtasks queued inside a timer run before the next timer.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: Nested Microtasks in Macrotasks
 sourceSnippet: -
@@ -1622,11 +1629,12 @@ Promise.resolve()
 console.log("End");
 ```
 
-## 64. requestanimationframe-and-task-ordering
+## 55. requestanimationframe-and-task-ordering
 
 slug: requestanimationframe-and-task-ordering
 topicSlug: event-loop
 title: requestAnimationFrame and Task Ordering
+description: Compares requestAnimationFrame, promise microtasks, timers, and script logs.
 sourceFile: apps/web/content/event-loop.mdx
 sourceSection: requestAnimationFrame and Task Ordering
 sourceSnippet: -
@@ -1658,11 +1666,12 @@ requestAnimationFrame(function () {
 console.log("6");
 ```
 
-## 65. has-path-depth
+## 56. has-path-dfs
 
-slug: has-path
+slug: has-path-dfs
 topicSlug: graph-traversal
-title: Has Path in Directed Graphs (DFS & BFS)
+title: Directed Graph Path Search with DFS
+description: Searches a directed graph recursively to determine whether a destination is reachable.
 sourceFile: apps/web/content/graph-traversal.mdx
 sourceSection: Has Path in Directed Graphs (DFS & BFS)
 sourceSnippet: has path
@@ -1685,11 +1694,12 @@ const hasPath = (graph: Graph, src: string, dst: string): boolean => {
 };
 ```
 
-## 65. has-path-bredth
+## 57. has-path-bfs
 
-slug: has-path
+slug: has-path-bfs
 topicSlug: graph-traversal
-title: Has Path in Directed Graphs (DFS & BFS)
+title: Directed Graph Path Search with BFS
+description: Searches a directed graph with a queue to determine whether a destination is reachable.
 sourceFile: apps/web/content/graph-traversal.mdx
 sourceSection: Has Path in Directed Graphs (DFS & BFS)
 sourceSnippet: has path
@@ -1720,11 +1730,12 @@ const hasPath = (
 };
 ```
 
-## 66. undirected-path
+## 58. undirected-path
 
 slug: undirected-path
 topicSlug: graph-traversal
-title: Path Existence in Undirected Graphs (DFS with Visited Set)
+title: Undirected Graph Path Search
+description: Builds an adjacency list and uses a visited set to search an undirected graph.
 sourceFile: apps/web/content/graph-traversal.mdx
 sourceSection: Path Existence in Undirected Graphs (DFS with Visited Set)
 sourceSnippet: undirected path
@@ -1773,11 +1784,12 @@ const hasPath = (
 };
 ```
 
-## 70. keyby
+## 59. keyby
 
 slug: keyby
 topicSlug: lodash
-title: keyBy
+title: Implement keyBy
+description: Indexes collection items by a property name or iteratee result.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: keyBy
 sourceSnippet: keyBy
@@ -1797,11 +1809,12 @@ function keyBy(collection, iteratee) {
 }
 ```
 
-## 71. omit
+## 60. omit
 
 slug: omit
 topicSlug: lodash
-title: omit
+title: Implement omit
+description: Returns a shallow object copy with one or more keys removed.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: omit
 sourceSnippet: omit
@@ -1824,11 +1837,12 @@ function omit(obj, keys) {
 }
 ```
 
-## 72. orderby
+## 61. orderby
 
 slug: orderby
 topicSlug: lodash
-title: orderBy
+title: Implement orderBy
+description: Sorts a copied array by a property in ascending or descending order.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: orderBy
 sourceSnippet: orderBy
@@ -1847,11 +1861,12 @@ function orderBy(array, property, order = "asc") {
 }
 ```
 
-## 73. pick
+## 62. pick
 
 slug: pick
 topicSlug: lodash
-title: pick
+title: Implement pick
+description: Returns a new object containing only selected existing keys.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: pick
 sourceSnippet: pick
@@ -1872,11 +1887,12 @@ function pick(obj, keys) {
 }
 ```
 
-## 74. curry
+## 63. curry
 
 slug: curry
 topicSlug: lodash
-title: curry
+title: Implement curry
+description: Transforms a fixed-arity function into a chain of partially applied calls.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: curry
 sourceSnippet: curry
@@ -1894,11 +1910,12 @@ function curry(fn) {
 }
 ```
 
-## 75. difference
+## 64. difference
 
 slug: difference
 topicSlug: lodash
-title: difference
+title: Implement difference
+description: Computes values that appear only on the left or only on the right array.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: difference
 sourceSnippet: difference
@@ -1924,11 +1941,12 @@ const findDifference = function (arr1, arr2) {
 };
 ```
 
-## 76. differenceby
+## 65. differenceby
 
 slug: differenceby
 topicSlug: lodash
-title: differenceBy
+title: Implement differenceBy
+description: Computes object differences by comparing a selected property value.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: differenceBy
 sourceSnippet: differenceBy
@@ -1958,11 +1976,12 @@ const differenceBy = (arr1, arr2, key) => {
 };
 ```
 
-## 77. intersection
+## 66. intersection
 
 slug: intersection
 topicSlug: lodash
-title: intersection
+title: Implement intersection
+description: Returns values present in both arrays using Set membership.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: intersection
 sourceSnippet: intersection
@@ -1984,11 +2003,12 @@ const intersection = function (nums1, nums2) {
 };
 ```
 
-## 78. union
+## 67. union
 
 slug: union
 topicSlug: lodash
-title: union
+title: Implement union
+description: Combines arrays and removes duplicates with Set.
 sourceFile: apps/web/content/lodash.mdx
 sourceSection: union
 sourceSnippet: union
@@ -2000,11 +2020,12 @@ const union = (...arrays) => {
 };
 ```
 
-## 81. object-groupby
+## 68. object-groupby
 
 slug: object-groupby
 topicSlug: map-and-set
-title: Object.groupBy
+title: Implement Object.groupBy
+description: Groups array items into an object keyed by a callback result.
 sourceFile: apps/web/content/map-and-set.mdx
 sourceSection: Object.groupBy
 sourceSnippet: Object.groupBy
@@ -2022,11 +2043,12 @@ const groupBy = (arr, callback) => {
 };
 ```
 
-## 82. map-groupby
+## 69. map-groupby
 
 slug: map-groupby
 topicSlug: map-and-set
-title: Map.groupBy
+title: Implement Map.groupBy
+description: Groups array items into a Map keyed by a callback result.
 sourceFile: apps/web/content/map-and-set.mdx
 sourceSection: Map.groupBy
 sourceSnippet: Map.groupBy
@@ -2048,11 +2070,12 @@ function groupBy(array, callback) {
 }
 ```
 
-## 83. promise-all
+## 70. promise-all
 
 slug: promise-all
 topicSlug: promises
-title: Promise.all
+title: Implement Promise.all
+description: Implements Promise.all by preserving result order and rejecting on the first failure.
 sourceFile: apps/web/content/promises.mdx
 sourceSection: Promise.all
 sourceSnippet: Promise.all
@@ -2102,11 +2125,12 @@ myPromiseAll([promise1, promise2, promise3]).then((values) => {
 });
 ```
 
-## 84. promise-allsettled
+## 71. promise-allsettled
 
 slug: promise-allsettled
 topicSlug: promises
-title: Promise.allSettled
+title: Implement Promise.allSettled
+description: Implements Promise.allSettled by converting each input into a status object.
 sourceFile: apps/web/content/promises.mdx
 sourceSection: Promise.allSettled
 sourceSnippet: Promise.allSettled
@@ -2135,11 +2159,12 @@ Promise.customAllSettled([
   .catch(console.error);
 ```
 
-## 85. promise-any
+## 72. promise-any
 
 slug: promise-any
 topicSlug: promises
-title: Promise.any
+title: Implement Promise.any
+description: Implements Promise.any by resolving on the first fulfillment or rejecting with AggregateError.
 sourceFile: apps/web/content/promises.mdx
 sourceSection: Promise.any
 sourceSnippet: Promise.any
@@ -2178,11 +2203,12 @@ const promises = [promise1, promise2, promise3];
 Promise.customAny(promises).then((value) => console.log(value));
 ```
 
-## 86. promise-race
+## 73. promise-race
 
 slug: promise-race
 topicSlug: promises
-title: Promise.race
+title: Implement Promise.race
+description: Implements Promise.race by settling when the first input promise settles.
 sourceFile: apps/web/content/promises.mdx
 sourceSection: Promise.race
 sourceSnippet: Promise.race
@@ -2206,11 +2232,12 @@ Promise.customRace([
 ]).then(console.log);
 ```
 
-## 87. clsx
+## 74. clsx
 
 slug: clsx
 topicSlug: random
-title: clsx
+title: Implement clsx
+description: Builds a className string from strings, arrays, and conditional object keys.
 sourceFile: apps/web/content/random.mdx
 sourceSection: clsx
 sourceSnippet: clsx
@@ -2241,11 +2268,12 @@ function clsx(...args) {
 }
 ```
 
-## 90. filtermap
+## 75. filtermap
 
 slug: filtermap
 topicSlug: random
-title: filterMap
+title: Implement filterMap
+description: Filters items and maps the kept values in a single reduce pass.
 sourceFile: apps/web/content/random.mdx
 sourceSection: filterMap
 sourceSnippet: filterMap
@@ -2272,13 +2300,16 @@ const activeNames = filterMap(
   (person) => person.active,
   (person) => person.name,
 );
+
+console.log(activeNames)
 ```
 
-## 91. innerjoin
+## 76. innerjoin
 
 slug: innerjoin
 topicSlug: random
-title: innerJoin
+title: Implement innerJoin
+description: Filters records by matching each record against a list of ids with a predicate.
 sourceFile: apps/web/content/random.mdx
 sourceSection: innerJoin
 sourceSnippet: innerJoin
@@ -2304,11 +2335,12 @@ const result = innerJoin(
 console.log(result);
 ```
 
-## 92. reducer
+## 77. reducer
 
 slug: reducer
 topicSlug: random
 title: Reducer Pattern with Actions
+description: Applies action objects through a reducer to produce a final task state.
 sourceFile: apps/web/content/random.mdx
 sourceSection: Reducer Pattern with Actions
 sourceSnippet: reducer
@@ -2358,11 +2390,12 @@ const finalState = actions.reduce(tasksReducer, initialState);
 console.log(finalState);
 ```
 
-## 95. topological-sort
+## 78. topological-sort
 
 slug: topological-sort
 topicSlug: random
-title: Topological Sort
+title: Topological Sort by Dependencies
+description: Orders cards by dependencies and detects unresolved dependency cycles.
 sourceFile: apps/web/content/random.mdx
 sourceSection: Topological Sort
 sourceSnippet: topological sort
