@@ -38,6 +38,7 @@ const toChallengeWithAnswer = (
     topicSlug: challenge.topicSlug,
     title: challenge.title,
     prompt: challenge.prompt,
+    code: challenge.code,
     order: challenge.order,
     createdAt: challenge.createdAt.toISOString(),
     updatedAt: challenge.updatedAt.toISOString(),
@@ -60,7 +61,8 @@ export const challengesRepository = {
         topicSlug: input.topicSlug,
         title: input.title,
         prompt: input.prompt,
-        order: input.order,
+        code: input.code,
+        ...(input.order === undefined ? {} : { order: input.order }),
         options: {
           create: input.options.map((option) => ({
             label: option.label,
@@ -237,6 +239,7 @@ export const challengesRepository = {
           topicSlug: input.topicSlug,
           title: input.title,
           prompt: input.prompt,
+          code: input.code,
           order: input.order,
           ...(input.options
             ? {

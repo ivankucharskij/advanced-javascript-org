@@ -78,6 +78,7 @@ Core files:
 Feature folders:
 
 - `src/features/health`
+- `src/features/admin`
 - `src/features/auth`
 - `src/features/guest-sessions`
 - `src/features/challenge-snippets` reusable code snippet CRUD
@@ -93,6 +94,7 @@ Feature modules use resource-prefixed files:
 
 Shared API helpers:
 
+- `src/middleware/admin.ts`
 - `src/middleware/auth.ts`
 - `src/shared/http.ts` - HTTP statuses, typed results/bodies, and OpenAPI JSON content helper
 - `src/shared/constants.ts` - shared API constants such as auth cookie settings
@@ -121,6 +123,13 @@ Auth is Google-only:
 - `GET /api/auth/google/callback` validates the Google profile, upserts the user, links `OAuthAccount`, sets the `accessToken` cookie, and returns the shared `googleCallbackResponseSchema` response.
 - Local Google token exchange can fail if Node cannot reach `https://oauth2.googleapis.com/token`; this is reported as `502`.
 
+Admin routes use a separate admin bearer token for Swagger-friendly content management:
+
+- `POST /api/admin/session` accepts `{ "code": "<ADMIN_CODE>" }`.
+- The response includes an admin `accessToken` that expires after 12 hours.
+- In Swagger, authorize admin routes with the returned token under `adminBearerAuth`.
+- Admin tokens are separate from Google user tokens and are only valid for admin-protected routes.
+
 ## Challenges / Flashcards
 
 The product UX is flashcards, but backend/schema naming intentionally uses `Challenge*`.
@@ -144,6 +153,8 @@ POST   /api/challenges
 PATCH  /api/challenges/:id
 DELETE /api/challenges/:id
 ```
+
+These CRUD routes require `adminBearerAuth`.
 
 Progress is stored in `ChallengeProgress`, not attempt history:
 
@@ -175,6 +186,7 @@ apps/api/.env.example
 Main variables:
 
 - `PORT`
+- `ADMIN_CODE`
 - `AUTH_SECRET`
 - `DATABASE_URL`
 - `WEB_ORIGIN`

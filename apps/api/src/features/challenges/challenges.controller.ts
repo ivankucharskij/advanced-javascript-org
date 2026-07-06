@@ -5,16 +5,19 @@ import {
   singleChallengeResponseSchema,
 } from "@repo/shared-types";
 
-import { authMiddleware, type AuthVariables } from "../../middleware/auth.js";
+import {
+  adminMiddleware,
+  type AdminVariables,
+} from "../../middleware/admin.js";
 import { challengesOpenApi } from "./challenges.openapi.js";
 import { challengesService } from "./challenges.service.js";
 
 export const challengesRouter = new OpenAPIHono<{
-  Variables: AuthVariables;
+  Variables: AdminVariables;
 }>();
 
-challengesRouter.use("/challenges/*", authMiddleware);
-challengesRouter.use("/challenges", authMiddleware);
+challengesRouter.use("/challenges/*", adminMiddleware);
+challengesRouter.use("/challenges", adminMiddleware);
 
 challengesRouter.openapi(challengesOpenApi.list, async (c) => {
   const result = await challengesService.list(c.req.valid("query"));

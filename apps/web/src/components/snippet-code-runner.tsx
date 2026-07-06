@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-import { HomeCodeRunner } from "@/components/home-code-runner";
+import { CodeRunner } from "@/components/code-runner";
 
 const snippetsRoot = path.join(process.cwd(), "src", "snippets");
 
@@ -30,11 +30,12 @@ export async function SnippetCodeRunner({
   const code = await readFile(resolveSnippetPath(snippetFile), "utf8");
 
   return (
-    <HomeCodeRunner
+    <CodeRunner
       code={code}
       inputHeight={inputHeight}
       outputHeight={outputHeight}
       className={className}
+      title="Try a snippet"
     />
   );
 }

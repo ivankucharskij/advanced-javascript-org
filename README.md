@@ -39,6 +39,7 @@ Expected local `apps/api/.env` when running the API directly on the host:
 ```env
 PORT=8080
 AUTH_SECRET=local-dev-auth-secret-change-me-32-characters
+ADMIN_CODE=<local admin code for Swagger admin sessions>
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
 WEB_ORIGIN=http://localhost:3000
 GOOGLE_CLIENT_ID=<google oauth client id>
@@ -206,6 +207,7 @@ Required runtime env:
 
 ```text
 AUTH_SECRET=<32+ character secret>
+ADMIN_CODE=<admin code for Swagger admin sessions>
 DATABASE_URL=<Neon PostgreSQL URL>
 WEB_ORIGIN=<public app HTTPS origin>
 GOOGLE_CLIENT_ID=<google oauth client id>
@@ -255,6 +257,7 @@ yc serverless container revision deploy \
   --concurrency 8 \
   --environment API_PORT=8081 \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
+  --environment ADMIN_CODE="<ADMIN_CODE>" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
   --environment DATABASE_URL="<DATABASE_URL>" \
   --environment WEB_ORIGIN="<WEB_ORIGIN>" \
@@ -311,6 +314,7 @@ YC_SERVICE_ACCOUNT_KEY_JSON
 YC_CLOUD_ID
 YC_FOLDER_ID
 YC_SERVICE_ACCOUNT_ID
+ADMIN_CODE
 AUTH_SECRET
 DATABASE_URL
 WEB_ORIGIN

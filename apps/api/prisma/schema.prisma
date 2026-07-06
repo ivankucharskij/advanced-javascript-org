@@ -51,7 +51,7 @@ model Challenge {
   title     String
   prompt    String
   code      String?
-  order     Int
+  order     Int      @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

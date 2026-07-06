@@ -4,6 +4,7 @@ const emptyStringToUndefined = (value: unknown) =>
   value === "" ? undefined : value;
 
 const envSchema = z.object({
+  ADMIN_CODE: z.string().min(1, "ADMIN_CODE is required"),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   DATABASE_URL: z.url().min(1, "DATABASE_URL is required"),
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),

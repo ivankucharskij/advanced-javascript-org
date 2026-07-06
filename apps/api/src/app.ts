@@ -33,6 +33,11 @@ export const createApp = (runtimeEnv: Env = getEnv()) => {
     scheme: "bearer",
     bearerFormat: "Bearer",
   });
+  app.openAPIRegistry.registerComponent("securitySchemes", "adminBearerAuth", {
+    type: "http",
+    scheme: "bearer",
+    bearerFormat: "Bearer",
+  });
 
   app.doc("/openapi.json", openApiDocumentConfig);
   app.doc("/doc", openApiDocumentConfig);

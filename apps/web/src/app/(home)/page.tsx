@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <HomeLayout {...baseOptions()} links={homeLinks}>
-      <div className="grid grid-cols-1 gap-4 md:gap-10 px-6 mx-auto w-full max-w-350 lg:grid-cols-2 mt-2 md:mt-4">
+      <div className="grid content-start grid-cols-1 gap-4 md:gap-10 px-6 mx-auto w-full max-w-350 lg:grid-cols-2 mt-2 md:mt-4">
         <h1 className="text-4xl my-4 md:my-8 leading-tight font-medium xl:text-5xl col-span-full">
           Advanced JavaScript
           <br className="md:hidden" /> explained through
@@ -53,14 +53,14 @@ export default function HomePage() {
           JavaScript topics that come up most often in interviews.
         </p>
         <SnippetCodeRunner
-          snippetFile="event-loop-microtasks.js"
-          inputHeight={140}
-          outputHeight={40}
-        />
-        <SnippetCodeRunner
           snippetFile="event-loop.js"
           inputHeight={500}
-          outputHeight={40}
+          outputHeight={48}
+        />
+        <SnippetCodeRunner
+          snippetFile="event-loop-microtasks.js"
+          inputHeight={140}
+          outputHeight={48}
         />
         <section className="col-span-full grid gap-6 md:grid-cols-3">
           <div>
@@ -95,9 +95,24 @@ export default function HomePage() {
             <p className="mt-3 text-base leading-7 text-fd-muted-foreground">
               Most JavaScript mistakes come from small assumptions: when a
               callback runs, whether a value was copied or shared, how coercion
-              changes a comparison, or how Promise.all works. These pages focus
-              on those details because they show up in real code reviews,
-              production bugs, and everyday web development tasks.
+              changes a comparison, or how Promise.all works. Practice here,
+              then use{" "}
+              <a
+                href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+                target="_blank"
+                rel="noreferrer"
+              >
+                MDN
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://javascript.info/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                JavaScript.info
+              </a>{" "}
+              as trusted references when you need deeper explanations.
             </p>
           </div>
         </section>

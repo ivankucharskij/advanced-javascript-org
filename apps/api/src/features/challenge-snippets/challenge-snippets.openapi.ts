@@ -13,7 +13,7 @@ import {
 import { jsonContent } from "../../shared/http.js";
 
 const challengeSnippetsTag = ["Challenge Snippets"];
-const bearerSecurity = [{ bearerAuth: [] }];
+const adminBearerSecurity = [{ adminBearerAuth: [] }];
 
 export const challengeSnippetsOpenApi = {
   create: createRoute({
@@ -25,7 +25,7 @@ export const challengeSnippetsOpenApi = {
         required: true,
       },
     },
-    security: bearerSecurity,
+    security: adminBearerSecurity,
     responses: {
       201: {
         content: jsonContent(singleChallengeSnippetResponseSchema),
@@ -44,7 +44,7 @@ export const challengeSnippetsOpenApi = {
     request: {
       params: challengeSnippetIdParamsSchema,
     },
-    security: bearerSecurity,
+    security: adminBearerSecurity,
     responses: {
       200: {
         content: jsonContent(deleteChallengeSnippetResponseSchema),
@@ -67,7 +67,7 @@ export const challengeSnippetsOpenApi = {
     request: {
       query: challengeSnippetListQuerySchema,
     },
-    security: bearerSecurity,
+    security: adminBearerSecurity,
     responses: {
       200: {
         content: jsonContent(challengeSnippetListResponseSchema),
@@ -86,7 +86,7 @@ export const challengeSnippetsOpenApi = {
       },
       params: challengeSnippetIdParamsSchema,
     },
-    security: bearerSecurity,
+    security: adminBearerSecurity,
     responses: {
       200: {
         content: jsonContent(singleChallengeSnippetResponseSchema),

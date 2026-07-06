@@ -25,6 +25,17 @@ export type GoogleCallbackResponse = {
   };
 };
 
+export type AdminSessionInput = {
+  code: string;
+};
+
+export type AdminSessionResponse = {
+  data: {
+    accessToken: string;
+    expiresAt: string;
+  };
+};
+
 export const userSchema: z.ZodType<User> = z.object({
   id: z.uuid(),
   fullName: z.string().min(1),
@@ -48,5 +59,17 @@ export const googleCallbackResponseSchema: z.ZodType<GoogleCallbackResponse> =
         mergedProgressCount: z.number().int().min(0),
       }),
       user: userSchema,
+    }),
+  });
+
+export const adminSessionSchema: z.ZodType<AdminSessionInput> = z.object({
+  code: z.string().min(1),
+});
+
+export const adminSessionResponseSchema: z.ZodType<AdminSessionResponse> =
+  z.object({
+    data: z.object({
+      accessToken: z.string().min(1),
+      expiresAt: z.iso.datetime(),
     }),
   });

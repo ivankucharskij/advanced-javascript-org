@@ -27,6 +27,7 @@ export type Challenge = {
   topicSlug: string;
   title: string;
   prompt: string;
+  code: string | null;
   order: number;
   options: ChallengeOption[];
   createdAt: string;
@@ -50,7 +51,8 @@ export type CreateChallengeInput = {
   topicSlug: string;
   title: string;
   prompt: string;
-  order: number;
+  code?: string | null;
+  order?: number;
   options: CreateChallengeOptionInput[];
 };
 
@@ -162,6 +164,7 @@ export const challengeSchema: z.ZodType<Challenge> = z.object({
   topicSlug: z.string().min(1),
   title: z.string().min(1),
   prompt: z.string().min(1),
+  code: z.string().min(1).nullable(),
   order: z.number().int(),
   options: z.array(challengeOptionSchema).length(3),
   createdAt: z.iso.datetime(),
@@ -176,6 +179,7 @@ export const challengeWithAnswerSchema: z.ZodType<ChallengeWithAnswer> =
     topicSlug: z.string().min(1),
     title: z.string().min(1),
     prompt: z.string().min(1),
+    code: z.string().min(1).nullable(),
     order: z.number().int(),
     options: z.array(challengeOptionWithAnswerSchema).length(3),
     createdAt: z.iso.datetime(),
@@ -196,7 +200,8 @@ const challengeMutationBaseSchema = z.object({
   topicSlug: z.string().min(1),
   title: z.string().min(1),
   prompt: z.string().min(1),
-  order: z.number().int(),
+  code: z.string().min(1).nullable().optional(),
+  order: z.number().int().optional(),
   options: z.array(createChallengeOptionSchema).length(3),
 });
 

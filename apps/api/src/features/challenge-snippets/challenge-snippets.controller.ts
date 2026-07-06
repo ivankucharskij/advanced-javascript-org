@@ -5,16 +5,19 @@ import {
   singleChallengeSnippetResponseSchema,
 } from "@repo/shared-types";
 
-import { authMiddleware, type AuthVariables } from "../../middleware/auth.js";
+import {
+  adminMiddleware,
+  type AdminVariables,
+} from "../../middleware/admin.js";
 import { challengeSnippetsOpenApi } from "./challenge-snippets.openapi.js";
 import { challengeSnippetsService } from "./challenge-snippets.service.js";
 
 export const challengeSnippetsRouter = new OpenAPIHono<{
-  Variables: AuthVariables;
+  Variables: AdminVariables;
 }>();
 
-challengeSnippetsRouter.use("/challenge-snippets/*", authMiddleware);
-challengeSnippetsRouter.use("/challenge-snippets", authMiddleware);
+challengeSnippetsRouter.use("/challenge-snippets/*", adminMiddleware);
+challengeSnippetsRouter.use("/challenge-snippets", adminMiddleware);
 
 challengeSnippetsRouter.openapi(challengeSnippetsOpenApi.list, async (c) => {
   const result = await challengeSnippetsService.list(c.req.valid("query"));

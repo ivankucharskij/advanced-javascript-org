@@ -9,6 +9,7 @@
     "DATABASE_URL",
     "DATABASE_URL_NEON",
     "AUTH_SECRET",
+    "ADMIN_CODE",
     "WEB_ORIGIN"
   ],
   "tasks": {

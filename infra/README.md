@@ -16,6 +16,7 @@ docker run --rm \
   -p 3000:3000 \
   -e PORT=3000 \
   -e DATABASE_URL='postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public' \
+  -e ADMIN_CODE='<admin code for Swagger admin sessions>' \
   -e AUTH_SECRET='local-dev-auth-secret-change-me-32-characters' \
   -e WEB_ORIGIN='http://localhost:3000' \
   -e GOOGLE_CLIENT_ID='<google oauth client id>' \
@@ -27,6 +28,7 @@ docker run --rm \
 Required runtime environment:
 
 - `DATABASE_URL`: external PostgreSQL connection string.
+- `ADMIN_CODE`: admin code used to issue 12-hour Swagger admin bearer tokens.
 - `AUTH_SECRET`: at least 32 characters.
 - `WEB_ORIGIN`: public web origin for API CORS.
 - `GOOGLE_CLIENT_ID`: Google OAuth client id.

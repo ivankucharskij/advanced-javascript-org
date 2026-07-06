@@ -82,6 +82,7 @@ jobs:
             --concurrency 8 \
             --environment API_PORT=8081 \
             --environment LOCAL_API_URL="http://127.0.0.1:8081" \
+            --environment ADMIN_CODE="${{ secrets.ADMIN_CODE }}" \
             --environment AUTH_SECRET="${{ secrets.AUTH_SECRET }}" \
             --environment DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --environment WEB_ORIGIN="${{ secrets.WEB_ORIGIN }}" \

@@ -20,7 +20,7 @@ import {
 } from "react";
 import { twMerge } from "tailwind-merge";
 
-const placeholderCode = `document.getElementById("output").textContent = "Click Run to execute the snippet.";`;
+const defaultPlaceholderText = "Click Run to execute the snippet.";
 
 function toCssSize(
   value: number | string | undefined,
@@ -32,6 +32,10 @@ function toCssSize(
 
 function normalizeCode(code: string): string {
   return code.trim();
+}
+
+function createPlaceholderCode(text: string) {
+  return `document.getElementById("output").textContent = ${JSON.stringify(text)};`;
 }
 
 function extractCodeFromChildren(children: ReactNode): string | undefined {
@@ -61,7 +65,42 @@ function createSandbox(code: string): SandboxSetup {
         code: JSON.stringify({ main: "/index.js" }),
       },
       "/index.html": {
-        code: `<div id="output"></div><script type="module" src="/index.js"></script>`,
+        code: `<!doctype html>
+<html>
+  <head>
+    <style>
+      :root {
+        color-scheme: dark;
+        background: #0d1117;
+        color: #c9d1d9;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 13px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0d1117;
+      }
+
+      #output {
+        min-height: 100vh;
+        white-space: normal;
+        overflow: auto;
+        padding: 12px 14px;
+        line-height: 1.55;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="output"></div>
+    <script type="module" src="/index.js"></script>
+  </body>
+</html>`,
       },
       "/index.js": {
         code: `
@@ -74,11 +113,11 @@ function createSandbox(code: string): SandboxSetup {
             return String(value);
           }
         };
-        
+
         console.log = (...args) => {
           output.textContent += args.map(format).join(" ") + "\\n";
         };
-        
+
         window.addEventListener("error", (event) => {
           console.log(event.message);
         });
@@ -118,18 +157,22 @@ function useAppDarkTheme() {
   );
 }
 
-export function HomeCodeRunner({
+export function CodeRunner({
   code: codeProp,
   children,
   inputHeight,
   outputHeight,
   className,
+  placeholderText = defaultPlaceholderText,
+  title = "Code",
 }: {
   code?: string;
   children?: ReactNode;
   inputHeight?: number | string;
   outputHeight?: number | string;
   className?: string;
+  placeholderText?: string;
+  title?: string;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const clientRef = useRef<SandpackClient | null>(null);
@@ -139,9 +182,17 @@ export function HomeCodeRunner({
   }, [children, codeProp]);
   const [code, setCode] = useState(initialCode);
   const isDarkTheme = useAppDarkTheme();
-  const sandbox = useMemo(() => createSandbox(placeholderCode), []);
+  const sandbox = useMemo(
+    () => createSandbox(createPlaceholderCode(placeholderText)),
+    [placeholderText],
+  );
   const editorHeight = toCssSize(inputHeight, "160px");
   const runnerHeight = toCssSize(outputHeight, "96px");
+
+  useEffect(() => {
+    setCode(initialCode);
+    clientRef.current?.updateSandbox(sandbox);
+  }, [initialCode, sandbox]);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,13 +229,13 @@ export function HomeCodeRunner({
   return (
     <section
       className={twMerge(
-        "col-span-full grid gap-4 rounded-lg border bg-fd-card p-2 md:p-4",
+        "grid gap-4 rounded-lg border bg-fd-card p-2 md:p-4",
         className,
       )}
     >
       <div className="grid gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-medium">Try a snippet</h2>
+          <h2 className="text-sm font-medium">{title}</h2>
           <button
             type="button"
             onClick={runCode}
@@ -212,7 +263,7 @@ export function HomeCodeRunner({
         ref={iframeRef}
         title="JavaScript snippet output"
         style={{ height: runnerHeight }}
-        className="w-full rounded-md border text-white"
+        className="w-full rounded-md border"
         sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
       />
     </section>
