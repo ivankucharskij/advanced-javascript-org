@@ -10,12 +10,12 @@ import { healthRouter } from "./features/health/health.controller.js";
 export const createRouter = () => {
   const router = new OpenAPIHono();
 
-  router.route("/api", healthRouter);
-  router.route("/api", adminRouter);
-  router.route("/api", authRouter);
-  router.route("/api", guestSessionsRouter);
-  router.route("/api", challengeSnippetsRouter);
-  router.route("/api", challengesRouter);
+  router.route("/", healthRouter);
+  router.route("/", adminRouter);
+  router.route("/", authRouter);
+  router.route("/", guestSessionsRouter);
+  router.route("/", challengeSnippetsRouter);
+  router.route("/", challengesRouter);
 
   return router;
 };

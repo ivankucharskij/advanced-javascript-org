@@ -49,6 +49,7 @@ pnpm docker:run
 - `apps/web/next.config.mjs` must keep the `/api/:path*` rewrite.
 - Fumadocs content lives in `apps/web/content`.
 - `snippets.md` is the manual working draft for reusable JavaScript snippet content derived from `apps/web/content/*.mdx`.
+- `challanges/*.md` contains one Markdown draft per snippet, named by snippet slug. Each file should preserve the snippet section from `snippets.md` and append one to four console-output challenge drafts. Keep the folder spelling as-is unless the repo is intentionally migrated.
 - Generated folders like `.next`, `.source`, `node_modules`, and Prisma generated output should not be hand-edited.
 - Product UX is JavaScript flashcard practice, but backend/schema naming intentionally keeps `Challenge*`.
 - Do not reintroduce todos/tasks, custom email/password auth, admin/roles, user status/blocking, difficulty, or answer-attempt history.
@@ -59,7 +60,7 @@ pnpm docker:run
 
 - Root docs pages are served from `apps/web/content/*.mdx`.
 - Homepage is `apps/web/src/app/(home)/page.tsx`.
-- Flashcard UI should live under `/flashcards` routes. Existing challenge UI code may be transitional and should be adapted, not expanded as a separate product.
+- Current practice UI is under `/challenges` and is transitional. Future route cleanup may move it under `/flashcards`; adapt the existing UI rather than expanding a separate product.
 - `/snippet-test` is a temporary rendering playground for one snippet/question. Keep experiments there until the real flashcard UI exists.
 - Use Fumadocs code rendering primitives already used by the app, such as `fumadocs-ui/components/dynamic-codeblock`, for snippet code styling.
 - Client HTTP helpers live in `apps/web/src/lib/fetchers.ts`; use the shared `fetchers` object for web API calls.
@@ -69,9 +70,11 @@ pnpm docker:run
 
 - API env lives in `apps/api/.env` for local dev.
 - Health endpoint is `/api/healthz`.
+- Swagger UI is `/api/swagger`; OpenAPI JSON is `/api/openapi.json`.
 - Auth is Google OAuth only. Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`; do not add local register/login.
 - `/check-auth` is the temporary web auth verification page. Keep auth-related manual checks there until the real `/login` and `/flashcards` flows replace it.
 - Flashcard APIs use `/api/challenges/*` and `Challenge*` contracts.
+- Public flashcard flow endpoints are `/api/challenges/dashboard`, `/api/challenges/next?mode=practice|review`, `/api/challenges/:id/answer`, and `/api/challenges/restart`.
 - Snippet APIs use `/api/challenge-snippets/*` and `ChallengeSnippet*` contracts. Snippet CRUD follows the same controller/service/repository/OpenAPI structure as challenges.
 - Challenge create/update payloads should use `snippetId`, not inline snippet code.
 - Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into `User` and discard the guest session.

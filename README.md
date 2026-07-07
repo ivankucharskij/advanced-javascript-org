@@ -77,9 +77,10 @@ Useful URLs:
 ```text
 Web:              http://localhost:3000
 API health:       http://localhost:8080/api/healthz
-Swagger:          http://localhost:8080/swagger
-OpenAPI JSON:     http://localhost:8080/openapi.json
+Swagger:          http://localhost:8080/api/swagger
+OpenAPI JSON:     http://localhost:8080/api/openapi.json
 Auth check page:  http://localhost:3000/check-auth
+Challenges UI:    http://localhost:3000/challenges
 Snippet test:     http://localhost:3000/snippet-test
 ```
 
@@ -92,9 +93,19 @@ Product notes:
 - Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
 - Reusable code snippets are stored as `ChallengeSnippet` records. `Challenge` records store questions and point to snippets through `snippetId`, so one snippet can have multiple questions.
 - `snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
+- `challanges/*.md` contains one Markdown draft per snippet, including the copied snippet metadata/code and one or more console-output challenge drafts. The misspelled folder name is intentional for now because it was created that way.
 - Auth is Google OAuth only: no local email/password registration/login.
 - Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
 - Progress is stored in `ChallengeProgress` with `needsReview`, `answeredCount`, and `correctCount`; there is no answer-attempt history table.
+- Public practice endpoints are guest-aware and optional-auth:
+
+```text
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
+POST /api/challenges/:id/answer
+POST /api/challenges/restart
+```
 
 ## Docker Local Run
 

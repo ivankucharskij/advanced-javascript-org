@@ -11,7 +11,12 @@ export const fetchers = {
   get<T>(url: string) {
     return ky.get(url, requestOptions).json<T>();
   },
-  post<T>(url: string) {
-    return ky.post(url, requestOptions).json<T>();
+  post<T, TJson = unknown>(url: string, json?: TJson) {
+    return ky
+      .post(url, {
+        ...requestOptions,
+        ...(json === undefined ? {} : { json }),
+      })
+      .json<T>();
   },
 };

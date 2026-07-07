@@ -40,6 +40,8 @@ Product/runtime notes:
 - The user-facing practice experience is flashcards.
 - Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
 - Reusable code examples are stored as `ChallengeSnippet` rows, and challenge questions reference snippets by `snippetId`.
+- Public practice endpoints are served under `/api/challenges/*`, including dashboard, next-card, answer, and restart.
+- Swagger UI is served at `/api/swagger`; OpenAPI JSON is served at `/api/openapi.json`.
 - Auth is Google OAuth only. Do not configure local email/password accounts.
 - Guest sessions are temporary progress buffers and are discarded after Google login merge.
 

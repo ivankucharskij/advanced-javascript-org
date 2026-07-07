@@ -1,13 +1,14 @@
-import type { PracticeDashboardResponse } from "@repo/shared-types";
+import type { ChallengeDashboardResponse } from "@repo/shared-types";
 import { ListChecks, Target } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 
 export function Results({
   dashboard,
   onPracticeWrongAnswers,
 }: {
-  dashboard: PracticeDashboardResponse["data"];
+  dashboard: ChallengeDashboardResponse["data"];
   onPracticeWrongAnswers: () => void;
 }) {
   return (
@@ -40,7 +41,7 @@ export function Results({
           </div>
         </dl>
         <button
-          className={buttonVariants({ variant: "secondary" })}
+          className={cn(buttonVariants({ variant: "secondary" }), "gap-1")}
           disabled={dashboard.totalWrong === 0}
           onClick={onPracticeWrongAnswers}
           type="button"

@@ -9,14 +9,15 @@ import { createRouter } from "./router.js";
 
 export const createApp = (runtimeEnv: Env = getEnv()) => {
   const app = new OpenAPIHono();
+  app.use("*", logger());
+
+  // cors
   const webOrigins = [
     runtimeEnv.WEB_ORIGIN,
     "http://localhost:8080",
     "http://localhost:3000",
     "http://localhost:3001",
   ].filter((origin): origin is string => Boolean(origin));
-
-  app.use("*", logger());
   app.use(
     "/api/*",
     cors({
@@ -26,8 +27,11 @@ export const createApp = (runtimeEnv: Env = getEnv()) => {
       credentials: true,
     }),
   );
+  // cors
 
-  app.route("/", createRouter());
+  app.route("/api", createRouter());
+
+  // docs
   app.openAPIRegistry.registerComponent("securitySchemes", "bearerAuth", {
     type: "http",
     scheme: "bearer",
@@ -39,9 +43,10 @@ export const createApp = (runtimeEnv: Env = getEnv()) => {
     bearerFormat: "Bearer",
   });
 
-  app.doc("/openapi.json", openApiDocumentConfig);
-  app.doc("/doc", openApiDocumentConfig);
-  app.get("/swagger", swaggerUI({ url: "/openapi.json" }));
+  app.doc("/api/openapi.json", openApiDocumentConfig);
+  app.doc("/api/doc", openApiDocumentConfig);
+  app.get("/api/swagger", swaggerUI({ url: "/api/openapi.json" }));
+  // docs
 
   return app;
 };

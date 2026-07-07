@@ -1,4 +1,4 @@
-import type { PracticeAnswerResponse } from "@repo/shared-types";
+import type { ChallengeAnswerResponse } from "@repo/shared-types";
 import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -7,7 +7,7 @@ export function Answer({
   answer,
   onNext,
 }: {
-  answer: PracticeAnswerResponse;
+  answer: ChallengeAnswerResponse;
   onNext: () => void;
 }) {
   return (

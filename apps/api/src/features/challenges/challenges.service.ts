@@ -1,6 +1,12 @@
 import type {
+  ChallengeAnswerInput,
+  ChallengeAnswerResponse,
+  ChallengeDashboardResponse,
   ChallengeListQuery,
   ChallengeListResponse,
+  ChallengeRestartResponse,
+  ChallengeSessionQuery,
+  ChallengeSessionResponse,
   ChallengeWithAnswer,
   CreateChallengeInput,
   DeleteChallengeResponse,
@@ -16,7 +22,39 @@ import {
 import { challengeSnippetsRepository } from "../challenge-snippets/challenge-snippets.repository.js";
 import { challengesRepository } from "./challenges.repository.js";
 
+export type ChallengePracticeActor = {
+  greetingName: string | null;
+  guestSessionId: string | null;
+  userId: string | null;
+};
+
 export const challengesService = {
+  async answer(
+    actor: ChallengePracticeActor,
+    challengeId: string,
+    input: ChallengeAnswerInput,
+  ): Promise<
+    HttpResult<
+      ChallengeAnswerResponse["data"],
+      never,
+      typeof HttpStatus.NOT_FOUND,
+      typeof HttpStatus.OK
+    >
+  > {
+    const answer = await challengesRepository.answer(actor, challengeId, input);
+
+    if (!answer) {
+      return createHttpResult({
+        message: "Challenge or answer option was not found",
+        status: HttpStatus.NOT_FOUND,
+      });
+    }
+
+    return createHttpResult({
+      data: answer,
+      status: HttpStatus.OK,
+    });
+  },
   async create(
     input: CreateChallengeInput,
   ): Promise<
@@ -50,6 +88,20 @@ export const challengesService = {
     return createHttpResult({
       data: await challengesRepository.create(input),
       status: HttpStatus.CREATED,
+    });
+  },
+  async dashboard(
+    actor: ChallengePracticeActor,
+  ): Promise<
+    SuccessHttpResult<
+      ChallengeDashboardResponse["data"],
+      never,
+      typeof HttpStatus.OK
+    >
+  > {
+    return createHttpResult({
+      data: await challengesRepository.dashboard(actor),
+      status: HttpStatus.OK,
     });
   },
   async delete(
@@ -92,6 +144,35 @@ export const challengesService = {
     return createHttpResult({
       data: challenges.data,
       meta: challenges.meta,
+      status: HttpStatus.OK,
+    });
+  },
+  async next(
+    actor: ChallengePracticeActor,
+    query: ChallengeSessionQuery,
+  ): Promise<
+    SuccessHttpResult<
+      ChallengeSessionResponse["data"],
+      never,
+      typeof HttpStatus.OK
+    >
+  > {
+    return createHttpResult({
+      data: await challengesRepository.next(actor, query.mode),
+      status: HttpStatus.OK,
+    });
+  },
+  async restart(
+    actor: ChallengePracticeActor,
+  ): Promise<
+    SuccessHttpResult<
+      ChallengeRestartResponse["data"],
+      never,
+      typeof HttpStatus.OK
+    >
+  > {
+    return createHttpResult({
+      data: await challengesRepository.restart(actor),
       status: HttpStatus.OK,
     });
   },

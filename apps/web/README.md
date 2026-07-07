@@ -30,12 +30,14 @@ pnpm lint         # run ESLint
 - `content`: MDX documentation pages.
 - `src/app/(home)/page.tsx`: homepage with runnable JavaScript snippets.
 - `src/app/(home)/[...slug]`: root-level documentation routes, for example `/array-methods`.
+- `src/app/challenges/page.tsx`: current transitional flashcard practice/review UI wired to `/api/challenges/*`.
 - `src/app/check-auth/page.tsx`: temporary auth verification page for Google OAuth and `/api/me`.
-- `src/app/snippet-test/page.tsx`: temporary page for rendering one snippet/question before the real flashcard route exists.
-- `/flashcards`: target route family for the flashcard practice UX.
+- `src/app/snippet-test/page.tsx`: temporary admin-auth rendering playground for one snippet/question.
+- `/flashcards`: future target route family for the separated flashcard dashboard/player UX.
+- `src/api/challenges.ts`: typed frontend wrapper for public challenge practice endpoints.
 - `src/app/api/search/route.ts`: Fumadocs search route handler.
 - `src/app/og/[...slug]/route.tsx`: Open Graph image route for docs pages.
-- `src/components/home-code-runner.tsx`: client-side CodeMirror and Sandpack runner.
+- `src/components/code-runner.tsx`: client-side CodeMirror and Sandpack runner.
 - `src/components/snippet-code-runner.tsx`: server component that loads files from `src/snippets`.
 - `src/components/markdown.tsx`: Markdown renderer used for processed documentation text.
 - `src/lib/source.ts`: Fumadocs source loader and page helpers.
@@ -63,6 +65,10 @@ Product direction:
 - User-facing practice copy should say flashcards.
 - Backend/API contracts intentionally use `Challenge*` naming and `/api/challenges/*`.
 - Reusable code snippets are backend `ChallengeSnippet` records and should be rendered as the code context for one or more challenge questions.
+- Public player code should be runnable with snippet code first and challenge-specific code second.
+- The current `/challenges` UI uses SWR and `src/api/challenges.ts`; keep API calls behind typed wrappers under `src/api`.
+- Mock challenge data should stay removed from the practice UI.
+- Root `challanges/*.md` files are content drafts for one snippet plus one or more console-output challenges.
 - Use Fumadocs code rendering, currently `fumadocs-ui/components/dynamic-codeblock`, for snippet code styling.
 - Use the shared client `fetchers` object from `src/lib/fetchers.ts` for API calls.
 - Google OAuth is the only auth flow. Do not add local email/password login forms.

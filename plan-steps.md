@@ -11,7 +11,7 @@ Work one step at a time. After each step, stop, test, and record the result befo
 - Confirm the target direction:
   - shared Zod schemas in `packages/shared-types`
   - Swagger/OpenAPI remains inside `apps/api`
-  - frontend uses direct fetchers + React Query, not generated API client/types
+  - frontend uses typed API wrappers + shared fetchers/SWR, not generated API client/types
 
 ### Result
 
@@ -20,7 +20,7 @@ Clear contract direction before changing schema or auth.
 ```text
 packages/shared-types  shared Zod schemas and inferred types
 apps/api               imports schemas and exposes Swagger/OpenAPI
-apps/web/src/api       fetchers and React Query hooks
+apps/web/src/api       typed API wrappers used by SWR/fetchers
 generated client       removed
 ```
 
@@ -37,7 +37,7 @@ pnpm --filter api build
 pnpm --filter web build
 ```
 
-## Step 2: Shared Types And React Query Foundation
+## Step 2: Shared Types And Frontend Fetcher Foundation
 
 ### Todo
 
@@ -49,7 +49,7 @@ pnpm --filter web build
   - health response
   - auth profile / `/api/me`
   - flashcard DTOs
-- Add React Query to `apps/web`.
+- Add frontend data fetching for `apps/web`.
 - Add a single frontend API layer under `apps/web/src/api`.
 - Fully type the health request first as the smallest vertical slice.
 
@@ -312,7 +312,7 @@ pnpm dev
 
 Manual:
 
-- Open `http://localhost:8080/swagger`.
+- Open `http://localhost:8080/api/swagger`.
 - Create one flashcard.
 - Verify it exists in Prisma Studio or through a temporary list endpoint if implemented.
 
@@ -346,12 +346,37 @@ POST /api/challenges/:id/answer
 
 Users can practice without auth, wrong cards are tracked, and progress persists through the current guest cookie until login or destruction.
 
+Actual result:
+
+- Added public optional-auth/guest-aware challenge endpoints:
+  - `GET /api/challenges/dashboard`
+  - `GET /api/challenges/next?mode=practice`
+  - `GET /api/challenges/next?mode=review`
+  - `POST /api/challenges/:id/answer`
+  - `POST /api/challenges/restart`
+- Anonymous dashboard/next/answer requests create or reuse the `guestSessionId` cookie.
+- Authenticated requests use the bearer token or `accessToken` cookie and store progress under the user.
+- Answering increments `answeredCount`; correct answers increment `correctCount` and clear `needsReview`; wrong answers set `needsReview`.
+- Practice mode returns unanswered cards; review mode returns cards where `needsReview = true`.
+- Dashboard returns guest/auth progress totals, review count, auth gate state after 50 guest answers, and topic progress summaries.
+- The API returns the selected result, correct option id, selected option id, selected feedback, and updated progress.
+- The public player response returns runnable code with the reusable snippet first and challenge-specific code second.
+- Restart clears the current user/guest progress so practice can start again after all cards are answered.
+
 ### Test
 
 ```bash
 pnpm --filter api build
 pnpm dev
 ```
+
+Actual verification:
+
+- `pnpm --filter @repo/shared-types build` passed.
+- `pnpm --filter api build` passed.
+- `pnpm --filter web build` passed.
+
+Manual endpoint checks are still pending.
 
 Manual:
 
@@ -387,6 +412,41 @@ The app supports the intended acquisition flow: start immediately, require auth 
 - Confirm auth gate appears.
 - Log in with Google.
 - Confirm progress is still present under the user.
+
+## Step 8A: Transitional `/challenges` Practice UI
+
+### Result
+
+Actual result:
+
+- The existing `/challenges` page is wired to the public challenge APIs.
+- Mock challenge data was removed.
+- `apps/web/src/api/challenges.ts` is the typed frontend API wrapper.
+- The player uses SWR and `fetchers` with credentials.
+- The page supports practice mode, review mode, answer locking, feedback, and `Start again` through `/api/challenges/restart`.
+- Dashboard wrong count now represents current review cards (`needsReview = true`), not historical wrong attempts.
+
+### Test
+
+```bash
+pnpm --filter api build
+pnpm --filter web build
+```
+
+## Step 8B: Markdown Challenge Drafts
+
+### Result
+
+Actual result:
+
+- Added root `challanges/*.md` draft files, one per snippet section from `snippets.md`.
+- The folder currently contains 77 Markdown files and 93 challenge drafts.
+- Each file preserves the snippet metadata/code and appends one or more `### Challenge` sections.
+- Challenge answers are written as `console.log` outputs/results for the MVP UI.
+
+### Test
+
+Content-only update; no build required.
 
 ## Step 9: Flashcards Dashboard UI
 
@@ -437,7 +497,7 @@ Manual:
   - next button
   - progress indicator
   - close button
-- Use React Query mutations for answers.
+- Use typed API wrappers and SWR mutations for answers.
 - Lock answer options after the first answer for that card presentation.
 
 ### Result

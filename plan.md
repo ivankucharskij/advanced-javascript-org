@@ -7,11 +7,13 @@ Build this as the main portfolio product: a Google-auth-backed JavaScript flashc
 - Main experience is an endless flashcard practice flow, not a challenge list.
 - Content target is roughly 250-300 JavaScript flashcards.
 - Each flashcard has:
-  - instruction/prompt text
-  - code snippet, usually `console.log(...)` or a small JS fragment
+  - reusable snippet code from `ChallengeSnippet`
+  - challenge-specific code that should be appended after the snippet code when present
+  - instruction/prompt text for future UI use
   - 3 answer options
   - one correct option
   - feedback/explanation
+- For the MVP, answer labels should be console output/results because the frontend does not display the prompt yet.
 - User answers once per card presentation.
 - If the answer is wrong:
   - show the correct answer immediately
@@ -34,15 +36,16 @@ Build this as the main portfolio product: a Google-auth-backed JavaScript flashc
 - Use shared Zod schemas and inferred TypeScript types from `packages/shared-types`.
 - Use `tsdown` to build `packages/shared-types`.
 - Keep Swagger/OpenAPI inside `apps/api`.
-- Use React Query in `apps/web`.
+- Use SWR in `apps/web` for the current implementation.
 - Keep frontend API requests in one place under `apps/web/src/api`.
+- Keep the typed API wrapper boundary if the data-fetching library changes later.
 
 Target shape:
 
 ```text
 packages/shared-types  shared Zod schemas and inferred types
 apps/api               imports schemas, exposes Swagger/OpenAPI
-apps/web/src/api       fetchers and React Query hooks
+apps/web/src/api       typed API wrappers used by SWR/fetchers
 ```
 
 ## Auth
@@ -89,6 +92,7 @@ GET  /api/challenges/dashboard
 GET  /api/challenges/next?mode=practice
 GET  /api/challenges/next?mode=review
 POST /api/challenges/:id/answer
+POST /api/challenges/restart
 ```
 
 Auth:
@@ -102,10 +106,24 @@ GET /api/auth/google/callback
 Content management through Swagger, no admin UI for now:
 
 ```text
+GET    /api/challenge-snippets
+POST   /api/challenge-snippets
+PATCH  /api/challenge-snippets/:id
+DELETE /api/challenge-snippets/:id
+GET    /api/challenges
 POST   /api/challenges
 PATCH  /api/challenges/:id
 DELETE /api/challenges/:id
 ```
+
+Swagger/OpenAPI are served under `/api/swagger` and `/api/openapi.json`.
+
+## Content Drafts
+
+- `snippets.md` remains the source working draft extracted from `apps/web/content/*.mdx`.
+- `challanges/*.md` contains one file per snippet, named by snippet slug. Each file preserves the snippet metadata/code and appends one to four challenge drafts.
+- Challenge draft answers should be visible `console.log` outputs/results.
+- A challenge's runnable code should start with the reusable snippet, then append challenge-specific code second.
 
 ## Prisma Shape
 
@@ -221,9 +239,10 @@ Keep `Challenge*` names in code and database. Use "flashcard" in user-facing cop
 ## UI Routes
 
 ```text
-/flashcards          dashboard / entry point
-/flashcards/practice endless practice flow
-/flashcards/review   wrong-card review flow
+/challenges          current combined practice/review UI
+/flashcards          future dashboard / entry point
+/flashcards/practice future endless practice flow
+/flashcards/review   future wrong-card review flow
 /login               Google login
 /check-auth          temporary manual auth verification page
 ```
@@ -238,16 +257,16 @@ Also add a dismissible auth prompt:
 
 ## First Implementation Slice
 
-1. Shared schemas + React Query direction.
+1. Shared schemas + SWR/fetcher direction.
 2. Replace Prisma schema with the flashcard product schema.
 3. Create destructive dev migration.
 4. Remove old todo API surface.
 5. Replace old users/email-password feature with Google-only auth and `/api/me`.
 6. Add Swagger endpoints to create/manage challenges/flashcards.
 7. Implement public/optional-auth challenge API with guest progress.
-8. Implement endless practice and wrong-card review UI.
+8. Implement endless practice and wrong-card review UI. Current transitional UI is `/challenges`.
 9. Add auth gate after 50 answered flashcards.
 
 ## Portfolio Value
 
-Shows real product architecture: Google OAuth, guest-to-user progress merge, custom auth cookies, Prisma modeling, destructive domain reshape, shared Zod contracts, React Query, Swagger-managed content, optional/protected APIs, wrong-card review, saved progress, Docker, CI/CD, and polished educational UX.
+Shows real product architecture: Google OAuth, guest-to-user progress merge, custom auth cookies, Prisma modeling, destructive domain reshape, shared Zod contracts, typed frontend fetchers, Swagger-managed content, optional/protected APIs, wrong-card review, saved progress, Docker, CI/CD, and polished educational UX.

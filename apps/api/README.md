@@ -34,9 +34,9 @@ Default local port:
 
 When the server is running:
 
-- OpenAPI JSON: `/openapi.json`
-- Legacy OpenAPI alias: `/doc`
-- Swagger UI: `/swagger`
+- OpenAPI JSON: `/api/openapi.json`
+- OpenAPI document route: `/api/doc`
+- Swagger UI: `/api/swagger`
 
 ## Prisma
 
@@ -140,6 +140,8 @@ Current content authoring model:
 - `Challenge` stores a question and points at a snippet through `snippetId`.
 - Multiple challenges can reference the same snippet.
 - Keep snippet content drafts in the repo root `snippets.md` while editing manually.
+- Keep per-snippet challenge drafts in root `challanges/*.md`. Each file preserves one snippet section and appends one to four console-output challenge drafts.
+- Public practice responses combine runnable code as `ChallengeSnippet.code` first, then `Challenge.code` second when challenge-specific code exists.
 
 Current CRUD routes:
 
@@ -156,24 +158,28 @@ DELETE /api/challenges/:id
 
 These CRUD routes require `adminBearerAuth`.
 
-Progress is stored in `ChallengeProgress`, not attempt history:
-
-- `needsReview`: true after a wrong answer, false after a correct answer.
-- `answeredCount`: incremented on every answer.
-- `correctCount`: incremented on correct answers.
-
-There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
-
-Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into the authenticated user and discard the guest session.
-
-Planned practice routes can be added later:
+Current public optional-auth practice routes:
 
 ```text
 GET  /api/challenges/dashboard
 GET  /api/challenges/next?mode=practice
 GET  /api/challenges/next?mode=review
 POST /api/challenges/:id/answer
+POST /api/challenges/restart
 ```
+
+Public practice routes identify the actor from a bearer token or `accessToken` cookie when present. Otherwise they create or reuse a `guestSessionId` cookie.
+
+Progress is stored in `ChallengeProgress`, not attempt history:
+
+- `needsReview`: true after a wrong answer, false after a correct answer.
+- `answeredCount`: incremented on every answer.
+- `correctCount`: incremented on correct answers.
+- Dashboard `totalWrong` is the current review count, not historical wrong attempts.
+
+There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
+
+Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into the authenticated user and discard the guest session.
 
 ## Environment
 

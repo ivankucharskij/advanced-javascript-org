@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <HomeLayout {...baseOptions()} links={homeLinks}>
-      <div className="grid content-start grid-cols-1 gap-4 md:gap-10 px-6 mx-auto w-full max-w-350 lg:grid-cols-2 mt-2 md:mt-4">
+      <div className="grid items-start grid-cols-1 gap-4 md:gap-10 px-4 md:px-6 mx-auto w-full max-w-350 lg:grid-cols-2 mt-2 md:mt-4">
         <h1 className="text-4xl my-4 md:my-8 leading-tight font-medium xl:text-5xl col-span-full">
           Advanced JavaScript
           <br className="md:hidden" /> explained through

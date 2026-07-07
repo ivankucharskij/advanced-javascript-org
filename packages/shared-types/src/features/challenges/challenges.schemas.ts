@@ -94,6 +94,8 @@ export type ChallengeDashboardResponse = {
     practiceCount: number;
     reviewCount: number;
     totalAnswered: number;
+    totalCorrect: number;
+    totalWrong: number;
     authRequired: boolean;
     topics: Array<{
       topicSlug: string;
@@ -114,6 +116,12 @@ export type ChallengeSessionResponse = {
     answered: number;
     total: number;
     challenge: Challenge | null;
+  };
+};
+
+export type ChallengeRestartResponse = {
+  data: {
+    resetCount: number;
   };
 };
 
@@ -263,6 +271,8 @@ export const challengeDashboardResponseSchema: z.ZodType<ChallengeDashboardRespo
       practiceCount: z.number().int().min(0),
       reviewCount: z.number().int().min(0),
       totalAnswered: z.number().int().min(0),
+      totalCorrect: z.number().int().min(0),
+      totalWrong: z.number().int().min(0),
       authRequired: z.boolean(),
       topics: z.array(
         z.object({
@@ -286,6 +296,13 @@ export const challengeSessionResponseSchema: z.ZodType<ChallengeSessionResponse>
       answered: z.number().int().min(0),
       total: z.number().int().min(0),
       challenge: challengeSchema.nullable(),
+    }),
+  });
+
+export const challengeRestartResponseSchema: z.ZodType<ChallengeRestartResponse> =
+  z.object({
+    data: z.object({
+      resetCount: z.number().int().min(0),
     }),
   });
 

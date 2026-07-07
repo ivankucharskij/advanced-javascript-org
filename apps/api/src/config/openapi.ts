@@ -1,8 +1,7 @@
 export const openApiDocumentConfig = {
   openapi: "3.0.0",
   info: {
-    title: "Hono API",
+    title: "Advanced Javascript API",
     version: "1.0.0",
-    description: "API description",
   },
 } as const;

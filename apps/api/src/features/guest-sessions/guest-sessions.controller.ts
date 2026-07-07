@@ -41,7 +41,7 @@ const clearGuestSessionCookie = (c: Parameters<typeof deleteCookie>[0]) => {
   });
 };
 
-export { clearGuestSessionCookie, getGuestSessionId };
+export { clearGuestSessionCookie, getGuestSessionId, setGuestSessionCookie };
 
 guestSessionsRouter.openapi(guestSessionsOpenApi.current, async (c) => {
   const result = await guestSessionsService.find(getGuestSessionId(c));
