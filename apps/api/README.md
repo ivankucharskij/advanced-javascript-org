@@ -141,7 +141,11 @@ Current content authoring model:
 - Multiple challenges can reference the same snippet.
 - Keep snippet content drafts in the repo root `snippets.md` while editing manually.
 - Keep per-snippet challenge drafts in root `challanges/*.md`. Each file preserves one snippet section and appends one to four console-output challenge drafts.
+- `challanges/saved-snippets.ts` stores persisted snippet IDs from the temporary admin seed flow.
+- `challanges/separate-challenges/*.ts` contains generated one-challenge-per-file seed drafts. They use `snippetId`, omit reusable snippet code, keep only challenge-specific `code` or `null`, and do not import shared types.
+- Temporary seed data for the web admin playground lives in `apps/web/src/app/snippet-test/snippets.ts` and `apps/web/src/app/snippet-test/seed-challenges.ts`. Seed snippets before challenges.
 - Public practice responses combine runnable code as `ChallengeSnippet.code` first, then `Challenge.code` second when challenge-specific code exists.
+- Shared pagination caps list `limit` at 100.
 
 Current CRUD routes:
 
@@ -175,7 +179,9 @@ Progress is stored in `ChallengeProgress`, not attempt history:
 - `needsReview`: true after a wrong answer, false after a correct answer.
 - `answeredCount`: incremented on every answer.
 - `correctCount`: incremented on correct answers.
-- Dashboard `totalWrong` is the current review count, not historical wrong attempts.
+- Dashboard totals are current card-state counts: `totalAnswered` is answered
+  cards, `totalCorrect` is answered cards not currently needing review, and
+  `totalWrong` is the current review count.
 
 There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
 
@@ -215,3 +221,13 @@ pnpm seed
 ```
 
 The seed command does not create demo email/password users. Auth users are created through Google OAuth.
+
+The temporary content seed workflow is in the web app at `/snippet-test`:
+
+1. Start `pnpm dev`.
+2. Open `http://localhost:3000/snippet-test`.
+3. Authorize with `ADMIN_CODE`.
+4. Click "Add snippets".
+5. Click "Add challenges".
+
+Challenge seeding posts each item to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.

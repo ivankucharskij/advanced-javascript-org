@@ -125,7 +125,10 @@ const toChallengeWithAnswer = (
   };
 };
 
-const combineRunnableCode = (snippetCode: string, challengeCode: string | null) => {
+const combineRunnableCode = (
+  snippetCode: string,
+  challengeCode: string | null,
+) => {
   if (!challengeCode) {
     return snippetCode;
   }
@@ -176,7 +179,9 @@ export const challengesRepository = {
       const selectedOption = challenge.options.find(
         (option) => option.id === input.optionId,
       );
-      const correctOption = challenge.options.find((option) => option.isCorrect);
+      const correctOption = challenge.options.find(
+        (option) => option.isCorrect,
+      );
 
       if (!selectedOption || !correctOption) {
         return null;
@@ -240,24 +245,29 @@ export const challengesRepository = {
     });
   },
   async create(input: CreateChallengeInput) {
-    const challenge = await prisma.challenge.create({
-      data: {
-        slug: input.slug,
-        snippetId: input.snippetId,
-        topicSlug: input.topicSlug,
-        title: input.title,
-        prompt: input.prompt,
-        code: input.code,
-        ...(input.order === undefined ? {} : { order: input.order }),
-        options: {
-          create: input.options.map((option) => ({
-            label: option.label,
-            feedback: option.feedback,
-            isCorrect: option.isCorrect,
-            order: option.order,
-          })),
+    const data = {
+      slug: input.slug,
+      snippet: {
+        connect: {
+          id: input.snippetId,
         },
       },
+      topicSlug: input.topicSlug,
+      title: input.title,
+      prompt: input.prompt,
+      code: input.code ?? null,
+      ...(input.order === undefined ? {} : { order: input.order }),
+      options: {
+        create: input.options.map((option) => ({
+          label: option.label,
+          feedback: option.feedback,
+          isCorrect: option.isCorrect,
+          order: option.order,
+        })),
+      },
+    } as Prisma.ChallengeCreateInput;
+    const challenge = await prisma.challenge.create({
+      data,
       include: challengeInclude,
     });
 
@@ -289,16 +299,16 @@ export const challengesRepository = {
         },
       }),
     ]);
-    const totalAnswered = progress.reduce(
+    const totalAnswerAttempts = progress.reduce(
       (total, item) => total + item.answeredCount,
-      0,
-    );
-    const totalCorrect = progress.reduce(
-      (total, item) => total + item.correctCount,
       0,
     );
     const answeredChallengeCount = progress.filter(
       (item) => item.answeredCount > 0,
+    ).length;
+    const reviewCount = progress.filter((item) => item.needsReview).length;
+    const masteredChallengeCount = progress.filter(
+      (item) => item.answeredCount > 0 && !item.needsReview,
     ).length;
     const progressByTopic = new Map<
       string,
@@ -315,24 +325,22 @@ export const challengesRepository = {
         current.completed += 1;
       }
 
-      if (item.correctCount > 0 && !item.needsReview) {
+      if (item.answeredCount > 0 && !item.needsReview) {
         current.mastered += 1;
       }
 
       progressByTopic.set(item.challenge.topicSlug, current);
     }
 
-    const reviewCount = progress.filter((item) => item.needsReview).length;
-
     return {
       greetingName: actor.greetingName,
       answeredToday: 0,
       practiceCount: Math.max(totalChallenges - answeredChallengeCount, 0),
       reviewCount,
-      totalAnswered,
-      totalCorrect,
+      totalAnswered: answeredChallengeCount,
+      totalCorrect: masteredChallengeCount,
       totalWrong: reviewCount,
-      authRequired: !actor.userId && totalAnswered >= 50,
+      authRequired: !actor.userId && totalAnswerAttempts >= 50,
       topics: topicCounts.map((topic) => {
         const topicProgress = progressByTopic.get(topic.topicSlug) ?? {
           completed: 0,
@@ -555,31 +563,41 @@ export const challengesRepository = {
         });
       }
 
+      const data: Prisma.ChallengeUpdateInput = {
+        slug: input.slug,
+        ...(input.snippetId
+          ? {
+              snippet: {
+                connect: {
+                  id: input.snippetId,
+                },
+              },
+            }
+          : {}),
+        topicSlug: input.topicSlug,
+        title: input.title,
+        prompt: input.prompt,
+        code: input.code,
+        order: input.order,
+        ...(input.options
+          ? {
+              options: {
+                create: input.options.map((option) => ({
+                  label: option.label,
+                  feedback: option.feedback,
+                  isCorrect: option.isCorrect,
+                  order: option.order,
+                })),
+              },
+            }
+          : {}),
+      };
+
       return tx.challenge.update({
         where: {
           id,
         },
-        data: {
-          slug: input.slug,
-          snippetId: input.snippetId,
-          topicSlug: input.topicSlug,
-          title: input.title,
-          prompt: input.prompt,
-          code: input.code,
-          order: input.order,
-          ...(input.options
-            ? {
-                options: {
-                  create: input.options.map((option) => ({
-                    label: option.label,
-                    feedback: option.feedback,
-                    isCorrect: option.isCorrect,
-                    order: option.order,
-                  })),
-                },
-              }
-            : {}),
-        },
+        data,
         include: challengeInclude,
       });
     });

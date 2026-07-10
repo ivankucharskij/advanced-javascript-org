@@ -1,0 +1,30 @@
+export const fillEdgeConsoleOutputChallenge = {
+  slug: "fill-edge-console-output",
+  snippetId: "af4084a5-7dfc-4e7b-86c6-108d3ce7b682",
+  topicSlug: "array-methods",
+  title: "Predict the edge-case console output",
+  prompt: "What does this edge case print?",
+  code: "const values = [1, 2, 3, 4];\r\nconsole.log(JSON.stringify(values.customFill(9, -2)));",
+  order: 2,
+  options: [
+    {
+      label: "[9,9,3,4]",
+      feedback: "Not quite. This edge case outputs `[1,2,9,9]`.",
+      isCorrect: false,
+      order: 1,
+    },
+    {
+      label: "[1,2,3,4]",
+      feedback: "Not quite. This edge case outputs `[1,2,9,9]`.",
+      isCorrect: false,
+      order: 2,
+    },
+    {
+      label: "[1,2,9,9]",
+      feedback:
+        "Correct. This follows the same implementation, so the output is `[1,2,9,9]`.",
+      isCorrect: true,
+      order: 3,
+    },
+  ],
+};

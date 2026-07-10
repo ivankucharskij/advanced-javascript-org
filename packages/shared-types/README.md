@@ -4,7 +4,11 @@ Compiled internal package for shared Zod schemas and inferred TypeScript types.
 Consumers import from the single public entry point:
 
 ```ts
-import { challengeSchema, meResponseSchema, type Challenge } from "@repo/shared-types";
+import {
+  challengeSchema,
+  meResponseSchema,
+  type Challenge,
+} from "@repo/shared-types";
 ```
 
 Current contract areas:
@@ -21,8 +25,9 @@ Do not add task/todo schemas or generated frontend API client types.
 Challenge response conventions:
 
 - Public player code is returned as runnable code: reusable snippet first, challenge-specific code second.
-- Dashboard `totalWrong` means current review cards (`needsReview = true`), not historical wrong attempts.
+- Dashboard totals are current card-state counts: `totalAnswered` is answered cards, `totalCorrect` is answered cards not currently needing review, and `totalWrong` is current review cards (`needsReview = true`).
 - Restart responses report how many progress rows were cleared for the current user or guest.
+- Shared pagination query validation defaults `limit` to 5 and caps it at 100.
 
 ```bash
 pnpm --filter @repo/shared-types build

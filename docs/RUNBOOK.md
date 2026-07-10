@@ -1,0 +1,406 @@
+# advanced-javascript-org Runbook
+
+This file is the handoff document for local development, Docker, database migrations, and deployment.
+
+## Repository Map
+
+```text
+apps/api                 Hono API, Prisma schema, migrations, Swagger/OpenAPI
+apps/web                 Next.js app
+packages/shared-types    compiled shared Zod schemas and inferred types
+infra/Dockerfile         combined web + API image
+infra/api.Dockerfile     API-only image for local/debug use
+infra/postgres.compose.yaml
+.github/workflows/deploy-yc.yml
+```
+
+## Local Development
+
+Requirements:
+
+- Node.js 22 recommended
+- pnpm 9
+- Docker
+
+Install dependencies:
+
+```bash
+pnpm install
+```
+
+Create local API env if missing:
+
+```bash
+cp apps/api/.env.example apps/api/.env
+```
+
+Expected local `apps/api/.env` when running the API directly on the host:
+
+```env
+PORT=8080
+AUTH_SECRET=local-dev-auth-secret-change-me-32-characters
+ADMIN_CODE=<local admin code for Swagger admin sessions>
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
+WEB_ORIGIN=http://localhost:3000
+GOOGLE_CLIENT_ID=<google oauth client id>
+GOOGLE_CLIENT_SECRET=<google oauth client secret>
+GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
+```
+
+When running the API in Docker against the local Postgres compose service, use:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public
+```
+
+Start local Postgres:
+
+```bash
+pnpm db:up
+```
+
+Apply local migrations and seed data:
+
+```bash
+pnpm db:migrate:dev
+pnpm seed
+```
+
+Run API and web in dev mode:
+
+```bash
+pnpm dev
+```
+
+Useful URLs:
+
+```text
+Web:              http://localhost:3000
+API health:       http://localhost:8080/api/healthz
+Swagger:          http://localhost:8080/api/swagger
+OpenAPI JSON:     http://localhost:8080/api/openapi.json
+Auth check page:  http://localhost:3000/check-auth
+Challenges UI:    http://localhost:3000/challenges
+Snippet test:     http://localhost:3000/snippet-test
+```
+
+`pnpm seed` does not create demo email/password users. Auth users are created through Google OAuth.
+`/check-auth` is the temporary auth verification page. It starts Google OAuth through browser navigation and checks `/api/me` with the auth cookie.
+
+Product notes:
+
+- User-facing practice UX is flashcards.
+- Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- Reusable code snippets are stored as `ChallengeSnippet` records. `Challenge` records store questions and point to snippets through `snippetId`, so one snippet can have multiple questions.
+- `snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
+- `challanges/*.md` contains one Markdown draft per snippet, including the copied snippet metadata/code and one or more console-output challenge drafts. The misspelled folder name is intentional for now because it was created that way.
+- `challanges/saved-snippets.ts` records persisted snippet IDs returned by the admin snippet import flow.
+- `challanges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These objects use persisted `snippetId` values, omit the reusable top snippet code, include only challenge-specific `code` or `null`, and keep correct answers distributed across option positions.
+- `apps/web/src/app/snippet-test/seed-challenges.ts` is the temporary web seed payload generated from `challanges/separate-challenges`.
+- Auth is Google OAuth only: no local email/password registration/login.
+- Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
+- Progress is stored in `ChallengeProgress` with `needsReview`, `answeredCount`, and `correctCount`; there is no answer-attempt history table.
+- Dashboard totals are current card-state counts: `totalAnswered` is answered cards, `totalCorrect` is answered cards not currently needing review, and `totalWrong` is current review cards. `answeredCount` remains the internal attempt counter for the guest auth gate.
+- Shared list pagination accepts `limit` values up to 100.
+- Public practice endpoints are guest-aware and optional-auth:
+
+```text
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
+POST /api/challenges/:id/answer
+POST /api/challenges/restart
+```
+
+Temporary admin content seeding lives at `http://localhost:3000/snippet-test`.
+Authorize with `ADMIN_CODE`, run "Add snippets" first, then run "Add challenges".
+The challenge seed flow posts to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.
+
+## Docker Local Run
+
+The combined image runs Next.js as the public server on port `3000`; the API runs internally on port `8080`. Next proxies `/api/*` to the internal API.
+
+Build and run:
+
+```bash
+pnpm docker:build
+pnpm docker:run
+```
+
+`pnpm docker:run` uses `apps/api/.env`, but overrides Docker-specific values:
+
+```text
+PORT=3000
+API_PORT=8080
+LOCAL_API_URL=http://127.0.0.1:8080
+DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public
+WEB_ORIGIN=http://localhost:3000
+```
+
+Check:
+
+```bash
+curl http://localhost:3000/api/healthz
+```
+
+Expected:
+
+```json
+{ "status": "healthy" }
+```
+
+## Database And Migrations
+
+Use one Prisma migration history for all environments.
+
+Development flow:
+
+```bash
+pnpm db:up
+pnpm db:migrate:dev
+pnpm seed
+```
+
+When changing `apps/api/prisma/schema.prisma`:
+
+```bash
+pnpm db:migrate:dev
+pnpm prisma:generate
+```
+
+Commit both:
+
+```text
+apps/api/prisma/schema.prisma
+apps/api/prisma/migrations/<timestamp_name>/migration.sql
+```
+
+Production/staging flow:
+
+```bash
+pnpm db:migrate:deploy
+```
+
+Rules:
+
+- Use `migrate dev` only for local development.
+- Use `migrate deploy` for Neon, CI, staging, and production.
+- Do not edit already-applied migration files.
+- Do not bake `DATABASE_URL` or `AUTH_SECRET` into Docker images.
+- Run migrations before deploying code that depends on new schema.
+
+## Local Commands
+
+```bash
+pnpm dev
+pnpm check
+pnpm db:up
+pnpm db:down
+pnpm db:logs
+pnpm db:migrate:dev
+pnpm db:migrate:deploy
+pnpm docker:build
+pnpm docker:run
+pnpm docker:build-api
+pnpm docker:run-api
+```
+
+## Deployment Architecture
+
+`advanced-javascript-org` deploys to Yandex Cloud as one Serverless Container built from `infra/Dockerfile`.
+
+- Database: Neon PostgreSQL.
+- Runtime: Yandex Cloud Serverless Containers.
+- Public server: Next.js on `PORT`, `8080` in Yandex Cloud.
+- Internal API: Hono on `API_PORT`, `8081` in Yandex Cloud.
+- API routing: Next.js rewrites `/api/*` to `LOCAL_API_URL`, `http://127.0.0.1:8081` in Yandex Cloud.
+
+## Deploy Combined Container To Yandex Cloud
+
+Registry currently used:
+
+```text
+crp5emfit56tmpg5qp5l
+```
+
+Required runtime env:
+
+```text
+AUTH_SECRET=<32+ character secret>
+ADMIN_CODE=<admin code for Swagger admin sessions>
+DATABASE_URL=<Neon PostgreSQL URL>
+WEB_ORIGIN=<public app HTTPS origin>
+GOOGLE_CLIENT_ID=<google oauth client id>
+GOOGLE_CLIENT_SECRET=<google oauth client secret>
+GOOGLE_REDIRECT_URI=<public api callback URL>/api/auth/google/callback
+API_PORT=8081
+LOCAL_API_URL=http://127.0.0.1:8081
+```
+
+One-time setup:
+
+```bash
+yc init
+yc container registry configure-docker
+yc serverless container create --name advanced-javascript-org
+yc iam service-account create --name advanced-javascript-org-sa
+yc config get folder-id
+yc iam service-account list
+```
+
+Grant image pull to the runtime service account:
+
+```bash
+yc resource-manager folder add-access-binding <FOLDER_ID> \
+  --role container-registry.images.puller \
+  --subject serviceAccount:<SERVICE_ACCOUNT_ID>
+```
+
+Manual deploy:
+
+```bash
+pnpm db:migrate:deploy
+docker build -f infra/Dockerfile -t cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest .
+docker push cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest
+```
+
+Deploy revision:
+
+```bash
+yc serverless container revision deploy \
+  --container-name advanced-javascript-org \
+  --image cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest \
+  --service-account-id <SERVICE_ACCOUNT_ID> \
+  --memory 512M \
+  --cores 1 \
+  --execution-timeout 30s \
+  --concurrency 8 \
+  --environment API_PORT=8081 \
+  --environment LOCAL_API_URL="http://127.0.0.1:8081" \
+  --environment ADMIN_CODE="<ADMIN_CODE>" \
+  --environment AUTH_SECRET="<AUTH_SECRET>" \
+  --environment DATABASE_URL="<DATABASE_URL>" \
+  --environment WEB_ORIGIN="<WEB_ORIGIN>" \
+  --environment GOOGLE_CLIENT_ID="<GOOGLE_CLIENT_ID>" \
+  --environment GOOGLE_CLIENT_SECRET="<GOOGLE_CLIENT_SECRET>" \
+  --environment GOOGLE_REDIRECT_URI="<GOOGLE_REDIRECT_URI>"
+```
+
+Allow public invocation once:
+
+```bash
+yc serverless container allow-unauthenticated-invoke advanced-javascript-org
+yc serverless container get advanced-javascript-org
+```
+
+Test:
+
+```bash
+curl https://<container-url>/api/healthz
+```
+
+## GitHub Actions CI/CD
+
+Workflow:
+
+```text
+.github/workflows/deploy-yc.yml
+```
+
+Triggers:
+
+- Push to `main` when app, shared package, infra, or deployment files change.
+- Manual `workflow_dispatch`.
+
+It:
+
+- installs Yandex Cloud CLI
+- authenticates with service account JSON
+- builds `infra/Dockerfile`
+- pushes `cr.yandex/<registry-id>/advanced-javascript-org:<commit-sha>`
+- deploys a new Serverless Container revision
+
+GitHub repository variables:
+
+```text
+YC_REGISTRY_ID=crp5emfit56tmpg5qp5l
+YC_CONTAINER_NAME=advanced-javascript-org
+```
+
+GitHub repository secrets:
+
+```text
+YC_SERVICE_ACCOUNT_KEY_JSON
+YC_CLOUD_ID
+YC_FOLDER_ID
+YC_SERVICE_ACCOUNT_ID
+ADMIN_CODE
+AUTH_SECRET
+DATABASE_URL
+WEB_ORIGIN
+GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI
+```
+
+The Actions service account needs these folder roles:
+
+```text
+container-registry.images.pusher
+container-registry.images.puller
+serverless-containers.editor
+iam.serviceAccounts.user
+```
+
+Grant example:
+
+```bash
+yc resource-manager folder add-access-binding <FOLDER_ID> \
+  --role serverless-containers.editor \
+  --subject serviceAccount:<SERVICE_ACCOUNT_ID>
+```
+
+## Troubleshooting
+
+`/api/healthz` returns 404 from web:
+
+- Check `apps/web/next.config.mjs` has the `/api/:path*` rewrite.
+- Rebuild/restart the Docker image after changing Next config.
+
+API fails in Docker but local API works:
+
+- In Docker, do not use `localhost` for host Postgres.
+- Use `host.docker.internal` on Docker Desktop.
+- Check `AUTH_SECRET` length is at least 32 characters.
+
+Combined Docker image starts Next on the wrong port:
+
+- `PORT` must be the public Next.js port.
+- API internal port is `API_PORT`.
+- `pnpm docker:run` already overrides this for local Docker.
+
+Yandex Cloud app returns CORS errors:
+
+- Set `WEB_ORIGIN` to the exact public app origin.
+- Deploy a new container revision after changing env.
+
+Yandex push auth fails:
+
+```bash
+yc container registry configure-docker
+```
+
+Migration fails in CI/prod:
+
+- Check Neon `DATABASE_URL`.
+- Run locally against the same URL:
+
+```bash
+pnpm --filter api exec prisma migrate status
+```
+
+Google OAuth callback returns `502 Google OAuth provider is unavailable` locally:
+
+- The API exchanges the Google code server-side through Node `fetch` to `https://oauth2.googleapis.com/token`.
+- If `curl https://oauth2.googleapis.com/token` works but Node `fetch` times out, the problem is local Node outbound networking, often VPN/firewall/DNS routing.
+- Verify from the same shell with `node -e "fetch('https://oauth2.googleapis.com/token').then(r=>console.log(r.status)).catch(console.error)"`.

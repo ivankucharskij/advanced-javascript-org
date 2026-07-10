@@ -29,5 +29,5 @@ export const paginationMetaSchema: z.ZodType<PaginationMeta> = z.object({
 
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(5),
+  limit: z.coerce.number().int().min(1).max(100).default(5),
 });

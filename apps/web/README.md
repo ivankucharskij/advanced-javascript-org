@@ -32,7 +32,9 @@ pnpm lint         # run ESLint
 - `src/app/(home)/[...slug]`: root-level documentation routes, for example `/array-methods`.
 - `src/app/challenges/page.tsx`: current transitional flashcard practice/review UI wired to `/api/challenges/*`.
 - `src/app/check-auth/page.tsx`: temporary auth verification page for Google OAuth and `/api/me`.
-- `src/app/snippet-test/page.tsx`: temporary admin-auth rendering playground for one snippet/question.
+- `src/app/snippet-test/page.tsx`: temporary admin-auth rendering playground and seed UI for snippets/challenges.
+- `src/app/snippet-test/snippets.ts`: temporary snippet seed payload posted to `/api/challenge-snippets`.
+- `src/app/snippet-test/seed-challenges.ts`: temporary challenge seed payload posted to `/api/challenges`.
 - `/flashcards`: future target route family for the separated flashcard dashboard/player UX.
 - `src/api/challenges.ts`: typed frontend wrapper for public challenge practice endpoints.
 - `src/app/api/search/route.ts`: Fumadocs search route handler.
@@ -69,6 +71,9 @@ Product direction:
 - The current `/challenges` UI uses SWR and `src/api/challenges.ts`; keep API calls behind typed wrappers under `src/api`.
 - Mock challenge data should stay removed from the practice UI.
 - Root `challanges/*.md` files are content drafts for one snippet plus one or more console-output challenges.
+- Root `challanges/separate-challenges/*.ts` files are generated one-challenge-per-file drafts. They should not import shared types, should use persisted `snippetId` values, and should not repeat the reusable snippet code at the top.
+- Use `/snippet-test` only as a temporary admin seed tool. Authorize with `ADMIN_CODE`, seed snippets first, then seed challenges.
+- Dashboard stats shown in `/challenges` are current card states, not raw answer attempts: right means answered and not currently in review; wrong means currently needs review.
 - Use Fumadocs code rendering, currently `fumadocs-ui/components/dynamic-codeblock`, for snippet code styling.
 - Use the shared client `fetchers` object from `src/lib/fetchers.ts` for API calls.
 - Google OAuth is the only auth flow. Do not add local email/password login forms.
