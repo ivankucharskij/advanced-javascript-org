@@ -136,7 +136,7 @@ export default function HomePage() {
               Start learning!
             </Link>
             <a
-              href="https://github.com/johnkucharsky/advancedjavascript"
+              href="https://github.com/ivankucharskij/advancedjavascript"
               rel="noreferrer noopener"
               className="inline-flex justify-center px-5 py-3 rounded-full font-medium tracking-tight transition-colors border bg-fd-secondary text-fd-secondary-foreground hover:bg-fd-accent"
             >
