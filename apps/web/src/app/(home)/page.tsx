@@ -38,6 +38,15 @@ const description =
 export const metadata: Metadata = {
   title,
   description,
+  openGraph: {
+    title,
+    images: "/og/image.png",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    images: "/og/image.png",
+  },
 };
 
 export default function HomePage() {
