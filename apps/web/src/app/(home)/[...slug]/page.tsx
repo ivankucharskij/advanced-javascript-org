@@ -9,9 +9,11 @@ import {
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { TechArticle, WithContext } from "schema-dts";
 
+import { JsonLd } from "@/components/json-ld";
 import { getMDXComponents } from "@/components/mdx";
-import { gitConfig } from "@/lib/shared";
+import { appName, gitConfig, ORIGIN } from "@/lib/shared";
 import { getPageImage, getPageMarkdownUrl, source } from "@/lib/source";
 
 export default async function Page(props: PageProps<"/[...slug]">) {
@@ -21,29 +23,48 @@ export default async function Page(props: PageProps<"/[...slug]">) {
 
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;
+  const pageUrl = new URL(page.url, ORIGIN).toString();
+  const imageUrl = new URL(getPageImage(page).url, ORIGIN).toString();
+  const jsonLd: WithContext<TechArticle> = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: page.data.title,
+    description: page.data.description,
+    image: imageUrl,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
+    publisher: {
+      "@type": "Organization",
+      name: appName,
+      url: ORIGIN,
+    },
+  };
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription className="mb-0">
-        {page.data.description}
-      </DocsDescription>
-      <div className="flex flex-row gap-2 items-center border-b pb-6">
-        <MarkdownCopyButton markdownUrl={markdownUrl} />
-        <ViewOptionsPopover
-          markdownUrl={markdownUrl}
-          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/apps/web/content/${page.path}`}
-        />
-      </div>
-      <DocsBody>
-        <MDX
-          components={getMDXComponents({
-            // this allows you to link to other pages with relative file paths
-            a: createRelativeLink(source, page),
-          })}
-        />
-      </DocsBody>
-    </DocsPage>
+    <>
+      <JsonLd data={jsonLd} />
+      <DocsPage toc={page.data.toc} full={page.data.full}>
+        <DocsTitle>{page.data.title}</DocsTitle>
+        <DocsDescription className="mb-0">
+          {page.data.description}
+        </DocsDescription>
+        <div className="flex flex-row gap-2 items-center border-b pb-6">
+          <MarkdownCopyButton markdownUrl={markdownUrl} />
+          <ViewOptionsPopover
+            markdownUrl={markdownUrl}
+            githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/apps/web/content/${page.path}`}
+          />
+        </div>
+        <DocsBody>
+          <MDX
+            components={getMDXComponents({
+              // this allows you to link to other pages with relative file paths
+              a: createRelativeLink(source, page),
+            })}
+          />
+        </DocsBody>
+      </DocsPage>
+    </>
   );
 }
 
@@ -62,6 +83,11 @@ export async function generateMetadata(
     title: page.data.title,
     description: page.data.description,
     openGraph: {
+      images: getPageImage(page).url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: page.data.title,
       images: getPageImage(page).url,
     },
   };

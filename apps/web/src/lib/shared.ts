@@ -5,7 +5,7 @@ export const docsImageRoute = "/og";
 export const docsContentRoute = "/llms.mdx";
 
 export const gitConfig = {
-  user: "johnkucharsky",
+  user: "ivankucharskij",
   repo: "advanced-javascript-org",
   branch: "main",
 };
