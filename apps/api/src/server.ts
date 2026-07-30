@@ -4,16 +4,9 @@ import { serve } from "@hono/node-server";
 
 import { createApp } from "./app.js";
 import { getEnv } from "./config/env.js";
-import { prisma } from "./lib/prisma.js";
-
-const assertDatabaseAvailable = async () => {
-  await prisma.$queryRaw`SELECT 1`;
-};
 
 export const startServer = async () => {
   const runtimeEnv = getEnv();
-
-  await assertDatabaseAvailable();
 
   const app = createApp(runtimeEnv);
 

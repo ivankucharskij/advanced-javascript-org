@@ -25,11 +25,18 @@ import { guestSessionsService } from "../guest-sessions/guest-sessions.service.j
 import { challengesOpenApi } from "./challenges.openapi.js";
 import { challengesService } from "./challenges.service.js";
 
+type ResolvePracticeActorOptions = {
+  createGuestSession: boolean;
+};
+
 export const challengesRouter = new OpenAPIHono<{
   Variables: AdminVariables;
 }>();
 
-const resolvePracticeActor = async (c: Context) => {
+const resolvePracticeActor = async (
+  c: Context,
+  options: ResolvePracticeActorOptions = { createGuestSession: true },
+) => {
   const accessToken = getCookie(c, AUTH_COOKIE_NAME);
   const authorizationHeader =
     c.req.header("Authorization") ??
@@ -47,7 +54,17 @@ const resolvePracticeActor = async (c: Context) => {
     }
   }
 
-  const result = await guestSessionsService.findOrCreate(getGuestSessionId(c));
+  const guestSessionId = getGuestSessionId(c);
+
+  if (!options.createGuestSession) {
+    return {
+      greetingName: null,
+      guestSessionId: guestSessionId ?? null,
+      userId: null,
+    };
+  }
+
+  const result = await guestSessionsService.findOrCreate(guestSessionId);
   const { guestSession } = result.data;
 
   setGuestSessionCookie(c, guestSession.id);
@@ -61,7 +78,7 @@ const resolvePracticeActor = async (c: Context) => {
 
 challengesRouter.openapi(challengesOpenApi.dashboard, async (c) => {
   const result = await challengesService.dashboard(
-    await resolvePracticeActor(c),
+    await resolvePracticeActor(c, { createGuestSession: false }),
   );
 
   return c.json(
@@ -72,7 +89,7 @@ challengesRouter.openapi(challengesOpenApi.dashboard, async (c) => {
 
 challengesRouter.openapi(challengesOpenApi.next, async (c) => {
   const result = await challengesService.next(
-    await resolvePracticeActor(c),
+    await resolvePracticeActor(c, { createGuestSession: false }),
     c.req.valid("query"),
   );
 
@@ -100,7 +117,9 @@ challengesRouter.openapi(challengesOpenApi.answer, async (c) => {
 });
 
 challengesRouter.openapi(challengesOpenApi.restart, async (c) => {
-  const result = await challengesService.restart(await resolvePracticeActor(c));
+  const result = await challengesService.restart(
+    await resolvePracticeActor(c, { createGuestSession: false }),
+  );
 
   return c.json(
     challengeRestartResponseSchema.parse({ data: result.data }),
