@@ -172,6 +172,20 @@ Check migration status:
 pnpm db:status
 ```
 
+Apply migrations to the production YDB database from your local machine:
+
+```bash
+cp apps/api/.env.production.local.example apps/api/.env.production.local
+pnpm db:status:prod
+pnpm db:migrate:prod
+```
+
+`apps/api/.env.production.local` is intentionally uncommitted. Keep its
+`GOOSE_DBSTRING` pointed at the production YDB database. The prod migration
+script calls `yc iam create-token`, adds the short-lived token to the Goose
+connection string in memory, and appends the required YDB Goose query
+parameters automatically.
+
 When changing schema:
 
 1. Add a new Goose migration in `apps/api/db/migrations`.
@@ -274,7 +288,7 @@ yc resource-manager folder add-access-binding <FOLDER_ID> \
 Manual deploy:
 
 ```bash
-pnpm db:migrate
+pnpm db:migrate:prod
 docker build -f infra/Dockerfile -t cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest .
 docker push cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest
 ```
@@ -293,10 +307,10 @@ yc serverless container revision deploy \
   --environment API_PORT=8081 \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment ADMIN_CODE="<ADMIN_CODE>" \
-    --environment AUTH_SECRET="<AUTH_SECRET>" \
-    --environment DB_CONNECTION_STRING="<DB_CONNECTION_STRING>" \
-    --environment YDB_METADATA_CREDENTIALS=1 \
-    --environment WEB_ORIGIN="<WEB_ORIGIN>" \
+  --environment AUTH_SECRET="<AUTH_SECRET>" \
+  --environment DB_CONNECTION_STRING="<DB_CONNECTION_STRING>" \
+  --environment YDB_METADATA_CREDENTIALS=1 \
+  --environment WEB_ORIGIN="<WEB_ORIGIN>" \
   --environment GOOGLE_CLIENT_ID="<GOOGLE_CLIENT_ID>" \
   --environment GOOGLE_CLIENT_SECRET="<GOOGLE_CLIENT_SECRET>" \
   --environment GOOGLE_REDIRECT_URI="<GOOGLE_REDIRECT_URI>"
