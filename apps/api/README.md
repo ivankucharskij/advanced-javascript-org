@@ -7,7 +7,7 @@
 - `@hono/zod-openapi` for typed routes and OpenAPI generation
 - `@hono/swagger-ui` for interactive docs
 - auth middleware for protected routes
-- Prisma-backed persistence owned by the API package
+- YDB-backed persistence owned by the API package
 
 ## Run
 
@@ -16,8 +16,7 @@ From the repo root:
 ```bash
 cp apps/api/.env.example apps/api/.env
 pnpm db:up
-pnpm db:migrate:dev
-pnpm prisma:generate
+pnpm db:migrate
 pnpm --filter api dev
 pnpm --filter api build
 pnpm --filter api start
@@ -38,12 +37,14 @@ When the server is running:
 - OpenAPI document route: `/api/doc`
 - Swagger UI: `/api/swagger`
 
-## Prisma
+## Database
 
-Generate the Prisma client from the repo root:
+Local development uses YDB from `infra/db.compose.yml`; migrations are Goose YQL files in `apps/api/db/migrations`.
 
 ```bash
-pnpm prisma:generate
+pnpm db:up
+pnpm db:migrate
+pnpm db:status
 ```
 
 ## Docker
@@ -60,10 +61,10 @@ Run it locally:
 docker run --env-file apps/api/.env -p 8080:8080 advanced-javascript-org-api
 ```
 
-When using Docker `--env-file`, keep values unquoted:
+When using Docker `--env-file`, keep values unquoted. For host-local YDB from inside a Docker container, use `host.docker.internal`:
 
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/db?sslmode=require
+DB_CONNECTION_STRING=grpc://host.docker.internal:2136/local
 ```
 
 ## Structure
@@ -88,9 +89,14 @@ Feature modules use resource-prefixed files:
 
 - `*.controller.ts` - Hono routes and HTTP response mapping
 - `*.service.ts` - business rules and authorization decisions
-- `*.repository.ts` - Prisma/database access
+- `*.repository.ts` - database access
 - `*.schemas.ts` - request/response validation types
 - `*.openapi.ts` - route definitions for OpenAPI generation
+
+YDB query notes:
+
+- User-facing text sorts should order by `Unicode::ToLower(...)` expressions so mixed-case titles/slugs sort naturally.
+- Keep dynamic sort expressions restricted to hardcoded field maps before passing them to `unsafe(...)`.
 
 Shared API helpers:
 
@@ -139,11 +145,12 @@ Current content authoring model:
 - `ChallengeSnippet` stores reusable code: `slug`, `topicSlug`, `title`, `language`, and `code`.
 - `Challenge` stores a question and points at a snippet through `snippetId`.
 - Multiple challenges can reference the same snippet.
-- Keep snippet content drafts in the repo root `snippets.md` while editing manually.
-- Keep per-snippet challenge drafts in root `challanges/*.md`. Each file preserves one snippet section and appends one to four console-output challenge drafts.
-- `challanges/saved-snippets.ts` stores persisted snippet IDs from the temporary admin seed flow.
-- `challanges/separate-challenges/*.ts` contains generated one-challenge-per-file seed drafts. They use `snippetId`, omit reusable snippet code, keep only challenge-specific `code` or `null`, and do not import shared types.
-- Temporary seed data for the web admin playground lives in `apps/web/src/app/snippet-test/snippets.ts` and `apps/web/src/app/snippet-test/seed-challenges.ts`. Seed snippets before challenges.
+- Keep snippet content drafts in root `challenges/snippets.md` while editing manually.
+- Keep per-snippet challenge drafts in root `challenges/*.md`. Each file preserves one snippet section and appends one to four console-output challenge drafts.
+- `challenges/seed-snippets.ts` contains the reusable snippet seed payload used by `pnpm seed`.
+- `challenges/saved-snippets.ts` stores persisted snippet IDs from the temporary admin seed flow.
+- `challenges/separate-challenges/*.ts` contains generated one-challenge-per-file seed drafts. They use `snippetId`, omit reusable snippet code, keep only challenge-specific `code` or `null`, and do not import shared types.
+- Temporary challenge seed data for the web admin playground lives in `apps/web/src/app/snippet-test/seed-challenges.ts`.
 - Public practice responses combine runnable code as `ChallengeSnippet.code` first, then `Challenge.code` second when challenge-specific code exists.
 - Shared pagination caps list `limit` at 100.
 
@@ -200,16 +207,20 @@ Main variables:
 - `PORT`
 - `ADMIN_CODE`
 - `AUTH_SECRET`
-- `DATABASE_URL`
 - `WEB_ORIGIN`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
+- `DB_CONNECTION_STRING`
+- `GOOSE_DRIVER`
+- `GOOSE_DBSTRING`
+- `GOOSE_MIGRATION_DIR`
+- `GOOSE_TABLE`
 
-Run this before deploying the API container to apply existing migrations to the configured database:
+Run this before deploying the API container to apply existing migrations to the configured YDB database:
 
 ```bash
-pnpm db:migrate:deploy
+pnpm db:migrate
 ```
 
 ## Seed
@@ -222,12 +233,13 @@ pnpm seed
 
 The seed command does not create demo email/password users. Auth users are created through Google OAuth.
 
-The temporary content seed workflow is in the web app at `/snippet-test`:
+The seed command loads `challenges/seed-snippets.ts`, validates each item with the shared `createChallengeSnippetSchema`, inserts missing reusable snippets, and skips duplicate slugs.
+
+Temporary challenge seeding is still in the web app at `/snippet-test`:
 
 1. Start `pnpm dev`.
 2. Open `http://localhost:3000/snippet-test`.
 3. Authorize with `ADMIN_CODE`.
-4. Click "Add snippets".
-5. Click "Add challenges".
+4. Click "Add challenges".
 
 Challenge seeding posts each item to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.

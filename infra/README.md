@@ -1,6 +1,6 @@
 # advanced-javascript-org Container
 
-This image runs the Next.js web app and the Hono API in one container. PostgreSQL stays external.
+This image runs the Next.js web app and the Hono API in one container. YDB stays external.
 The public HTTP server is Next.js. The API listens on an internal port, and Next.js proxies `/api/*` to it.
 
 Build from the repository root:
@@ -9,13 +9,15 @@ Build from the repository root:
 docker build -f infra/Dockerfile -t advanced-javascript-org .
 ```
 
-Run with an external database:
+Run with an external or host-local YDB database:
 
 ```bash
 docker run --rm \
   -p 3000:3000 \
   -e PORT=3000 \
-  -e DATABASE_URL='postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public' \
+  -e API_PORT=8081 \
+  -e LOCAL_API_URL='http://127.0.0.1:8081' \
+  -e DB_CONNECTION_STRING='grpc://host.docker.internal:2136/local' \
   -e ADMIN_CODE='<admin code for Swagger admin sessions>' \
   -e AUTH_SECRET='local-dev-auth-secret-change-me-32-characters' \
   -e WEB_ORIGIN='http://localhost:3000' \
@@ -27,7 +29,7 @@ docker run --rm \
 
 Required runtime environment:
 
-- `DATABASE_URL`: external PostgreSQL connection string.
+- `DB_CONNECTION_STRING`: YDB connection string.
 - `ADMIN_CODE`: admin code used to issue 12-hour Swagger admin bearer tokens.
 - `AUTH_SECRET`: at least 32 characters.
 - `WEB_ORIGIN`: public web origin for API CORS.
@@ -51,10 +53,10 @@ Optional runtime environment:
 - `API_PORT`: internal API port, default `8081` for the combined image.
 - `LOCAL_API_URL`: URL used by Next.js rewrites for `/api/*`, default `http://127.0.0.1:8081` for the combined image.
 
-Apply migrations against the same external database before starting or deploying:
+Apply Goose migrations against the same YDB database before starting or deploying:
 
 ```bash
-pnpm db:migrate:deploy
+pnpm db:migrate
 ```
 
 Health checks:
@@ -70,11 +72,14 @@ When using the combined image in Yandex Cloud Serverless Containers, invoke the 
 curl https://<container-url>/api/healthz
 ```
 
-For a local PostgreSQL container only:
+For a local YDB container:
 
 ```bash
-docker compose -f infra/postgres.compose.yaml up -d
+pnpm db:up
 ```
+
+The YDB UI is exposed at `http://localhost:9876`; the container still listens on
+`8765`, but the host mapping avoids Windows reserved port ranges.
 
 The API-only image is still available for local or debugging use:
 

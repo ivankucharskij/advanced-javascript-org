@@ -5,12 +5,12 @@ This file is the handoff document for local development, Docker, database migrat
 ## Repository Map
 
 ```text
-apps/api                 Hono API, Prisma schema, migrations, Swagger/OpenAPI
+apps/api                 Hono API, database repositories, Goose migrations, Swagger/OpenAPI
 apps/web                 Next.js app
 packages/shared-types    compiled shared Zod schemas and inferred types
 infra/Dockerfile         combined web + API image
 infra/api.Dockerfile     API-only image for local/debug use
-infra/postgres.compose.yaml
+infra/db.compose.yml     local database service backed by YDB
 .github/workflows/deploy-yc.yml
 ```
 
@@ -21,6 +21,7 @@ Requirements:
 - Node.js 22 recommended
 - pnpm 9
 - Docker
+- Goose CLI available on `PATH`
 
 Install dependencies:
 
@@ -40,20 +41,18 @@ Expected local `apps/api/.env` when running the API directly on the host:
 PORT=8080
 AUTH_SECRET=local-dev-auth-secret-change-me-32-characters
 ADMIN_CODE=<local admin code for Swagger admin sessions>
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app?schema=public
 WEB_ORIGIN=http://localhost:3000
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
 GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
+DB_CONNECTION_STRING=grpc://localhost:2136/local
+GOOSE_DRIVER=ydb
+GOOSE_DBSTRING=grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric
+GOOSE_MIGRATION_DIR=apps/api/db/migrations
+GOOSE_TABLE=goose_db_version
 ```
 
-When running the API in Docker against the local Postgres compose service, use:
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public
-```
-
-Start local Postgres:
+Start local YDB:
 
 ```bash
 pnpm db:up
@@ -62,7 +61,7 @@ pnpm db:up
 Apply local migrations and seed data:
 
 ```bash
-pnpm db:migrate:dev
+pnpm db:migrate
 pnpm seed
 ```
 
@@ -79,12 +78,16 @@ Web:              http://localhost:3000
 API health:       http://localhost:8080/api/healthz
 Swagger:          http://localhost:8080/api/swagger
 OpenAPI JSON:     http://localhost:8080/api/openapi.json
+YDB UI:           http://localhost:9876
 Auth check page:  http://localhost:3000/check-auth
 Challenges UI:    http://localhost:3000/challenges
 Snippet test:     http://localhost:3000/snippet-test
 ```
 
-`pnpm seed` does not create demo email/password users. Auth users are created through Google OAuth.
+The local compose file maps host `9876` to the YDB container UI port `8765`
+because Windows may reserve host port `8765`.
+
+`pnpm seed` validates and inserts reusable snippets from `challenges/seed-snippets.ts`, skips existing snippet slugs, and does not create demo email/password users. Auth users are created through Google OAuth.
 `/check-auth` is the temporary auth verification page. It starts Google OAuth through browser navigation and checks `/api/me` with the auth cookie.
 
 Product notes:
@@ -92,14 +95,15 @@ Product notes:
 - User-facing practice UX is flashcards.
 - Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
 - Reusable code snippets are stored as `ChallengeSnippet` records. `Challenge` records store questions and point to snippets through `snippetId`, so one snippet can have multiple questions.
-- `snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
-- `challanges/*.md` contains one Markdown draft per snippet, including the copied snippet metadata/code and one or more console-output challenge drafts. The misspelled folder name is intentional for now because it was created that way.
-- `challanges/saved-snippets.ts` records persisted snippet IDs returned by the admin snippet import flow.
-- `challanges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These objects use persisted `snippetId` values, omit the reusable top snippet code, include only challenge-specific `code` or `null`, and keep correct answers distributed across option positions.
-- `apps/web/src/app/snippet-test/seed-challenges.ts` is the temporary web seed payload generated from `challanges/separate-challenges`.
+- `challenges/snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
+- `challenges/seed-snippets.ts` is the reusable snippet seed payload used by `pnpm seed`.
+- `challenges/*.md` contains one Markdown draft per snippet, including the copied snippet metadata/code and one or more console-output challenge drafts.
+- `challenges/saved-snippets.ts` records persisted snippet IDs returned by the admin snippet import flow.
+- `challenges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These objects use persisted `snippetId` values, omit the reusable top snippet code, include only challenge-specific `code` or `null`, and keep correct answers distributed across option positions.
+- `apps/web/src/app/snippet-test/seed-challenges.ts` is the temporary web seed payload generated from `challenges/separate-challenges`.
 - Auth is Google OAuth only: no local email/password registration/login.
 - Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
-- Progress is stored in `ChallengeProgress` with `needsReview`, `answeredCount`, and `correctCount`; there is no answer-attempt history table.
+- Progress is stored in YDB user/guest challenge progress tables with `needs_review`, `answered_count`, and `correct_count`; there is no answer-attempt history table.
 - Dashboard totals are current card-state counts: `totalAnswered` is answered cards, `totalCorrect` is answered cards not currently needing review, and `totalWrong` is current review cards. `answeredCount` remains the internal attempt counter for the guest auth gate.
 - Shared list pagination accepts `limit` values up to 100.
 - Public practice endpoints are guest-aware and optional-auth:
@@ -112,13 +116,13 @@ POST /api/challenges/:id/answer
 POST /api/challenges/restart
 ```
 
-Temporary admin content seeding lives at `http://localhost:3000/snippet-test`.
-Authorize with `ADMIN_CODE`, run "Add snippets" first, then run "Add challenges".
+Temporary challenge seeding lives at `http://localhost:3000/snippet-test`.
+Authorize with `ADMIN_CODE`, then run "Add challenges".
 The challenge seed flow posts to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.
 
 ## Docker Local Run
 
-The combined image runs Next.js as the public server on port `3000`; the API runs internally on port `8080`. Next proxies `/api/*` to the internal API.
+The combined image runs Next.js as the public server on port `3000`; the API runs internally on port `8081`. Next proxies `/api/*` to the internal API.
 
 Build and run:
 
@@ -131,9 +135,9 @@ pnpm docker:run
 
 ```text
 PORT=3000
-API_PORT=8080
-LOCAL_API_URL=http://127.0.0.1:8080
-DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/app?schema=public
+API_PORT=8081
+LOCAL_API_URL=http://127.0.0.1:8081
+DB_CONNECTION_STRING=grpc://host.docker.internal:2136/local
 WEB_ORIGIN=http://localhost:3000
 ```
 
@@ -151,43 +155,36 @@ Expected:
 
 ## Database And Migrations
 
-Use one Prisma migration history for all environments.
+YDB is the only active database. Goose owns schema migrations from `apps/api/db/migrations`.
 
 Development flow:
 
 ```bash
 pnpm db:up
-pnpm db:migrate:dev
+pnpm db:migrate
 pnpm seed
 ```
 
-When changing `apps/api/prisma/schema.prisma`:
+Check migration status:
 
 ```bash
-pnpm db:migrate:dev
-pnpm prisma:generate
+pnpm db:status
 ```
 
-Commit both:
+When changing schema:
 
-```text
-apps/api/prisma/schema.prisma
-apps/api/prisma/migrations/<timestamp_name>/migration.sql
-```
-
-Production/staging flow:
-
-```bash
-pnpm db:migrate:deploy
-```
+1. Add a new Goose migration in `apps/api/db/migrations`.
+2. Apply it locally with `pnpm db:migrate`.
+3. Update database repository code and shared contracts if the HTTP shape changes.
+4. Commit the migration and code together.
 
 Rules:
 
-- Use `migrate dev` only for local development.
-- Use `migrate deploy` for Neon, CI, staging, and production.
 - Do not edit already-applied migration files.
-- Do not bake `DATABASE_URL` or `AUTH_SECRET` into Docker images.
+- Do not bake `DB_CONNECTION_STRING` or `AUTH_SECRET` into Docker images.
 - Run migrations before deploying code that depends on new schema.
+- Keep `GOOSE_DBSTRING` pointed at the same YDB database when applying migrations.
+- For YDB-backed list endpoints, user-facing text sorts use `Unicode::ToLower(...)` in `ORDER BY` expressions. This keeps mixed-case values, for example `thisArg...`, in natural title order.
 
 ## Local Commands
 
@@ -196,9 +193,8 @@ pnpm dev
 pnpm check
 pnpm db:up
 pnpm db:down
-pnpm db:logs
-pnpm db:migrate:dev
-pnpm db:migrate:deploy
+pnpm db:migrate
+pnpm db:status
 pnpm docker:build
 pnpm docker:run
 pnpm docker:build-api
@@ -209,7 +205,7 @@ pnpm docker:run-api
 
 `advanced-javascript-org` deploys to Yandex Cloud as one Serverless Container built from `infra/Dockerfile`.
 
-- Database: Neon PostgreSQL.
+- Database: YDB.
 - Runtime: Yandex Cloud Serverless Containers.
 - Public server: Next.js on `PORT`, `8080` in Yandex Cloud.
 - Internal API: Hono on `API_PORT`, `8081` in Yandex Cloud.
@@ -228,13 +224,22 @@ Required runtime env:
 ```text
 AUTH_SECRET=<32+ character secret>
 ADMIN_CODE=<admin code for Swagger admin sessions>
-DATABASE_URL=<Neon PostgreSQL URL>
+DB_CONNECTION_STRING=<YDB connection string>
 WEB_ORIGIN=<public app HTTPS origin>
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
 GOOGLE_REDIRECT_URI=<public api callback URL>/api/auth/google/callback
 API_PORT=8081
 LOCAL_API_URL=http://127.0.0.1:8081
+```
+
+Migration env for the machine running Goose:
+
+```text
+GOOSE_DRIVER=ydb
+GOOSE_DBSTRING=<YDB connection string with Goose query params when needed>
+GOOSE_MIGRATION_DIR=apps/api/db/migrations
+GOOSE_TABLE=goose_db_version
 ```
 
 One-time setup:
@@ -259,7 +264,7 @@ yc resource-manager folder add-access-binding <FOLDER_ID> \
 Manual deploy:
 
 ```bash
-pnpm db:migrate:deploy
+pnpm db:migrate
 docker build -f infra/Dockerfile -t cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest .
 docker push cr.yandex/crp5emfit56tmpg5qp5l/advanced-javascript-org:latest
 ```
@@ -279,7 +284,7 @@ yc serverless container revision deploy \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment ADMIN_CODE="<ADMIN_CODE>" \
   --environment AUTH_SECRET="<AUTH_SECRET>" \
-  --environment DATABASE_URL="<DATABASE_URL>" \
+  --environment DB_CONNECTION_STRING="<DB_CONNECTION_STRING>" \
   --environment WEB_ORIGIN="<WEB_ORIGIN>" \
   --environment GOOGLE_CLIENT_ID="<GOOGLE_CLIENT_ID>" \
   --environment GOOGLE_CLIENT_SECRET="<GOOGLE_CLIENT_SECRET>" \
@@ -336,7 +341,7 @@ YC_FOLDER_ID
 YC_SERVICE_ACCOUNT_ID
 ADMIN_CODE
 AUTH_SECRET
-DATABASE_URL
+DB_CONNECTION_STRING
 WEB_ORIGIN
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
@@ -369,9 +374,16 @@ yc resource-manager folder add-access-binding <FOLDER_ID> \
 
 API fails in Docker but local API works:
 
-- In Docker, do not use `localhost` for host Postgres.
-- Use `host.docker.internal` on Docker Desktop.
+- In Docker, use `host.docker.internal` for host-local YDB.
+- Check `DB_CONNECTION_STRING` points at the correct database path.
 - Check `AUTH_SECRET` length is at least 32 characters.
+
+`pnpm db:up` cannot bind port `8765`:
+
+- Use the checked-in `infra/db.compose.yml`, which maps `9876:8765` for the
+  YDB UI.
+- If a failed start left a created container behind, remove it with
+  `docker rm repo-db-local` and retry `pnpm db:up`.
 
 Combined Docker image starts Next on the wrong port:
 
@@ -392,11 +404,11 @@ yc container registry configure-docker
 
 Migration fails in CI/prod:
 
-- Check Neon `DATABASE_URL`.
-- Run locally against the same URL:
+- Check the Goose env points at the intended YDB database.
+- Run locally against the same YDB connection:
 
 ```bash
-pnpm --filter api exec prisma migrate status
+pnpm db:status
 ```
 
 Google OAuth callback returns `502 Google OAuth provider is unavailable` locally:

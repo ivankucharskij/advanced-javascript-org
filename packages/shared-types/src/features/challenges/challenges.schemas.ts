@@ -52,7 +52,7 @@ export type CreateChallengeInput = {
   title: string;
   prompt: string;
   code?: string | null;
-  order?: number;
+  order: number;
   options: CreateChallengeOptionInput[];
 };
 
@@ -209,7 +209,7 @@ const challengeMutationBaseSchema = z.object({
   title: z.string().min(1),
   prompt: z.string().min(1),
   code: z.string().min(1).nullable().optional(),
-  order: z.number().int().optional(),
+  order: z.number().int(),
   options: z.array(createChallengeOptionSchema).length(3),
 });
 

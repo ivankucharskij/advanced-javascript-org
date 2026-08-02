@@ -6,7 +6,6 @@ const emptyStringToUndefined = (value: unknown) =>
 const envSchema = z.object({
   ADMIN_CODE: z.string().min(1, "ADMIN_CODE is required"),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
-  DATABASE_URL: z.url().min(1, "DATABASE_URL is required"),
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
   GOOGLE_REDIRECT_URI: z.url().min(1, "GOOGLE_REDIRECT_URI is required"),
@@ -18,6 +17,7 @@ const envSchema = z.object({
     z.coerce.number().int().min(1).max(65535),
   ),
   WEB_ORIGIN: z.preprocess(emptyStringToUndefined, z.url().optional()),
+  DB_CONNECTION_STRING: z.url().min(1, "DB_CONNECTION_STRING is required"),
 });
 
 export type Env = z.infer<typeof envSchema>;

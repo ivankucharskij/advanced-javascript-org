@@ -6,11 +6,11 @@ import {
 } from "@repo/shared-types";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
-import { getEnv } from "../../config/env.js";
 import {
   GUEST_SESSION_COOKIE_MAX_AGE_SECONDS,
   GUEST_SESSION_COOKIE_NAME,
 } from "../../shared/constants.js";
+import { shouldUseSecureCookies } from "../../shared/cookies.js";
 import { guestSessionsOpenApi } from "./guest-sessions.openapi.js";
 import { guestSessionsService } from "./guest-sessions.service.js";
 
@@ -29,7 +29,7 @@ const setGuestSessionCookie = (
     maxAge: GUEST_SESSION_COOKIE_MAX_AGE_SECONDS,
     path: "/",
     sameSite: "Lax",
-    secure: getEnv().NODE_ENV === "production",
+    secure: shouldUseSecureCookies(),
   });
 };
 
@@ -37,7 +37,7 @@ const clearGuestSessionCookie = (c: Parameters<typeof deleteCookie>[0]) => {
   deleteCookie(c, GUEST_SESSION_COOKIE_NAME, {
     path: "/",
     sameSite: "Lax",
-    secure: getEnv().NODE_ENV === "production",
+    secure: shouldUseSecureCookies(),
   });
 };
 

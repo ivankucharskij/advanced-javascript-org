@@ -1,7 +1,6 @@
 import type { User } from "@repo/shared-types";
 import { z } from "zod";
 
-import type { User as PrismaUser } from "../../lib/prisma.js";
 import {
   createHttpResult,
   type HttpResult,
@@ -36,17 +35,6 @@ const googleProfileSchema = z.object({
   picture: z.url().optional(),
   verified_email: z.boolean().optional(),
 });
-
-const toPublicUser = (user: PrismaUser): User => {
-  return {
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    avatarUrl: user.avatarUrl,
-    createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString(),
-  };
-};
 
 export const authService = {
   async authorize(
@@ -87,7 +75,7 @@ export const authService = {
 
     return createHttpResult({
       status: HttpStatus.OK,
-      data: toPublicUser(user),
+      data: user,
     });
   },
   async signInWithGoogle(
@@ -134,7 +122,7 @@ export const authService = {
       data: {
         accessToken: await createAccessToken(user.id),
         guestSessionMerge,
-        user: toPublicUser(user),
+        user,
       },
     });
   },

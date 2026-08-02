@@ -1,127 +1,93 @@
+import { randomUUID } from "node:crypto";
+
 import type {
   Challenge,
   ChallengeAnswerInput,
   ChallengeAnswerResponse,
   ChallengeDashboardResponse,
   ChallengeListQuery,
+  ChallengeOptionWithAnswer,
   ChallengeProgress,
   ChallengeRestartResponse,
   ChallengeSessionMode,
   ChallengeSessionResponse,
   ChallengeWithAnswer,
   CreateChallengeInput,
+  CreateChallengeOptionInput,
   UpdateChallengeInput,
 } from "@repo/shared-types";
+import type { SQL } from "@ydbjs/query";
 
-import { Prisma, prisma } from "../../lib/prisma.js";
+import { getDb } from "../../lib/db.js";
+import { toIsoDate, toNumber } from "../../lib/db-utils.js";
 import type { ChallengePracticeActor } from "./challenges.service.js";
+import {
+  type ChallengeOptionRow,
+  type ChallengeRow,
+  deleteActorProgress,
+  deleteChallengeById,
+  deleteChallengeOptionsByChallengeId,
+  deleteGuestProgressByChallengeId,
+  deleteUserProgressByChallengeId,
+  insertActorProgress,
+  insertChallenge,
+  insertChallengeOption,
+  type ProgressRow,
+  type PublicChallengeRow,
+  selectActorAnsweredCount,
+  selectActorProgress,
+  selectActorProgressByTopic,
+  selectActorProgressCount,
+  selectChallengeById,
+  selectChallengeBySlug,
+  selectChallengeList,
+  selectChallengeListTotal,
+  selectChallengeTopicCounts,
+  selectChallengeTotal,
+  selectNextPracticeChallenge,
+  selectNextReviewChallenge,
+  selectOptionsByChallengeId,
+  updateActorProgress,
+  updateChallengeById,
+} from "./challenges.sql.js";
 
-const challengeInclude = {
-  options: {
-    orderBy: {
-      order: "asc" as const,
-    },
-  },
-};
-
-type ChallengeRecord = NonNullable<
-  Awaited<ReturnType<typeof findChallengeById>>
->;
-
-type PublicChallengeRecord = NonNullable<
-  Awaited<ReturnType<typeof findPublicChallenge>>
->;
-
-const findChallengeById = (id: string) => {
-  return prisma.challenge.findUnique({
-    where: {
-      id,
-    },
-    include: challengeInclude,
-  });
-};
-
-const findPublicChallenge = (where: Prisma.ChallengeWhereInput) => {
-  return prisma.challenge.findFirst({
-    where,
-    orderBy: [
-      {
-        topicSlug: "asc",
-      },
-      {
-        order: "asc",
-      },
-      {
-        createdAt: "asc",
-      },
-      {
-        id: "asc",
-      },
-    ],
-    include: {
-      options: {
-        orderBy: {
-          order: "asc",
-        },
-      },
-      snippet: {
-        select: {
-          code: true,
-        },
-      },
-    },
-  });
-};
-
-const getActorProgressWhere = (
-  actor: ChallengePracticeActor,
-): Prisma.ChallengeProgressWhereInput => {
-  if (actor.userId) {
-    return {
-      userId: actor.userId,
-    };
-  }
-
+const toChallengeProgress = (progress: ProgressRow): ChallengeProgress => {
   return {
-    guestSessionId: actor.guestSessionId ?? "",
+    challengeId: progress.challenge_id,
+    needsReview: progress.needs_review,
+    answeredCount: toNumber(progress.answered_count),
+    correctCount: toNumber(progress.correct_count),
   };
 };
 
-const toChallengeProgress = (
-  progress: Pick<
-    ChallengeProgress,
-    "answeredCount" | "challengeId" | "correctCount" | "needsReview"
-  >,
-): ChallengeProgress => {
+const toOptionWithAnswer = (
+  option: ChallengeOptionRow,
+): ChallengeOptionWithAnswer => {
   return {
-    challengeId: progress.challengeId,
-    needsReview: progress.needsReview,
-    answeredCount: progress.answeredCount,
-    correctCount: progress.correctCount,
+    id: option.id,
+    label: option.label,
+    feedback: option.feedback,
+    isCorrect: option.is_correct,
+    order: toNumber(option.option_order),
   };
 };
 
 const toChallengeWithAnswer = (
-  challenge: ChallengeRecord,
+  challenge: ChallengeRow,
+  options: ChallengeOptionRow[],
 ): ChallengeWithAnswer => {
   return {
     id: challenge.id,
-    snippetId: challenge.snippetId,
+    snippetId: challenge.snippet_id,
     slug: challenge.slug,
-    topicSlug: challenge.topicSlug,
+    topicSlug: challenge.topic_slug,
     title: challenge.title,
     prompt: challenge.prompt,
     code: challenge.code,
-    order: challenge.order,
-    createdAt: challenge.createdAt.toISOString(),
-    updatedAt: challenge.updatedAt.toISOString(),
-    options: challenge.options.map((option) => ({
-      id: option.id,
-      label: option.label,
-      feedback: option.feedback,
-      isCorrect: option.isCorrect,
-      order: option.order,
-    })),
+    order: toNumber(challenge.challenge_order),
+    createdAt: toIsoDate(challenge.created_at),
+    updatedAt: toIsoDate(challenge.updated_at),
+    options: options.map(toOptionWithAnswer),
   };
 };
 
@@ -136,24 +102,83 @@ const combineRunnableCode = (
   return `${snippetCode.trim()}\n\n${challengeCode.trim()}`;
 };
 
-const toPublicChallenge = (challenge: PublicChallengeRecord): Challenge => {
+const toPublicChallenge = (
+  challenge: PublicChallengeRow,
+  options: ChallengeOptionRow[],
+): Challenge => {
   return {
     id: challenge.id,
-    snippetId: challenge.snippetId,
+    snippetId: challenge.snippet_id,
     slug: challenge.slug,
-    topicSlug: challenge.topicSlug,
+    topicSlug: challenge.topic_slug,
     title: challenge.title,
     prompt: challenge.prompt,
-    code: combineRunnableCode(challenge.snippet.code, challenge.code),
-    order: challenge.order,
-    createdAt: challenge.createdAt.toISOString(),
-    updatedAt: challenge.updatedAt.toISOString(),
-    options: challenge.options.map((option) => ({
+    code: combineRunnableCode(challenge.snippet_code, challenge.code),
+    order: toNumber(challenge.challenge_order),
+    createdAt: toIsoDate(challenge.created_at),
+    updatedAt: toIsoDate(challenge.updated_at),
+    options: options.map((option) => ({
       id: option.id,
       label: option.label,
-      order: option.order,
+      order: toNumber(option.option_order),
     })),
   };
+};
+
+const selectChallengeWithAnswerById = async (sql: SQL, id: string) => {
+  const challenge = await selectChallengeById(sql, id);
+
+  if (!challenge) {
+    return null;
+  }
+
+  return toChallengeWithAnswer(
+    challenge,
+    await selectOptionsByChallengeId(sql, challenge.id),
+  );
+};
+
+const insertOptions = async (
+  sql: SQL,
+  challengeId: string,
+  options: CreateChallengeOptionInput[],
+) => {
+  for (const option of options) {
+    await insertChallengeOption(sql, challengeId, randomUUID(), option);
+  }
+};
+
+const upsertActorProgress = async (
+  sql: SQL,
+  actor: ChallengePracticeActor,
+  challengeId: string,
+  isCorrect: boolean,
+) => {
+  const current = await selectActorProgress(sql, actor, challengeId);
+
+  if (current) {
+    const nextProgress = {
+      challenge_id: challengeId,
+      needs_review: !isCorrect,
+      answered_count: toNumber(current.answered_count) + 1,
+      correct_count: toNumber(current.correct_count) + (isCorrect ? 1 : 0),
+    };
+
+    await updateActorProgress(sql, actor, nextProgress);
+
+    return nextProgress;
+  }
+
+  const progress = {
+    challenge_id: challengeId,
+    needs_review: !isCorrect,
+    answered_count: 1,
+    correct_count: isCorrect ? 1 : 0,
+  };
+
+  await insertActorProgress(sql, actor, progress);
+
+  return progress;
 };
 
 export const challengesRepository = {
@@ -162,78 +187,25 @@ export const challengesRepository = {
     challengeId: string,
     input: ChallengeAnswerInput,
   ): Promise<ChallengeAnswerResponse["data"] | null> {
-    return prisma.$transaction(async (tx) => {
-      const challenge = await tx.challenge.findUnique({
-        where: {
-          id: challengeId,
-        },
-        include: {
-          options: true,
-        },
-      });
+    const sql = await getDb();
+
+    return sql.begin(async (tx) => {
+      const challenge = await selectChallengeById(tx, challengeId);
 
       if (!challenge) {
         return null;
       }
 
-      const selectedOption = challenge.options.find(
-        (option) => option.id === input.optionId,
-      );
-      const correctOption = challenge.options.find(
-        (option) => option.isCorrect,
-      );
+      const options = await selectOptionsByChallengeId(tx, challengeId);
+      const selectedOption = options.find((option) => option.id === input.optionId);
+      const correctOption = options.find((option) => option.is_correct);
 
       if (!selectedOption || !correctOption) {
         return null;
       }
 
       const isCorrect = selectedOption.id === correctOption.id;
-      const progressUpdate = {
-        answeredCount: {
-          increment: 1,
-        },
-        needsReview: !isCorrect,
-        ...(isCorrect
-          ? {
-              correctCount: {
-                increment: 1,
-              },
-            }
-          : {}),
-      };
-      const progressCreate = {
-        challengeId,
-        answeredCount: 1,
-        correctCount: isCorrect ? 1 : 0,
-        needsReview: !isCorrect,
-      };
-      const progress = actor.userId
-        ? await tx.challengeProgress.upsert({
-            where: {
-              userId_challengeId: {
-                challengeId,
-                userId: actor.userId,
-              },
-            },
-            create: {
-              ...progressCreate,
-              userId: actor.userId,
-            },
-            update: progressUpdate,
-          })
-        : await tx.challengeProgress.upsert({
-            where: {
-              guestSessionId_challengeId: {
-                challengeId,
-                guestSessionId: actor.guestSessionId ?? "",
-              },
-            },
-            create: {
-              ...progressCreate,
-              guestSessionId: actor.guestSessionId ?? "",
-            },
-            update: progressUpdate,
-          });
+      const progress = await upsertActorProgress(tx, actor, challengeId, isCorrect);
 
       return {
         isCorrect,
@@ -245,70 +217,41 @@ export const challengesRepository = {
     });
   },
   async create(input: CreateChallengeInput) {
-    const data = {
-      slug: input.slug,
-      snippet: {
-        connect: {
-          id: input.snippetId,
-        },
-      },
-      topicSlug: input.topicSlug,
-      title: input.title,
-      prompt: input.prompt,
-      code: input.code ?? null,
-      ...(input.order === undefined ? {} : { order: input.order }),
-      options: {
-        create: input.options.map((option) => ({
-          label: option.label,
-          feedback: option.feedback,
-          isCorrect: option.isCorrect,
-          order: option.order,
-        })),
-      },
-    } as Prisma.ChallengeCreateInput;
-    const challenge = await prisma.challenge.create({
-      data,
-      include: challengeInclude,
+    const sql = await getDb();
+    const id = randomUUID();
+
+    await sql.begin(async (tx) => {
+      await insertChallenge(tx, id, input);
+
+      await insertOptions(tx, id, input.options);
     });
 
-    return toChallengeWithAnswer(challenge);
+    const challenge = await selectChallengeWithAnswerById(sql, id);
+
+    if (!challenge) {
+      throw new Error("Database challenge create did not return a challenge");
+    }
+
+    return challenge;
   },
   async dashboard(
     actor: ChallengePracticeActor,
   ): Promise<ChallengeDashboardResponse["data"]> {
-    const progressWhere = getActorProgressWhere(actor);
-    const [totalChallenges, topicCounts, progress] = await prisma.$transaction([
-      prisma.challenge.count(),
-      prisma.challenge.groupBy({
-        by: ["topicSlug"],
-        _count: {
-          _all: true,
-        },
-        orderBy: {
-          topicSlug: "asc",
-        },
-      }),
-      prisma.challengeProgress.findMany({
-        where: progressWhere,
-        include: {
-          challenge: {
-            select: {
-              topicSlug: true,
-            },
-          },
-        },
-      }),
-    ]);
+    const sql = await getDb();
+    const totalRow = await selectChallengeTotal(sql);
+    const topicCounts = await selectChallengeTopicCounts(sql);
+    const progress = await selectActorProgressByTopic(sql, actor);
+    const totalChallenges = toNumber(totalRow?.total);
     const totalAnswerAttempts = progress.reduce(
-      (total, item) => total + item.answeredCount,
+      (total, item) => total + toNumber(item.answered_count),
       0,
     );
     const answeredChallengeCount = progress.filter(
-      (item) => item.answeredCount > 0,
+      (item) => toNumber(item.answered_count) > 0,
     ).length;
-    const reviewCount = progress.filter((item) => item.needsReview).length;
+    const reviewCount = progress.filter((item) => item.needs_review).length;
     const masteredChallengeCount = progress.filter(
-      (item) => item.answeredCount > 0 && !item.needsReview,
+      (item) => toNumber(item.answered_count) > 0 && !item.needs_review,
     ).length;
     const progressByTopic = new Map<
       string,
@@ -316,20 +259,20 @@ export const challengesRepository = {
     >();
 
     for (const item of progress) {
-      const current = progressByTopic.get(item.challenge.topicSlug) ?? {
+      const current = progressByTopic.get(item.topic_slug) ?? {
         completed: 0,
         mastered: 0,
       };
 
-      if (item.answeredCount > 0) {
+      if (toNumber(item.answered_count) > 0) {
         current.completed += 1;
       }
 
-      if (item.answeredCount > 0 && !item.needsReview) {
+      if (toNumber(item.answered_count) > 0 && !item.needs_review) {
         current.mastered += 1;
       }
 
-      progressByTopic.set(item.challenge.topicSlug, current);
+      progressByTopic.set(item.topic_slug, current);
     }
 
     return {
@@ -342,14 +285,14 @@ export const challengesRepository = {
       totalWrong: reviewCount,
       authRequired: !actor.userId && totalAnswerAttempts >= 50,
       topics: topicCounts.map((topic) => {
-        const topicProgress = progressByTopic.get(topic.topicSlug) ?? {
+        const topicProgress = progressByTopic.get(topic.topic_slug) ?? {
           completed: 0,
           mastered: 0,
         };
 
         return {
-          topicSlug: topic.topicSlug,
-          total: topic._count._all,
+          topicSlug: topic.topic_slug,
+          total: toNumber(topic.total),
           completed: topicProgress.completed,
           mastered: topicProgress.mastered,
         };
@@ -357,139 +300,52 @@ export const challengesRepository = {
     };
   },
   async delete(id: string) {
-    return prisma.$transaction(async (tx) => {
-      const challenge = await tx.challenge.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const sql = await getDb();
+
+    return sql.begin(async (tx) => {
+      const challenge = await selectChallengeById(tx, id);
 
       if (!challenge) {
         return null;
       }
 
-      await tx.challengeProgress.deleteMany({
-        where: {
-          challengeId: id,
-        },
-      });
-      await tx.challengeOption.deleteMany({
-        where: {
-          challengeId: id,
-        },
-      });
-      await tx.challenge.delete({
-        where: {
-          id,
-        },
-      });
+      await deleteUserProgressByChallengeId(tx, id);
+      await deleteGuestProgressByChallengeId(tx, id);
+      await deleteChallengeOptionsByChallengeId(tx, id);
+      await deleteChallengeById(tx, id);
 
       return challenge.id;
     });
   },
-  findById(id: string) {
-    return findChallengeById(id);
+  async findById(id: string) {
+    const sql = await getDb();
+
+    return selectChallengeWithAnswerById(sql, id);
   },
-  findBySlug(slug: string) {
-    return prisma.challenge.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        id: true,
-      },
-    });
+  async findBySlug(slug: string) {
+    const sql = await getDb();
+
+    return selectChallengeBySlug(sql, slug);
   },
   async list(query: ChallengeListQuery) {
-    const where: Prisma.ChallengeWhereInput = {
-      ...(query.slug
-        ? {
-            slug: {
-              contains: query.slug,
-              mode: "insensitive",
-            },
-          }
-        : {}),
-      ...(query.topicSlug
-        ? {
-            topicSlug: query.topicSlug,
-          }
-        : {}),
-      ...(query.snippetId
-        ? {
-            snippetId: query.snippetId,
-          }
-        : {}),
-      ...(query.q
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: query.q,
-                  mode: "insensitive",
-                },
-              },
-              {
-                prompt: {
-                  contains: query.q,
-                  mode: "insensitive",
-                },
-              },
-              {
-                snippet: {
-                  code: {
-                    contains: query.q,
-                    mode: "insensitive",
-                  },
-                },
-              },
-            ],
-          }
-        : {}),
-    };
-    const orderBy: Prisma.ChallengeOrderByWithRelationInput[] = [
-      {
-        [query.sortBy]: query.sortDirection,
-      },
-      ...(query.sortBy === "topicSlug"
-        ? []
-        : [
-            {
-              topicSlug: "asc" as const,
-            },
-          ]),
-      ...(query.sortBy === "order"
-        ? []
-        : [
-            {
-              order: "asc" as const,
-            },
-          ]),
-      {
-        createdAt: "asc",
-      },
-      {
-        id: "asc",
-      },
-    ];
-    const [total, challenges] = await prisma.$transaction([
-      prisma.challenge.count({
-        where,
-      }),
-      prisma.challenge.findMany({
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
-        where,
-        orderBy,
-        include: challengeInclude,
-      }),
-    ]);
+    const sql = await getDb();
+    const totalRow = await selectChallengeListTotal(sql, query);
+    const challenges = await selectChallengeList(sql, query);
+    const data: ChallengeWithAnswer[] = [];
+
+    for (const challenge of challenges) {
+      data.push(
+        toChallengeWithAnswer(
+          challenge,
+          await selectOptionsByChallengeId(sql, challenge.id),
+        ),
+      );
+    }
+
+    const total = toNumber(totalRow?.total);
 
     return {
-      data: challenges.map(toChallengeWithAnswer),
+      data,
       meta: {
         total,
         page: query.page,
@@ -502,107 +358,57 @@ export const challengesRepository = {
     actor: ChallengePracticeActor,
     mode: ChallengeSessionMode,
   ): Promise<ChallengeSessionResponse["data"]> {
-    const progressWhere = getActorProgressWhere(actor);
-    const [total, progressSummary] = await prisma.$transaction([
-      prisma.challenge.count(),
-      prisma.challengeProgress.aggregate({
-        where: progressWhere,
-        _sum: {
-          answeredCount: true,
-        },
-      }),
-    ]);
+    const sql = await getDb();
+    const totalRow = await selectChallengeTotal(sql);
+    const progressSummaryRow = await selectActorAnsweredCount(sql, actor);
     const challenge =
       mode === "review"
-        ? await findPublicChallenge({
-            progress: {
-              some: {
-                ...progressWhere,
-                needsReview: true,
-              },
-            },
-          })
-        : await findPublicChallenge({
-            NOT: {
-              progress: {
-                some: {
-                  ...progressWhere,
-                  answeredCount: {
-                    gt: 0,
-                  },
-                },
-              },
-            },
-          });
+        ? await selectNextReviewChallenge(sql, actor)
+        : await selectNextPracticeChallenge(sql, actor);
 
     return {
       mode,
-      answered: progressSummary._sum.answeredCount ?? 0,
-      total,
-      challenge: challenge ? toPublicChallenge(challenge) : null,
+      answered: toNumber(progressSummaryRow?.total),
+      total: toNumber(totalRow?.total),
+      challenge: challenge
+        ? toPublicChallenge(
+            challenge,
+            await selectOptionsByChallengeId(sql, challenge.id),
+          )
+        : null,
     };
   },
   async restart(
     actor: ChallengePracticeActor,
   ): Promise<ChallengeRestartResponse["data"]> {
-    const result = await prisma.challengeProgress.deleteMany({
-      where: getActorProgressWhere(actor),
-    });
+    const sql = await getDb();
+    const row = await selectActorProgressCount(sql, actor);
+
+    await deleteActorProgress(sql, actor);
 
     return {
-      resetCount: result.count,
+      resetCount: toNumber(row?.total),
     };
   },
   async update(id: string, input: UpdateChallengeInput) {
-    const challenge = await prisma.$transaction(async (tx) => {
+    const sql = await getDb();
+
+    await sql.begin(async (tx) => {
+      await updateChallengeById(tx, id, input);
+
       if (input.options) {
-        await tx.challengeOption.deleteMany({
-          where: {
-            challengeId: id,
-          },
-        });
+        await deleteChallengeOptionsByChallengeId(tx, id);
+        await insertOptions(tx, id, input.options);
       }
-
-      const data: Prisma.ChallengeUpdateInput = {
-        slug: input.slug,
-        ...(input.snippetId
-          ? {
-              snippet: {
-                connect: {
-                  id: input.snippetId,
-                },
-              },
-            }
-          : {}),
-        topicSlug: input.topicSlug,
-        title: input.title,
-        prompt: input.prompt,
-        code: input.code,
-        order: input.order,
-        ...(input.options
-          ? {
-              options: {
-                create: input.options.map((option) => ({
-                  label: option.label,
-                  feedback: option.feedback,
-                  isCorrect: option.isCorrect,
-                  order: option.order,
-                })),
-              },
-            }
-          : {}),
-      };
-
-      return tx.challenge.update({
-        where: {
-          id,
-        },
-        data,
-        include: challengeInclude,
-      });
     });
 
-    return toChallengeWithAnswer(challenge);
+    const challenge = await selectChallengeWithAnswerById(sql, id);
+
+    if (!challenge) {
+      throw new Error("Database challenge update did not return a challenge");
+    }
+
+    return challenge;
   },
   toChallengeWithAnswer,
 };

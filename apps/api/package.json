@@ -8,9 +8,6 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate:dev": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
     "lint": "tsc --noEmit && eslint --fix"
   },
   "dependencies": {
@@ -18,21 +15,18 @@
     "@hono/oauth-providers": "^0.8.5",
     "@hono/swagger-ui": "^0.6.1",
     "@hono/zod-openapi": "^1.3.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
     "@repo/shared-types": "workspace:*",
+    "@ydbjs/core": "^6.3.1",
+    "@ydbjs/query": "^6.3.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.15",
-    "pg": "^8.20.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@types/node": "^25.6.0",
-    "@types/pg": "^8.20.0",
     "eslint": "^9.39.1",
     "prettier": "^3.8.3",
-    "prisma": "^7.8.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }

@@ -1,97 +1,89 @@
+import { randomUUID } from "node:crypto";
+
 import type { GuestSessionSummary } from "@repo/shared-types";
+import type { SQL } from "@ydbjs/query";
 
-import { prisma } from "../../lib/prisma.js";
+import { getDb } from "../../lib/db.js";
+import { toIsoDate, toNumber } from "../../lib/db-utils.js";
+import {
+  deleteGuestProgress,
+  deleteGuestSession,
+  type GuestSessionRow,
+  insertGuestSession,
+  insertUserProgressFromGuest,
+  selectGuestProgress,
+  selectGuestProgressSummary,
+  selectGuestSession,
+  selectUserProgress,
+  updateUserProgressFromGuest,
+} from "./guest-sessions.sql.js";
 
-type GuestSessionWithProgress = Awaited<
-  ReturnType<typeof findGuestSessionWithProgress>
->;
+const toSummary = async (
+  sql: SQL,
+  guestSession: GuestSessionRow,
+): Promise<GuestSessionSummary> => {
+  const progress = await selectGuestProgressSummary(sql, guestSession.id);
 
-const findGuestSessionWithProgress = (id: string) => {
-  return prisma.guestSession.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      challengeProgress: true,
-    },
-  });
-};
-
-const toSummary = (
-  guestSession: NonNullable<GuestSessionWithProgress>,
-): GuestSessionSummary => {
   return {
     id: guestSession.id,
-    createdAt: guestSession.createdAt.toISOString(),
-    updatedAt: guestSession.updatedAt.toISOString(),
-    progressCount: guestSession.challengeProgress.length,
-    totalAnswered: guestSession.challengeProgress.reduce(
-      (total, progress) => total + progress.answeredCount,
-      0,
-    ),
-    needsReviewCount: guestSession.challengeProgress.filter(
-      (progress) => progress.needsReview,
-    ).length,
+    createdAt: toIsoDate(guestSession.created_at),
+    updatedAt: toIsoDate(guestSession.updated_at),
+    progressCount: toNumber(progress?.progress_count),
+    totalAnswered: toNumber(progress?.total_answered),
+    needsReviewCount: toNumber(progress?.needs_review_count),
   };
 };
 
 export const guestSessionsRepository = {
   async discard(id: string) {
-    return prisma.$transaction(async (tx) => {
-      const guestSession = await tx.guestSession.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          id: true,
-        },
-      });
+    const sql = await getDb();
+
+    return sql.begin(async (tx) => {
+      const guestSession = await selectGuestSession(tx, id);
 
       if (!guestSession) {
         return null;
       }
 
-      await tx.challengeProgress.deleteMany({
-        where: {
-          guestSessionId: id,
-        },
-      });
-      await tx.guestSession.delete({
-        where: {
-          id,
-        },
-      });
+      await deleteGuestProgress(tx, id);
+      await deleteGuestSession(tx, id);
 
       return guestSession.id;
     });
   },
   async find(id: string): Promise<GuestSessionSummary | null> {
-    const guestSession = await findGuestSessionWithProgress(id);
+    const sql = await getDb();
+    const guestSession = await selectGuestSession(sql, id);
 
-    return guestSession ? toSummary(guestSession) : null;
+    return guestSession ? toSummary(sql, guestSession) : null;
   },
   async findOrCreate(id: string | undefined) {
+    const sql = await getDb();
+
     if (id) {
-      const existingGuestSession = await findGuestSessionWithProgress(id);
+      const existingGuestSession = await selectGuestSession(sql, id);
 
       if (existingGuestSession) {
         return {
           created: false,
-          guestSession: toSummary(existingGuestSession),
+          guestSession: await toSummary(sql, existingGuestSession),
         };
       }
     }
 
-    const guestSession = await prisma.guestSession.create({
-      data: {},
-      include: {
-        challengeProgress: true,
-      },
-    });
+    const guestSessionId = randomUUID();
+
+    await insertGuestSession(sql, guestSessionId);
+
+    const guestSession = await selectGuestSession(sql, guestSessionId);
+
+    if (!guestSession) {
+      throw new Error("Database guest session create did not return a session");
+    }
 
     return {
       created: true,
-      guestSession: toSummary(guestSession),
+      guestSession: await toSummary(sql, guestSession),
     };
   },
   async mergeIntoUser(userId: string, guestSessionId: string | undefined) {
@@ -103,15 +95,10 @@ export const guestSessionsRepository = {
       };
     }
 
-    return prisma.$transaction(async (tx) => {
-      const guestSession = await tx.guestSession.findUnique({
-        where: {
-          id: guestSessionId,
-        },
-        include: {
-          challengeProgress: true,
-        },
-      });
+    const sql = await getDb();
+
+    return sql.begin(async (tx) => {
+      const guestSession = await selectGuestSession(tx, guestSessionId);
 
       if (!guestSession) {
         return {
@@ -121,58 +108,43 @@ export const guestSessionsRepository = {
         };
       }
 
-      for (const guestProgress of guestSession.challengeProgress) {
-        const userProgress = await tx.challengeProgress.findUnique({
-          where: {
-            userId_challengeId: {
-              challengeId: guestProgress.challengeId,
-              userId,
-            },
-          },
-        });
+      const guestProgressRows = await selectGuestProgress(tx, guestSessionId);
+
+      for (const guestProgress of guestProgressRows) {
+        const userProgress = await selectUserProgress(
+          tx,
+          userId,
+          guestProgress.challenge_id,
+        );
 
         if (userProgress) {
-          await tx.challengeProgress.update({
-            where: {
-              id: userProgress.id,
-            },
-            data: {
-              answeredCount:
-                userProgress.answeredCount + guestProgress.answeredCount,
-              correctCount:
-                userProgress.correctCount + guestProgress.correctCount,
-              needsReview:
-                userProgress.needsReview || guestProgress.needsReview,
-            },
+          await updateUserProgressFromGuest(tx, {
+            userId,
+            challengeId: guestProgress.challenge_id,
+            answeredCount:
+              userProgress.answered_count + guestProgress.answered_count,
+            correctCount: userProgress.correct_count + guestProgress.correct_count,
+            needsReview:
+              userProgress.needs_review || guestProgress.needs_review,
           });
         } else {
-          await tx.challengeProgress.create({
-            data: {
-              answeredCount: guestProgress.answeredCount,
-              challengeId: guestProgress.challengeId,
-              correctCount: guestProgress.correctCount,
-              needsReview: guestProgress.needsReview,
-              userId,
-            },
+          await insertUserProgressFromGuest(tx, {
+            userId,
+            challengeId: guestProgress.challenge_id,
+            needsReview: guestProgress.needs_review,
+            answeredCount: guestProgress.answered_count,
+            correctCount: guestProgress.correct_count,
           });
         }
       }
 
-      await tx.challengeProgress.deleteMany({
-        where: {
-          guestSessionId,
-        },
-      });
-      await tx.guestSession.delete({
-        where: {
-          id: guestSessionId,
-        },
-      });
+      await deleteGuestProgress(tx, guestSessionId);
+      await deleteGuestSession(tx, guestSessionId);
 
       return {
         discarded: true,
         guestSessionId,
-        mergedProgressCount: guestSession.challengeProgress.length,
+        mergedProgressCount: guestProgressRows.length,
       };
     });
   },

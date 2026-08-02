@@ -2,6 +2,167 @@
 
 Build this as the main portfolio product: a Google-auth-backed JavaScript flashcard practice app using existing course topics/content. The old todo/task domain is disposable and should stay removed.
 
+## Current Status
+
+The `apps/api` migration from Prisma/PostgreSQL to YDB is locally verified. The repo no longer has active Prisma/PostgreSQL code, dependencies, scripts, env, Docker services, or future-facing docs.
+
+Current handoff:
+
+- Stop point: 2026-08-02 after local automated YDB final verification,
+  Docker smoke checks, app-level database naming cleanup, command-line
+  reusable snippet seeding, and YDB text-sort cleanup.
+- Resume from: owner review. External Google OAuth and Yandex Cloud production checks remain owner-context tasks if the owner wants them.
+- No next agent implementation step is queued. When work resumes, read `.agents/AGENTS.md`, `.agents/plan.md`, `.agents/plan-steps.md`, package scripts, shared contracts, and the files involved in the requested change before editing.
+- Do not continue into unrelated product work until the owner accepts the YDB migration state or explicitly asks to resume product work.
+
+Confirmed migration decisions:
+
+- Use `apps/api` as the API path.
+- Before every YDB-related implementation or planning step, consult YDB v26.1 docs: https://ydb.tech/docs/en/?version=v26.1
+- Use snake_case table and column names.
+- Use YDB unique secondary indexes instead of lookup tables for uniqueness.
+- Make `challenge_order` required at the application/API/seed level.
+- Keep admin `q` search simple and scan-based for the first YDB slice.
+- Model relations explicitly with `*_id` columns, for example `challenges.snippet_id -> challenge_snippets.id`. YDB stores those IDs, while repository code enforces referential rules and cascades.
+- Keep the user's removal of `db:logs`; do not re-add it.
+- No legacy database fallback is wanted. YDB is the active persistence backend.
+- App-owned database names are generic `db`, because YDB is the only supported
+  database. Use `DB_CONNECTION_STRING`, `apps/api/src/lib/db.ts`,
+  `apps/api/db/migrations`, `infra/db.compose.yml`, and root `db:*` scripts.
+
+Current local YDB state:
+
+- `infra/db.compose.yml` exists and starts `repo-db-local`.
+- Local YDB gRPC is reachable on `localhost:2136` / `127.0.0.1:2136`.
+- YDB UI should be available at `http://localhost:9876`.
+- Goose connects through `GOOSE_DBSTRING`.
+- Applied schema version: `20260801135000`.
+
+Important connection strings:
+
+```env
+DB_CONNECTION_STRING=grpc://localhost:2136/local
+GOOSE_DBSTRING=grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric
+GOOSE_MIGRATION_DIR=apps/api/db/migrations
+GOOSE_TABLE=goose_db_version
+```
+
+For JetBrains/DataGrip YDB JDBC, use anonymous/no-auth and:
+
+```text
+jdbc:ydb:grpc://127.0.0.1:2136/local
+```
+
+Do not use Goose query params in the JDBC URL.
+
+Verified YDB commands:
+
+```bash
+pnpm.cmd db:status
+pnpm.cmd db:migrate
+goose -env apps/api/.env -dir apps/api/db/migrations down
+pnpm.cmd db:migrate
+pnpm.cmd --filter api build
+pnpm.cmd check
+pnpm.cmd seed
+```
+
+Latest verification results:
+
+- `pnpm.cmd check` passes after app-level database naming cleanup.
+- `pnpm.cmd --filter api lint` passes after app-level database naming cleanup and the YDB text-sort cleanup.
+- `pnpm.cmd db:status` shows `20260801135000_00001_create_initial_schema.sql` applied.
+- `pnpm.cmd --filter api build` passes.
+- `pnpm.cmd check` passes after Prisma/PostgreSQL runtime removal.
+- `pnpm.cmd check` passes after YDB-only docs/deployment updates.
+- `pnpm.cmd seed` passes through the YDB-only seed workflow and seeds reusable challenge snippets from `challenges/seed-snippets.ts`, skipping existing slugs.
+- `/api/challenge-snippets?page=1&limit=5&sortBy=title&sortDirection=desc`
+  returns human-descending title order after switching YDB text sort
+  expressions to `Unicode::ToLower(...)`.
+- Future-facing README/runbook/API/infra docs and active deployment docs no longer mention Prisma/PostgreSQL, Neon, or `DATABASE_URL`.
+- `pnpm.cmd docker:build` passes after removing Prisma generation/copy layers.
+- Combined Docker image smoke passes against local YDB through `DB_CONNECTION_STRING=grpc://host.docker.internal:2136/local`.
+- Container public health route `http://localhost:3100/api/healthz` returns `{ "status": "healthy" }`.
+- Disposable API smoke created a snippet/challenge, answered wrong as a guest, saw the card in review, restarted progress, and deleted the disposable rows.
+- `pnpm.cmd lint` passes with one existing warning in `apps/web/src/components/code-runner.tsx` about `react-hooks/set-state-in-effect`.
+- The previous migration was rolled back and the corrected migration was re-applied successfully.
+- After the naming cleanup, the old `repo-ydb-local` container was removed and
+  the renamed `repo-db-local` compose service was verified. YDB UI uses host
+  port `9876` mapped to container port `8765` because Windows excluded the
+  earlier host ports.
+
+Files currently involved in the YDB migration work:
+
+- `apps/api/db/migrations/20260801135000_00001_create_initial_schema.sql`
+- `.agents/plan.md`
+- `.agents/plan-steps.md`
+- `.agents/AGENTS.md`
+- `apps/api/.env.example`
+- `apps/api/env.d.ts`
+- `apps/api/src/config/env.ts`
+- `apps/api/src/lib/db.ts`
+- `apps/api/src/lib/db-utils.ts`
+- `apps/api/src/shared/cookies.ts`
+- `apps/api/src/features/auth/auth.controller.ts`
+- `apps/api/src/features/auth/auth.repository.ts`
+- `apps/api/src/features/auth/auth.service.ts`
+- `apps/api/src/features/guest-sessions/guest-sessions.controller.ts`
+- `apps/api/src/features/guest-sessions/guest-sessions.repository.ts`
+- `apps/api/src/features/challenge-snippets/challenge-snippets.repository.ts`
+- `apps/api/src/features/challenge-snippets/challenge-snippets.sql.ts`
+- `apps/api/src/features/challenges/challenges.repository.ts`
+- `apps/api/src/features/challenges/challenges.sql.ts`
+- `apps/api/src/scripts/seed.ts`
+- `challenges/seed-snippets.ts`
+- `packages/shared-types/src/features/challenges/challenges.schemas.ts`
+- `apps/api/src/server.ts`
+- `apps/api/package.json`
+- `pnpm-lock.yaml`
+- `package.json`
+- `turbo.json`
+- `infra/db.compose.yml`
+- `infra/Dockerfile`
+- `infra/api.Dockerfile`
+- `.github/workflows/deploy-yc.yml`
+- `README.md`
+- `apps/api/README.md`
+- `docs/RUNBOOK.md`
+- `infra/README.md`
+
+Known dirty worktree note:
+
+- The repo already has uncommitted changes. Do not revert user changes.
+- `infra/db.compose.yml` was already present as untracked user work when the YDB migration task began.
+- `package.json` has user removal of `db:logs`; preserve it.
+
+Current facts:
+
+- Active runtime DB access is YDB through `apps/api/src/lib/db.ts`.
+- Prisma runtime dependencies, generated client files, Prisma config, Prisma schema/migrations, and the local Postgres compose file have been removed.
+- Future-facing docs describe YDB/Goose as the active database/migration stack.
+- Local YDB compose support exists at `infra/db.compose.yml`.
+- The old local Postgres orphan container `repo-prisma-postgres` was removed during final verification.
+- The YDB JS driver disables endpoint discovery for explicit local hosts (`localhost`, `127.0.0.1`, `host.docker.internal`) so Docker local connections do not follow YDB local discovery back to container loopback.
+- YDB `ORDER BY` supports expressions; user-facing text sort fields use `Unicode::ToLower(...)` so lowercase titles such as `thisArg...` do not sort ahead of uppercase titles in descending order.
+- Auth and guest cookies use secure cookies when `WEB_ORIGIN` is HTTPS; this preserves production HTTPS behavior while allowing HTTP localhost Docker smoke tests.
+- Goose supports the `ydb` driver and can read `GOOSE_DRIVER`, `GOOSE_DBSTRING`, `GOOSE_MIGRATION_DIR`, and `GOOSE_TABLE` from env files.
+- YDB local Goose connection string should use:
+
+```text
+grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric
+```
+
+- Prisma ORM does not list YDB as a supported database, so this is not a provider swap. The API persistence layer must move away from Prisma.
+
+References:
+
+- YDB docs v26.1: https://ydb.tech/docs/en/?version=v26.1
+- YDB Goose integration: https://ydb.tech/docs/en/integrations/migration/goose?version=v26.1
+- Goose env vars: https://pressly.github.io/goose/documentation/environment-variables/
+- Goose YDB driver example: https://github.com/pressly/goose
+- YDB JS SDK: https://ydb.js.org/guide/core
+- Prisma supported databases: https://docs.prisma.io/docs/orm/reference/supported-databases
+
 ## Product Shape
 
 - Main experience is an endless flashcard practice flow, not a challenge list.
@@ -120,12 +281,15 @@ Swagger/OpenAPI are served under `/api/swagger` and `/api/openapi.json`.
 
 ## Content Drafts
 
-- `snippets.md` remains the source working draft extracted from `apps/web/content/*.mdx`.
-- `challanges/*.md` contains one file per snippet, named by snippet slug. Each file preserves the snippet metadata/code and appends one to four challenge drafts.
+- `challenges/snippets.md` remains the source working draft extracted from `apps/web/content/*.mdx`.
+- `challenges/*.md` contains one file per snippet, named by snippet slug. Each file preserves the snippet metadata/code and appends one to four challenge drafts.
+- `challenges/seed-snippets.ts` contains the API create-shape reusable snippet seed payload used by `pnpm seed`.
 - Challenge draft answers should be visible `console.log` outputs/results.
 - A challenge's runnable code should start with the reusable snippet, then append challenge-specific code second.
 
-## Prisma Shape
+## Legacy Prisma Shape
+
+This section records the product data model that currently exists in legacy Prisma form. The active database target is YDB, and `.agents/plan-steps.md` defines the ordered Prisma/PostgreSQL removal path.
 
 Remove old todo tables:
 
@@ -255,7 +419,7 @@ Also add a dismissible auth prompt:
 - Do not do background/silent Google authorization.
 - OAuth redirect happens only after the user clicks Google or reaches the auth gate.
 
-## First Implementation Slice
+## Completed Product Implementation Slice
 
 1. Shared schemas + SWR/fetcher direction.
 2. Replace Prisma schema with the flashcard product schema.
@@ -269,4 +433,4 @@ Also add a dismissible auth prompt:
 
 ## Portfolio Value
 
-Shows real product architecture: Google OAuth, guest-to-user progress merge, custom auth cookies, Prisma modeling, destructive domain reshape, shared Zod contracts, typed frontend fetchers, Swagger-managed content, optional/protected APIs, wrong-card review, saved progress, Docker, CI/CD, and polished educational UX.
+Shows real product architecture: Google OAuth, guest-to-user progress merge, custom auth cookies, YDB-backed persistence, shared Zod contracts, typed frontend fetchers, Swagger-managed content, optional/protected APIs, wrong-card review, saved progress, Docker, CI/CD, and polished educational UX.

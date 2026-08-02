@@ -1,0 +1,24 @@
+services:
+  db:
+    image: ydbplatform/local-ydb:latest
+    container_name: repo-db-local
+    hostname: localhost
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "2135:2135"
+      - "2136:2136"
+      - "9876:8765"
+      - "9092:9092"
+    environment:
+      GRPC_TLS_PORT: "2135"
+      GRPC_PORT: "2136"
+      MON_PORT: "8765"
+      YDB_KAFKA_PROXY_PORT: "9092"
+    volumes:
+      - db-data:/ydb_data
+      - db-certs:/ydb_certs
+
+volumes:
+  db-data:
+  db-certs:

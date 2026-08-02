@@ -6,11 +6,17 @@
     "OPENAPI_URL",
     "LOCAL_API_URL",
     "PORT",
-    "DATABASE_URL",
-    "DATABASE_URL_NEON",
     "AUTH_SECRET",
     "ADMIN_CODE",
-    "WEB_ORIGIN"
+    "WEB_ORIGIN",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "GOOGLE_REDIRECT_URI",
+    "DB_CONNECTION_STRING",
+    "GOOSE_DRIVER",
+    "GOOSE_DBSTRING",
+    "GOOSE_MIGRATION_DIR",
+    "GOOSE_TABLE"
   ],
   "tasks": {
     "build": {

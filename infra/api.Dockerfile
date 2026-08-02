@@ -17,7 +17,6 @@ COPY packages/shared-types packages/shared-types
 COPY packages/eslint-config packages/eslint-config
 RUN pnpm --filter @repo/shared-types build
 WORKDIR /app/apps/api
-RUN pnpm prisma:generate
 RUN pnpm build
 
 FROM base AS runner
@@ -30,7 +29,6 @@ COPY packages/shared-types/package.json packages/shared-types/package.json
 RUN pnpm install --frozen-lockfile --prod --filter api...
 
 COPY --from=builder /app/apps/api/dist apps/api/dist
-COPY --from=builder /app/apps/api/prisma apps/api/prisma
 COPY --from=builder /app/packages/shared-types/dist packages/shared-types/dist
 
 WORKDIR /app/apps/api

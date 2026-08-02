@@ -11,6 +11,7 @@ import {
   AUTH_COOKIE_MAX_AGE_SECONDS,
   AUTH_COOKIE_NAME,
 } from "../../shared/constants.js";
+import { shouldUseSecureCookies } from "../../shared/cookies.js";
 import { HttpStatus } from "../../shared/http.js";
 import {
   clearGuestSessionCookie,
@@ -72,14 +73,12 @@ authRouter.openapi(
       return c.json({ message: auth.message }, auth.status);
     }
 
-    const runtimeEnv = getEnv();
-
     setCookie(c, AUTH_COOKIE_NAME, auth.data.accessToken, {
       httpOnly: true,
       maxAge: AUTH_COOKIE_MAX_AGE_SECONDS,
       path: "/",
       sameSite: "Lax",
-      secure: runtimeEnv.NODE_ENV === "production",
+      secure: shouldUseSecureCookies(),
     });
 
     if (auth.data.guestSessionMerge.discarded) {

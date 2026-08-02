@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import type {
   ChallengeSnippet,
   ChallengeSnippetListQuery,
@@ -5,56 +7,55 @@ import type {
   UpdateChallengeSnippetInput,
 } from "@repo/shared-types";
 
-import { Prisma, prisma } from "../../lib/prisma.js";
+import { getDb } from "../../lib/db.js";
+import { toIsoDate, toNumber } from "../../lib/db-utils.js";
+import {
+  type ChallengeSnippetRow,
+  deleteChallengeSnippetById,
+  insertChallengeSnippet,
+  selectChallengeSnippetById,
+  selectChallengeSnippetBySlug,
+  selectChallengeSnippetList,
+  selectChallengeSnippetListTotal,
+  selectChallengeUsingSnippet,
+  updateChallengeSnippetById,
+} from "./challenge-snippets.sql.js";
 
-type ChallengeSnippetRecord = Awaited<
-  ReturnType<typeof prisma.challengeSnippet.findFirstOrThrow>
->;
-
-const toChallengeSnippet = (
-  snippet: ChallengeSnippetRecord,
-): ChallengeSnippet => {
+const toChallengeSnippet = (snippet: ChallengeSnippetRow): ChallengeSnippet => {
   return {
     id: snippet.id,
     slug: snippet.slug,
-    topicSlug: snippet.topicSlug,
+    topicSlug: snippet.topic_slug,
     title: snippet.title,
     language: snippet.language,
     code: snippet.code,
-    createdAt: snippet.createdAt.toISOString(),
-    updatedAt: snippet.updatedAt.toISOString(),
+    createdAt: toIsoDate(snippet.created_at),
+    updatedAt: toIsoDate(snippet.updated_at),
   };
 };
 
 export const challengeSnippetsRepository = {
   async create(input: CreateChallengeSnippetInput) {
-    const snippet = await prisma.challengeSnippet.create({
-      data: {
-        slug: input.slug,
-        topicSlug: input.topicSlug,
-        title: input.title,
-        language: input.language,
-        code: input.code,
-      },
-    });
+    const sql = await getDb();
+    const id = randomUUID();
+
+    await insertChallengeSnippet(sql, id, input);
+
+    const snippet = await selectChallengeSnippetById(sql, id);
+
+    if (!snippet) {
+      throw new Error(
+        "Database challenge snippet create did not return a snippet",
+      );
+    }
 
     return toChallengeSnippet(snippet);
   },
   async delete(id: string) {
-    return prisma.$transaction(async (tx) => {
-      const snippet = await tx.challengeSnippet.findUnique({
-        where: {
-          id,
-        },
-        select: {
-          id: true,
-          _count: {
-            select: {
-              challenges: true,
-            },
-          },
-        },
-      });
+    const sql = await getDb();
+
+    return sql.begin(async (tx) => {
+      const snippet = await selectChallengeSnippetById(tx, id);
 
       if (!snippet) {
         return {
@@ -63,18 +64,16 @@ export const challengeSnippetsRepository = {
         };
       }
 
-      if (snippet._count.challenges > 0) {
+      const usedChallenge = await selectChallengeUsingSnippet(tx, id);
+
+      if (usedChallenge) {
         return {
           id: snippet.id,
           isUsed: true,
         };
       }
 
-      await tx.challengeSnippet.delete({
-        where: {
-          id,
-        },
-      });
+      await deleteChallengeSnippetById(tx, id);
 
       return {
         id: snippet.id,
@@ -82,86 +81,21 @@ export const challengeSnippetsRepository = {
       };
     });
   },
-  findById(id: string) {
-    return prisma.challengeSnippet.findUnique({
-      where: {
-        id,
-      },
-    });
+  async findById(id: string) {
+    const sql = await getDb();
+
+    return selectChallengeSnippetById(sql, id);
   },
-  findBySlug(slug: string) {
-    return prisma.challengeSnippet.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        id: true,
-      },
-    });
+  async findBySlug(slug: string) {
+    const sql = await getDb();
+
+    return selectChallengeSnippetBySlug(sql, slug);
   },
   async list(query: ChallengeSnippetListQuery) {
-    const where: Prisma.ChallengeSnippetWhereInput = {
-      ...(query.slug
-        ? {
-            slug: {
-              contains: query.slug,
-              mode: "insensitive",
-            },
-          }
-        : {}),
-      ...(query.topicSlug
-        ? {
-            topicSlug: query.topicSlug,
-          }
-        : {}),
-      ...(query.q
-        ? {
-            OR: [
-              {
-                title: {
-                  contains: query.q,
-                  mode: "insensitive",
-                },
-              },
-              {
-                code: {
-                  contains: query.q,
-                  mode: "insensitive",
-                },
-              },
-            ],
-          }
-        : {}),
-    };
-    const orderBy: Prisma.ChallengeSnippetOrderByWithRelationInput[] = [
-      {
-        [query.sortBy]: query.sortDirection,
-      },
-      ...(query.sortBy === "topicSlug"
-        ? []
-        : [
-            {
-              topicSlug: "asc" as const,
-            },
-          ]),
-      {
-        createdAt: "asc",
-      },
-      {
-        id: "asc",
-      },
-    ];
-    const [total, snippets] = await prisma.$transaction([
-      prisma.challengeSnippet.count({
-        where,
-      }),
-      prisma.challengeSnippet.findMany({
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
-        where,
-        orderBy,
-      }),
-    ]);
+    const sql = await getDb();
+    const totalRow = await selectChallengeSnippetListTotal(sql, query);
+    const snippets = await selectChallengeSnippetList(sql, query);
+    const total = toNumber(totalRow?.total);
 
     return {
       data: snippets.map(toChallengeSnippet),
@@ -174,18 +108,17 @@ export const challengeSnippetsRepository = {
     };
   },
   async update(id: string, input: UpdateChallengeSnippetInput) {
-    const snippet = await prisma.challengeSnippet.update({
-      where: {
-        id,
-      },
-      data: {
-        slug: input.slug,
-        topicSlug: input.topicSlug,
-        title: input.title,
-        language: input.language,
-        code: input.code,
-      },
-    });
+    const sql = await getDb();
+
+    await updateChallengeSnippetById(sql, id, input);
+
+    const snippet = await selectChallengeSnippetById(sql, id);
+
+    if (!snippet) {
+      throw new Error(
+        "Database challenge snippet update did not return a snippet",
+      );
+    }
 
     return toChallengeSnippet(snippet);
   },

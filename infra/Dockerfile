@@ -16,7 +16,6 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 FROM deps AS builder
 ENV LOCAL_API_URL="http://127.0.0.1:8081"
 COPY . .
-RUN pnpm --filter api prisma:generate
 RUN pnpm --filter @repo/shared-types build
 RUN pnpm --filter api build
 RUN pnpm --filter web build
@@ -35,7 +34,6 @@ COPY packages/shared-types/package.json packages/shared-types/package.json
 RUN pnpm install --frozen-lockfile --prod --filter api --ignore-scripts
 
 COPY --from=builder /app/apps/api/dist apps/api/dist
-COPY --from=builder /app/apps/api/prisma apps/api/prisma
 COPY --from=builder /app/packages/shared-types/dist packages/shared-types/dist
 COPY --from=builder /app/apps/web/.next/standalone ./
 COPY --from=builder /app/apps/web/.next/static apps/web/.next/static
