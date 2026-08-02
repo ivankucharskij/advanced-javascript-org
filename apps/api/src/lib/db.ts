@@ -1,3 +1,4 @@
+import { EnvironCredentialsProvider } from "@ydbjs/auth/environ";
 import { Driver } from "@ydbjs/core";
 import { query, type QueryClient } from "@ydbjs/query";
 
@@ -25,7 +26,12 @@ export const getDbDriver = async () => {
   }
 
   const connectionString = getEnv().DB_CONNECTION_STRING;
-  dbDriver = new Driver(connectionString, getDbDriverOptions(connectionString));
+  const credentials = new EnvironCredentialsProvider(connectionString);
+  dbDriver = new Driver(connectionString, {
+    ...getDbDriverOptions(connectionString),
+    credentialsProvider: credentials,
+    secureOptions: credentials.secureOptions,
+  });
   await dbDriver.ready();
 
   return dbDriver;

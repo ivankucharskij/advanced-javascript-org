@@ -46,6 +46,7 @@ GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
 GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/google/callback
 DB_CONNECTION_STRING=grpc://localhost:2136/local
+YDB_ANONYMOUS_CREDENTIALS=1
 GOOSE_DRIVER=ydb
 GOOSE_DBSTRING=grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric
 GOOSE_MIGRATION_DIR=apps/api/db/migrations
@@ -225,6 +226,7 @@ Required runtime env:
 AUTH_SECRET=<32+ character secret>
 ADMIN_CODE=<admin code for Swagger admin sessions>
 DB_CONNECTION_STRING=<YDB connection string>
+YDB_METADATA_CREDENTIALS=1
 WEB_ORIGIN=<public app HTTPS origin>
 GOOGLE_CLIENT_ID=<google oauth client id>
 GOOGLE_CLIENT_SECRET=<google oauth client secret>
@@ -261,6 +263,14 @@ yc resource-manager folder add-access-binding <FOLDER_ID> \
   --subject serviceAccount:<SERVICE_ACCOUNT_ID>
 ```
 
+Grant YDB read/write access to the same runtime service account:
+
+```bash
+yc resource-manager folder add-access-binding <FOLDER_ID> \
+  --role ydb.editor \
+  --subject serviceAccount:<SERVICE_ACCOUNT_ID>
+```
+
 Manual deploy:
 
 ```bash
@@ -283,9 +293,10 @@ yc serverless container revision deploy \
   --environment API_PORT=8081 \
   --environment LOCAL_API_URL="http://127.0.0.1:8081" \
   --environment ADMIN_CODE="<ADMIN_CODE>" \
-  --environment AUTH_SECRET="<AUTH_SECRET>" \
-  --environment DB_CONNECTION_STRING="<DB_CONNECTION_STRING>" \
-  --environment WEB_ORIGIN="<WEB_ORIGIN>" \
+    --environment AUTH_SECRET="<AUTH_SECRET>" \
+    --environment DB_CONNECTION_STRING="<DB_CONNECTION_STRING>" \
+    --environment YDB_METADATA_CREDENTIALS=1 \
+    --environment WEB_ORIGIN="<WEB_ORIGIN>" \
   --environment GOOGLE_CLIENT_ID="<GOOGLE_CLIENT_ID>" \
   --environment GOOGLE_CLIENT_SECRET="<GOOGLE_CLIENT_SECRET>" \
   --environment GOOGLE_REDIRECT_URI="<GOOGLE_REDIRECT_URI>"

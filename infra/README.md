@@ -18,6 +18,7 @@ docker run --rm \
   -e API_PORT=8081 \
   -e LOCAL_API_URL='http://127.0.0.1:8081' \
   -e DB_CONNECTION_STRING='grpc://host.docker.internal:2136/local' \
+  -e YDB_ANONYMOUS_CREDENTIALS='1' \
   -e ADMIN_CODE='<admin code for Swagger admin sessions>' \
   -e AUTH_SECRET='local-dev-auth-secret-change-me-32-characters' \
   -e WEB_ORIGIN='http://localhost:3000' \
@@ -30,6 +31,7 @@ docker run --rm \
 Required runtime environment:
 
 - `DB_CONNECTION_STRING`: YDB connection string.
+- `YDB_METADATA_CREDENTIALS=1`: use the container revision service account through the Yandex metadata service in production.
 - `ADMIN_CODE`: admin code used to issue 12-hour Swagger admin bearer tokens.
 - `AUTH_SECRET`: at least 32 characters.
 - `WEB_ORIGIN`: public web origin for API CORS.

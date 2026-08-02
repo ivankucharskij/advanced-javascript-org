@@ -13,5 +13,7 @@ declare namespace NodeJS {
     PORT?: string;
     WEB_ORIGIN?: string;
     DB_CONNECTION_STRING?: string;
+    YDB_ANONYMOUS_CREDENTIALS?: "1";
+    YDB_METADATA_CREDENTIALS?: "1";
   }
 }
