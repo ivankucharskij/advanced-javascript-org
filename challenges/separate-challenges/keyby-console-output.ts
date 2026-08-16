@@ -1,6 +1,6 @@
 export const keybyConsoleOutputChallenge = {
   slug: "keyby-console-output",
-  snippetId: "696af8f0-f026-4e5f-9c0e-af2d54eeb775",
+  snippetId: "56eeb472-b044-4ebe-b836-41b6efeefb98",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

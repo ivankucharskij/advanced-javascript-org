@@ -29,6 +29,7 @@ export const createApp = (runtimeEnv: Env = getEnv()) => {
   );
   // cors
 
+  app.get("/", (c) => c.redirect("/api/healthz"));
   app.route("/api", createRouter());
 
   // docs

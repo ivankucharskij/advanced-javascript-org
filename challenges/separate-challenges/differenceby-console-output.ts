@@ -1,6 +1,6 @@
 export const differencebyConsoleOutputChallenge = {
   slug: "differenceby-console-output",
-  snippetId: "4123a3b9-12c2-46fa-87cb-cd3b442c9bba",
+  snippetId: "78703489-1b42-4fa8-94e8-69e525468e75",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

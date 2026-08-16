@@ -1,116 +1,252 @@
 # AGENTS.md
 
-Guidance for agents working in `C:\projects\advanced-javascript-org`.
+Current guidance for agents working in `C:\projects\advanced-javascript-org`.
 
-## First Actions
+This file is the durable project handoff. There are no separate agent plan files; inspect the current code and update this file when a change materially alters the documented state.
 
-- Before starting implementation work, look around the repo carefully. Read the relevant `.agents` files, current plan files, shared contracts, package scripts, and the feature files involved in the requested change.
-- Treat `.agents/plan.md` and `.agents/plan-steps.md` as the planning source of truth. Do not create separate ad hoc plan files unless the owner explicitly asks.
-- The YDB migration for `apps/api` is locally verified. Do not reintroduce legacy database code, scripts, env, Docker services, or docs.
-- Before every YDB-related implementation or planning step, check the YDB v26.1 docs: https://ydb.tech/docs/en/?version=v26.1
-- Do not add legacy database fallback behavior. YDB is the active persistence backend.
+## Before Changing Code
 
-## Project Shape
-
-This is a pnpm/Turborepo monorepo with:
-
-- `apps/web`: Next.js 16, React 19, Fumadocs docs site.
-- `apps/api`: Hono API with YDB persistence.
-- `packages/shared-types`: compiled shared Zod schemas and inferred types.
-- `infra`: Dockerfiles and local YDB compose support.
-
-The root `README.md` is recruiter-facing. Read `docs/RUNBOOK.md` first for local dev, Docker, migrations, deploy, and CI/CD.
+- Inspect the relevant package scripts, shared contracts, feature files, and current diff before editing. The worktree is often dirty; preserve unrelated and user-owned changes.
+- Read `docs/RUNBOOK.md` for local development, YDB, Docker, migrations, deployment, and troubleshooting.
+- Never hand-edit generated directories such as `node_modules`, `.next`, `.source`, or package `dist` output.
+- Never edit `pnpm-lock.yaml` manually. Let pnpm update it.
+- Do not commit secrets or revert user changes unless explicitly asked.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
 # Next.js: ALWAYS read docs before coding
 
-Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+Before any Next.js work, find and read the relevant document in `apps/web/node_modules/next/dist/docs/`. The installed docs are the source of truth for this Next.js version.
 
 <!-- END:nextjs-agent-rules -->
 
-Check hono docs when working with hono
-https://hono.dev/docs/
+- Check the official Hono docs before Hono-specific work: https://hono.dev/docs/
+- Check YDB v26.1 docs before every YDB implementation or planning step: https://ydb.tech/docs/en/?version=v26.1
+- Check Fumadocs docs before Fumadocs-specific work: https://www.fumadocs.dev/
 
-Check YDB v26.1 docs when working with YDB
-https://ydb.tech/docs/en/?version=v26.1
+## Current State
 
-Check fumadocs when working with fumadocs
-https://www.fumadocs.dev/
+As of 2026-08-16:
 
-## Common Commands
+- The app is a JavaScript documentation and challenge-practice product. Product copy, routes, schemas, and APIs all use challenge naming. Do not introduce flashcard naming or `/flashcards` routes.
+- The active challenge routes are `/challenges`, `/challenges/practice`, and `/challenges/review`.
+- The challenge dashboard, endless practice player, wrong-answer review player, guest progress, Google OAuth gate, and restart flow are implemented.
+- The dashboard intentionally does not render topic progress. The dashboard API still returns topic aggregates; do not restore the UI element unless the owner asks.
+- YDB is the only database. Prisma/PostgreSQL code, dependencies, configuration, migrations, Docker services, and fallback behavior are removed.
+- Shared Zod schemas in `packages/shared-types` are the contract source. Swagger/OpenAPI remains API-owned. There is no generated frontend API client and no duplicate `Practice*` contract module.
+- The old todo/task product, custom email/password auth, roles, user blocking/status, difficulty, streaks, and answer-attempt history are intentionally absent.
+- Shared-types build, API build, web production build, and scoped API/web lint pass after the current challenge-route and contract cleanup.
+- Local YDB migration, seed, API practice flow, health behavior, and combined-container smoke were verified during the YDB migration. Real Google OAuth, guest-to-user merge, the latest combined Docker rebuild, and Yandex Cloud production deployment remain manual/external checks.
 
-Run from the repo root unless noted otherwise:
+## Repository Shape
+
+This is a pnpm 9/Turborepo monorepo:
+
+- `apps/web`: Next.js 16, React 19, Fumadocs, Tailwind CSS, SWR, CodeMirror, and Sandpack.
+- `apps/api`: Hono, `@hono/zod-openapi`, Google OAuth, YDB repositories, and Goose migrations.
+- `packages/shared-types`: compiled shared Zod schemas and TypeScript types.
+- `packages/eslint-config`: shared base and Next.js ESLint configurations.
+- `challenges`: source drafts and seed payloads for reusable snippets and challenges.
+- `infra`: local YDB Compose, combined/API-only Dockerfiles, and the combined runtime launcher.
+- `docs/RUNBOOK.md`: operational source of truth.
+- `.github/workflows/deploy-yc.yml`: combined-image deployment to Yandex Cloud Serverless Containers.
+
+The root `README.md` is concise and recruiter-facing. Package READMEs describe their current package surfaces; keep historical implementation logs out of them.
+
+## Commands
+
+Run from the repository root unless stated otherwise:
 
 ```bash
 pnpm install
 pnpm dev
+pnpm build
 pnpm check
-pnpm --filter web build
-pnpm --filter api build
+pnpm lint
+
 pnpm db:up
+pnpm db:down
 pnpm db:migrate
 pnpm db:status
+
 pnpm seed
+pnpm seed:challenges
+
 pnpm docker:build
 pnpm docker:run
+pnpm docker:build-api
+pnpm docker:run-api
 ```
 
-## Important Conventions
+Useful scoped verification:
 
-- YDB is the active database.
-- Local YDB uses `infra/db.compose.yml`; do not re-add removed helper scripts such as `db:logs`.
-- YDB list endpoints should sort user-facing text fields case-insensitively with `Unicode::ToLower(...)` in `ORDER BY` expressions. Keep sort fields whitelisted before passing expressions through `unsafe(...)`.
-- `pnpm docker:run` serves the combined app at `http://localhost:3000`; temporary smoke tests may use another host port if `3000` is busy.
-- The combined Docker image runs Next.js publicly and the API internally.
-- `apps/web/next.config.mjs` must keep the `/api/:path*` rewrite.
-- Fumadocs content lives in `apps/web/content`.
-- `challenges/snippets.md` is the manual working draft for reusable JavaScript snippet content derived from `apps/web/content/*.mdx`.
-- `challenges/*.md` contains one Markdown draft per snippet, named by snippet slug. Each file should preserve the snippet section from `challenges/snippets.md` and append one to four console-output challenge drafts.
-- `challenges/seed-snippets.ts` contains the API create-shape reusable snippet seed payload used by `pnpm seed`.
-- `challenges/saved-snippets.ts` stores the current persisted snippet IDs used by generated challenge seed data.
-- `challenges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These files intentionally do not import shared types. Each object should use `snippetId` from `saved-snippets.ts`, include only challenge-specific `code` or `null`, have exactly three options, exactly one correct option, and avoid putting the correct answer in the same position every time.
-- Generated folders like `.next`, `.source`, and `node_modules` should not be hand-edited.
-- Product UX is JavaScript flashcard practice, but backend/schema naming intentionally keeps `Challenge*`.
-- Do not reintroduce todos/tasks, custom email/password auth, admin/roles, user status/blocking, difficulty, or answer-attempt history.
-- `ChallengeSnippet` stores reusable code snippets. `Challenge` stores one question for a snippet through `snippetId`; multiple challenges may point at the same snippet.
-- `ChallengeProgress` is the per-user/per-guest card state: `needsReview`, `answeredCount`, and `correctCount`.
-- Dashboard totals are current card-state counts: `totalAnswered` is answered cards, `totalCorrect` is answered cards not currently needing review, and `totalWrong` is current review cards. Keep `answeredCount` as an internal attempt counter for auth gating and merge math.
-- Shared pagination query validation caps `limit` at 100.
+```bash
+pnpm --filter @repo/shared-types build
+pnpm --filter api build
+pnpm --filter web types:check
+pnpm --filter web build
+```
 
-## Web Notes
+Package `lint` scripts run TypeScript and ESLint with `--fix`; use direct `pnpm --filter <package> exec eslint <paths>` when a non-mutating scoped check is preferable.
 
-- Root docs pages are served from `apps/web/content/*.mdx`.
-- Homepage is `apps/web/src/app/(home)/page.tsx`.
-- Current practice UI is under `/challenges` and is transitional. Future route cleanup may move it under `/flashcards`; adapt the existing UI rather than expanding a separate product.
-- `/snippet-test` is a temporary rendering playground for one snippet/question. Keep experiments there until the real flashcard UI exists.
-- `/snippet-test` also has temporary admin seed buttons. `pnpm seed` seeds reusable snippets from `challenges/seed-snippets.ts`; the temporary UI can still seed challenges from `seed-challenges.ts`, and challenge seeding depends on matching persisted `snippetId` values.
-- Use Fumadocs code rendering primitives already used by the app, such as `fumadocs-ui/components/dynamic-codeblock`, for snippet code styling.
-- Client HTTP helpers live in `apps/web/src/lib/fetchers.ts`; use the shared `fetchers` object for web API calls.
-- Use `pnpm --filter web build` after routing or Next config changes.
+## Web Application
 
-## API Notes
+Current routes and utilities:
 
-- API env lives in `apps/api/.env` for local dev.
-- Health endpoint is `/api/healthz`.
-- Swagger UI is `/api/swagger`; OpenAPI JSON is `/api/openapi.json`.
-- Auth is Google OAuth only. Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`; do not add local register/login.
-- `/check-auth` is the temporary web auth verification page. Keep auth-related manual checks there until the real `/login` and `/flashcards` flows replace it.
-- Flashcard APIs use `/api/challenges/*` and `Challenge*` contracts.
-- Public flashcard flow endpoints are `/api/challenges/dashboard`, `/api/challenges/next?mode=practice|review`, `/api/challenges/:id/answer`, and `/api/challenges/restart`.
-- Snippet APIs use `/api/challenge-snippets/*` and `ChallengeSnippet*` contracts. Snippet CRUD follows the same controller/service/repository/OpenAPI structure as challenges.
-- Current YDB text sorting fix is in `apps/api/src/features/challenge-snippets/challenge-snippets.sql.ts` and `apps/api/src/features/challenges/challenges.sql.ts`.
-- Challenge create/update payloads should use `snippetId`, not inline snippet code.
-- Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into `User` and discard the guest session.
-- Shared API HTTP helpers live in `apps/api/src/shared/http.ts`.
-- API services should return shared HTTP helper result types (`createHttpResult`, `HttpResult`, `SuccessHttpResult`) rather than ad hoc objects.
-- API controllers should translate service results into explicit JSON responses. Do not `throw new Error(result.message)` for normal service-result handling; return `c.json({ message }, status)` for declared error responses.
-- API startup checks DB connectivity.
-- Run migrations before starting code that expects new schema.
+- `/`: homepage.
+- Root documentation pages such as `/array-methods`: generated from `apps/web/content/*.mdx` through the `(home)/[...slug]` route.
+- `/challenges`: SWR-backed challenge dashboard with practice/review entry points, session totals, guest save-progress prompt, and required-auth gate.
+- `/challenges/practice`: endless practice mode over unanswered challenges.
+- `/challenges/review`: review mode over challenges whose current progress has `needsReview = true`.
+- `/check-auth`: temporary/manual Google OAuth and `/api/me` verification utility.
+- `/snippet-test`: rendering playground and older admin-authorized snippet/challenge seed UI.
+- `/static-check-api`: diagnostic page.
+- `/api/search`, `/og/[...slug]`, `/llms.mdx/[...slug]`, and `/sitemap.xml`: documentation/search/metadata routes.
 
-## Safety
+Challenge UI implementation:
 
-- Do not commit secrets.
-- Do not revert user changes unless explicitly asked.
-- Keep edits scoped; this repo often has a dirty working tree.
-- Never edit `pnpm-lock.yaml` manually. Only let pnpm update lockfiles through pnpm commands.
+- `apps/web/src/app/challenges/page.tsx`: dashboard.
+- `apps/web/src/app/challenges/_components/player.tsx`: shared practice/review player.
+- `apps/web/src/app/challenges/practice/page.tsx` and `review/page.tsx`: fixed-mode route wrappers.
+- `apps/web/src/api/challenges.ts`: typed challenge API boundary.
+- `apps/web/src/lib/fetchers.ts`: shared `ky` helpers with credentials included.
+- `apps/web/src/components/code-runner.tsx`: client-side runnable code editor/output.
+
+Keep API calls behind typed wrappers in `apps/web/src/api`. The web app imports types from `@repo/shared-types`; do not generate a client from OpenAPI.
+
+`apps/web/next.config.mjs` must keep the `/api/:path*` rewrite to `LOCAL_API_URL`. The combined container relies on that rewrite to reach the internal API.
+
+Player behavior:
+
+- Show the title, prompt, combined runnable code, exactly three answer options, and answered/total progress.
+- Accept one answer per challenge presentation and lock the options afterward.
+- A wrong answer reveals the correct option, displays feedback, and sets `needsReview = true`; there is no retry on the same presentation.
+- A correct answer displays feedback and clears `needsReview`.
+- `Next` fetches another challenge in the current mode.
+- Practice exhaustion offers restart; review exhaustion links back to practice.
+- Guests can dismiss the save-progress prompt until the 50-attempt required-auth gate.
+- Google OAuth must start with browser navigation to `/api/auth/google`, not `fetch`.
+
+Use the existing Fumadocs styling primitives and app tokens. Use `pnpm --filter web build` after routing or Next.js configuration changes.
+
+## API
+
+The API is mounted under `/api`. Core runtime files are `apps/api/src/app.ts`, `server.ts`, and `router.ts`. Feature modules use controller/service/repository/OpenAPI separation.
+
+Public and optional-auth routes:
+
+```text
+GET  /api/healthz
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice|review
+POST /api/challenges/:id/answer
+POST /api/challenges/restart
+GET  /api/guest-session
+POST /api/guest-session
+DELETE /api/guest-session
+```
+
+Google auth routes:
+
+```text
+GET /api/auth/google
+GET /api/auth/google/callback
+GET /api/me
+```
+
+Admin/content routes:
+
+```text
+POST   /api/admin/session
+GET    /api/challenge-snippets
+POST   /api/challenge-snippets
+PATCH  /api/challenge-snippets/:id
+DELETE /api/challenge-snippets/:id
+GET    /api/challenges
+POST   /api/challenges
+PATCH  /api/challenges/:id
+DELETE /api/challenges/:id
+```
+
+Swagger UI is `/api/swagger`; OpenAPI JSON is `/api/openapi.json` (with `/api/doc` retained as another document route).
+
+API conventions:
+
+- Google OAuth is the only user auth. Keep the `accessToken` cookie and bearer-token support; do not add local registration/login.
+- Admin content management uses a separate 12-hour bearer token returned by `POST /api/admin/session` from `ADMIN_CODE`.
+- Guest sessions are temporary anonymous progress buffers. On Google callback, merge guest progress into the user, delete/discard the guest session, clear its cookie, and set the user auth cookie.
+- Challenge/snippet create and update payloads use `snippetId`; reusable code is not duplicated into every challenge.
+- API services return `createHttpResult`/`HttpResult`/`SuccessHttpResult` values from `apps/api/src/shared/http.ts`.
+- Controllers translate expected service failures into explicit JSON/status responses; do not throw for normal declared errors.
+- `/api/healthz` queries YDB and returns `{ "status": "healthy", "db": "ok" }` or HTTP 503 with `{ "status": "unhealthy", "db": "fail" }`. API startup itself does not require an immediate successful DB query.
+
+## Challenge Data And Progress
+
+- `ChallengeSnippet` stores reusable `slug`, `topicSlug`, `title`, `language`, and code.
+- `Challenge` stores one question and references a snippet through `snippetId`; multiple challenges may share a snippet. Challenge-specific `code` may be null.
+- Every challenge has exactly three ordered options and exactly one correct option.
+- Public runnable code is reusable snippet code first, followed by challenge-specific code when present.
+- `ChallengeProgress` is current per-actor state, not an attempt log: `needsReview`, `answeredCount`, and `correctCount`.
+- `answeredCount` is the internal attempt counter used for the 50-answer guest auth gate and guest/user merge math.
+- Dashboard counts are card-state counts: `totalAnswered` is the number of challenges answered at least once; `totalCorrect` is answered challenges not currently needing review; `totalWrong`/`reviewCount` is the current review set; `practiceCount` is unanswered challenges.
+- The dashboard API returns per-topic totals/completed/mastered aggregates even though the current dashboard UI does not render them.
+- Restart deletes the current actor's progress rows and returns `resetCount`.
+- Shared list pagination defaults to 5 and caps `limit` at 100.
+
+## YDB And Migrations
+
+- YDB is the only persistence backend. Database helpers live in `apps/api/src/lib/db.ts` and SQL/YQL helpers live beside their repositories.
+- The single current Goose migration is `apps/api/db/migrations/20260801135000_00001_create_initial_schema.sql`.
+- Current tables are `users`, `oauth_accounts`, `guest_sessions`, `challenge_snippets`, `challenges`, `challenge_options`, `user_challenge_progress`, and `guest_challenge_progress`.
+- Use snake_case database names and explicit `*_id` relation columns. Repository code enforces referential behavior/cascades that YDB does not provide automatically.
+- Use YDB unique secondary indexes for uniqueness.
+- Do not edit an already-applied migration. Add a new migration and apply it before code that expects the new schema.
+- List endpoints sort user-facing text case-insensitively with whitelisted `Unicode::ToLower(...)` expressions before passing expressions to `unsafe(...)`.
+- Explicit local hosts (`localhost`, `127.0.0.1`, `host.docker.internal`) disable YDB endpoint discovery so local/Docker connections do not redirect to container loopback.
+
+Local services:
+
+- Compose file: `infra/db.compose.yml`.
+- Container: `repo-db-local`.
+- gRPC: `localhost:2136`.
+- YDB UI: `http://localhost:9876` (host `9876` maps to container `8765`).
+- App connection: `grpc://localhost:2136/local`.
+- Goose connection: `grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric`.
+- DataGrip/JDBC: `jdbc:ydb:grpc://127.0.0.1:2136/local` with anonymous/no-auth; do not append Goose query parameters.
+
+Keep API environment in `apps/api/.env` for local development. Production migration credentials belong in the uncommitted `apps/api/.env.production.local`; `scripts/goose-prod.mjs` obtains a short-lived Yandex IAM token.
+
+## Challenge Content And Seeding
+
+- `challenges/snippets.md`: aggregate manual working source derived from documentation content.
+- `challenges/*.md`: per-snippet/manual challenge drafts. The current Markdown set contains 85 `### Challenge` sections.
+- `challenges/seed-snippets.ts`: reusable snippet create payload consumed by `pnpm seed`.
+- `challenges/saved-snippets.ts`: persisted snippet UUIDs referenced by challenge seed objects.
+- `challenges/separate-challenges/*.ts`: 85 one-challenge-per-file seed modules consumed by `pnpm seed:challenges`.
+- `apps/web/src/app/snippet-test/seed-challenges.ts`: older web seed payload for the temporary playground.
+
+Seed rules:
+
+- Run `pnpm seed` before `pnpm seed:challenges`.
+- Seed commands validate through shared Zod schemas, create missing rows, skip duplicate slugs, and fail if other errors remain.
+- Separate challenge modules intentionally do not import shared types.
+- Each challenge seed uses the persisted `snippetId`, includes only challenge-specific code or null, has exactly three options, exactly one correct answer, and varied correct-option positions.
+- Answer labels are visible `console.log` outputs/results for the current UI.
+
+## Docker And Deployment
+
+- `infra/Dockerfile` builds the shared package, API, and standalone Next.js app, then runs both processes in one container through `infra/start.mjs`.
+- Next.js is public on `PORT` (`8080` in Yandex Cloud; root `pnpm docker:run` overrides it to `3000`).
+- Hono is internal on `API_PORT=8081`; `LOCAL_API_URL=http://127.0.0.1:8081` feeds the Next.js rewrite.
+- YDB remains external. Local combined-container access uses `grpc://host.docker.internal:2136/local`; production uses metadata credentials and the configured YDB connection.
+- `infra/api.Dockerfile` is retained for API-only local/debug builds.
+- `.github/workflows/deploy-yc.yml` builds and pushes the combined image on relevant `main` changes and deploys a Yandex Cloud Serverless Container revision.
+- Apply production migrations separately before deploying code that requires them.
+
+## Safety And Scope
+
+- Preserve the challenge namespace across UI, routes, APIs, shared types, docs, and database concepts.
+- Do not reintroduce Prisma, PostgreSQL, generated API clients, `Practice*` duplicate contracts, or legacy database fallbacks.
+- Do not add todos/tasks, local passwords, roles/admin user models, user blocking/status, difficulty, streaks, or answer-attempt history without an explicit product decision.
+- Keep the existing `db:*` command set; do not re-add the removed `db:logs` helper.
+- Keep changes package-scoped and verify them with the owning package's commands.

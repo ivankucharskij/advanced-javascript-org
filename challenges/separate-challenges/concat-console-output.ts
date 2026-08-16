@@ -1,6 +1,6 @@
 export const concatConsoleOutputChallenge = {
   slug: "concat-console-output",
-  snippetId: "2a06ba1d-3ee6-4dc1-a485-cf4e7b22f4eb",
+  snippetId: "79c7a54c-bcbe-431f-83bc-7999872c3ca2",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

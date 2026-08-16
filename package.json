@@ -16,6 +16,7 @@
     "docker:run-api": "docker run --rm --env-file apps/api/.env -p 8080:8080 advanced-javascript-org-api",
     "dev": "turbo run dev",
     "seed": "pnpm --filter api seed",
+    "seed:challenges": "pnpm --filter api seed:challenges",
     "lint": "turbo run lint"
   },
   "devDependencies": {

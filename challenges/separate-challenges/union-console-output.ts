@@ -1,6 +1,6 @@
 export const unionConsoleOutputChallenge = {
   slug: "union-console-output",
-  snippetId: "b1b57911-b68d-4fc8-837d-f9cc33ecb5c9",
+  snippetId: "662b2e17-804b-4083-8674-59363cb0dec1",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

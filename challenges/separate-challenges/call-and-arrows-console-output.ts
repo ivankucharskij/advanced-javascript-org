@@ -1,6 +1,6 @@
 export const callAndArrowsConsoleOutputChallenge = {
   slug: "call-and-arrows-console-output",
-  snippetId: "e7c81592-c974-418d-bfa4-7ac9b8bea0d4",
+  snippetId: "79b59a6d-dd35-43e1-a03f-0f07247c4a5f",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

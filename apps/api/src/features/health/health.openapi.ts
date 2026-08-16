@@ -13,6 +13,10 @@ export const healthOpenApi = {
         content: jsonContent(healthCheckResponseSchema),
         description: "Health check",
       },
+      503: {
+        content: jsonContent(healthCheckResponseSchema),
+        description: "Health check failed",
+      },
     },
     tags: appTag,
   }),

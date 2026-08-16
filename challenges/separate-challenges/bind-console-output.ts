@@ -1,6 +1,6 @@
 export const bindConsoleOutputChallenge = {
   slug: "bind-console-output",
-  snippetId: "e81fa2eb-e9a4-4ab1-ae25-7fb8817958c7",
+  snippetId: "b551abf5-45fa-477f-a000-87d95c2c4a8f",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

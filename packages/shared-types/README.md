@@ -1,7 +1,6 @@
 # Shared Types
 
-Compiled internal package for shared Zod schemas and inferred TypeScript types.
-Consumers import from the single public entry point:
+`@repo/shared-types` is the compiled internal contract package shared by the Hono API and Next.js web app. It exports Zod schemas and their TypeScript types from one public entry point.
 
 ```ts
 import {
@@ -11,25 +10,32 @@ import {
 } from "@repo/shared-types";
 ```
 
-Current contract areas:
+## Contract Areas
 
-- `features/auth`: Google-authenticated profile contracts such as `/api/me` and the Google callback response.
-- `features/guest-sessions`: anonymous guest-session contracts used before Google login.
+- `features/auth`: `/api/me` and Google callback contracts.
+- `features/guest-sessions`: guest-session lifecycle contracts.
 - `features/challenge-snippets`: reusable snippet CRUD contracts.
-- `features/challenges`: challenge/question contracts used to power the flashcard UX, including dashboard, next-card, answer, and restart responses.
-- `features/health`: health check response.
-- `shared`: common response and pagination helpers.
+- `features/challenges`: challenge CRUD, dashboard, next-challenge, answer, progress, and restart contracts.
+- `features/health`: health response.
+- `shared`: errors and pagination.
 
-Do not add task/todo schemas or generated frontend API client types.
+There is no generated frontend client and no separate `Practice*` contract area. Do not add task/todo schemas or duplicate challenge-practice contracts.
 
-Challenge response conventions:
+## Challenge Conventions
 
-- Public player code is returned as runnable code: reusable snippet first, challenge-specific code second.
-- Dashboard totals are current card-state counts: `totalAnswered` is answered cards, `totalCorrect` is answered cards not currently needing review, and `totalWrong` is current review cards (`needsReview = true`).
-- Restart responses report how many progress rows were cleared for the current user or guest.
-- Shared pagination query validation defaults `limit` to 5 and caps it at 100.
+- Public challenges contain exactly three answer options without correctness metadata.
+- Management challenge responses include option correctness and feedback.
+- Runnable code is returned with reusable snippet code first and challenge-specific code second.
+- Dashboard totals represent current challenge state, not an attempt log.
+- The dashboard response includes topic aggregates even though the current dashboard UI does not render them.
+- Pagination defaults to 5 items and caps `limit` at 100.
+
+## Commands
 
 ```bash
 pnpm --filter @repo/shared-types build
 pnpm --filter @repo/shared-types dev
+pnpm --filter @repo/shared-types lint
 ```
+
+`build` uses `tsdown` and writes `dist`; do not edit generated output manually.

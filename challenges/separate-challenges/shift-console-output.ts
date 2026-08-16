@@ -1,6 +1,6 @@
 export const shiftConsoleOutputChallenge = {
   slug: "shift-console-output",
-  snippetId: "5e39e7ad-3c52-4bd0-b0c6-07e25fcdfa95",
+  snippetId: "14f273d6-bc3a-4d03-af7c-e95087fd7e44",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

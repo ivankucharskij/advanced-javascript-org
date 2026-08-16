@@ -1,6 +1,6 @@
 export const methodChainingConsoleOutputChallenge = {
   slug: "method-chaining-console-output",
-  snippetId: "e9fc77ef-da9f-431c-b0ed-2d158ba3569b",
+  snippetId: "0bc04f96-d428-4c41-9eaa-f4ce592669de",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

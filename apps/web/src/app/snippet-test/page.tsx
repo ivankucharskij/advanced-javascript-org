@@ -300,7 +300,7 @@ export default function SnippetTestPage() {
               : `Add ${challengesToSeed.length} challenges`}
           </button>
           <p className="text-sm text-fd-muted-foreground">
-            Posts each flashcard challenge to /api/challenges.
+            Posts each challenge to /api/challenges.
           </p>
         </div>
         {challengesMutation.isMutating ? (

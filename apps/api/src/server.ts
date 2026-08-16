@@ -4,11 +4,10 @@ import { serve } from "@hono/node-server";
 
 import { createApp } from "./app.js";
 import { getEnv } from "./config/env.js";
-import { checkDbHealth, closeDb } from "./lib/db.js";
+import { closeDb } from "./lib/db.js";
 
 export const startServer = async () => {
   const runtimeEnv = getEnv();
-  await checkDbHealth();
 
   const app = createApp(runtimeEnv);
 

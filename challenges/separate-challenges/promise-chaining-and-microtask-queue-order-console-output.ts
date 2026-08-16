@@ -1,6 +1,6 @@
 export const promiseChainingAndMicrotaskQueueOrderConsoleOutputChallenge = {
   slug: "promise-chaining-and-microtask-queue-order-console-output",
-  snippetId: "d770bbff-2d9e-490d-8a23-483ad190b10b",
+  snippetId: "9e2e59e4-d5d6-40d5-a428-5c58df77c3bf",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

@@ -1,6 +1,6 @@
 export const promiseAllsettledConsoleOutputChallenge = {
   slug: "promise-allsettled-console-output",
-  snippetId: "da4c4ef3-9500-41f6-aed6-df3f10f9ff2b",
+  snippetId: "7c41b8a2-ff24-4652-8073-f0085c589b51",
   topicSlug: "promises",
   title: "Predict the console output",
   prompt: "What does this code print?",

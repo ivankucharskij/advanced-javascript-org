@@ -1,6 +1,6 @@
 export const forVsWhileConsoleOutputChallenge = {
   slug: "for-vs-while-console-output",
-  snippetId: "e91830e5-de05-45d8-b190-212a49ed7843",
+  snippetId: "d7293006-8811-405e-8994-b2306fee79a3",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

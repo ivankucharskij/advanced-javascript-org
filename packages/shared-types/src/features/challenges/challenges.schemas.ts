@@ -90,7 +90,6 @@ export type ChallengeProgress = {
 export type ChallengeDashboardResponse = {
   data: {
     greetingName: string | null;
-    answeredToday: number;
     practiceCount: number;
     reviewCount: number;
     totalAnswered: number;
@@ -267,7 +266,6 @@ export const challengeDashboardResponseSchema: z.ZodType<ChallengeDashboardRespo
   z.object({
     data: z.object({
       greetingName: z.string().nullable(),
-      answeredToday: z.number().int().min(0),
       practiceCount: z.number().int().min(0),
       reviewCount: z.number().int().min(0),
       totalAnswered: z.number().int().min(0),

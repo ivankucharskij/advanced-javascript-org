@@ -1,6 +1,6 @@
 export const blockingInsideAsyncCallbacksConsoleOutputChallenge = {
   slug: "blocking-inside-async-callbacks-console-output",
-  snippetId: "92a13335-dd7c-45c8-934e-48dc0b0be726",
+  snippetId: "0cb1ec07-6fc2-43b9-bf24-090481f2ef81",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

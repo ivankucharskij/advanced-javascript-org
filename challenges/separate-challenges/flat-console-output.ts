@@ -1,6 +1,6 @@
 export const flatConsoleOutputChallenge = {
   slug: "flat-console-output",
-  snippetId: "7f578f70-abe4-4a85-a666-cd25f88911c4",
+  snippetId: "250f5cb7-2a13-46cc-b3c0-0a8443c46be3",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

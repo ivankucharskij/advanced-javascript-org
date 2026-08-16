@@ -1,6 +1,6 @@
 export const undirectedPathEdgeConsoleOutputChallenge = {
   slug: "undirected-path-edge-console-output",
-  snippetId: "db88a53f-3adf-4823-adfe-3a0f731b4a5c",
+  snippetId: "9a246e18-6c29-47a4-b737-a80c7046ece9",
   topicSlug: "graph-traversal",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

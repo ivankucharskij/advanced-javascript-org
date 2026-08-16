@@ -1,6 +1,6 @@
 export const unshiftConsoleOutputChallenge = {
   slug: "unshift-console-output",
-  snippetId: "c55dbcec-9cad-43ab-858e-e65ff881f339",
+  snippetId: "fe54066f-3a8e-487f-99e9-9d512d281c85",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

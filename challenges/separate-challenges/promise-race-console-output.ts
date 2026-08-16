@@ -1,6 +1,6 @@
 export const promiseRaceConsoleOutputChallenge = {
   slug: "promise-race-console-output",
-  snippetId: "4e9b8d67-22bc-47d5-aa8c-ff082bfdfe18",
+  snippetId: "97d063ad-45f6-4cbb-9729-cac74ece1a53",
   topicSlug: "promises",
   title: "Predict the console output",
   prompt: "What does this code print?",

@@ -1,6 +1,6 @@
 export const orderbyConsoleOutputChallenge = {
   slug: "orderby-console-output",
-  snippetId: "94f1971f-94e5-43bb-bb8f-43dcbb67d2bd",
+  snippetId: "d934ac6c-af32-4180-b10f-8848a7e49efa",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

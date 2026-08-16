@@ -35,7 +35,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(challengeAnswerResponseSchema),
-        description: "Answer a flashcard challenge",
+        description: "Answer a challenge",
       },
       404: {
         content: jsonContent(errorResponseSchema),
@@ -57,7 +57,7 @@ export const challengesOpenApi = {
     responses: {
       201: {
         content: jsonContent(singleChallengeResponseSchema),
-        description: "Create a flashcard challenge",
+        description: "Create a challenge",
       },
       409: {
         content: jsonContent(errorResponseSchema),
@@ -77,7 +77,7 @@ export const challengesOpenApi = {
       200: {
         content: jsonContent(challengeDashboardResponseSchema),
         description:
-          "Get the flashcard dashboard for the current user or guest",
+          "Get the challenge dashboard for the current user or guest",
       },
     },
     tags: challengesTag,
@@ -92,7 +92,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(deleteChallengeResponseSchema),
-        description: "Delete a flashcard challenge",
+        description: "Delete a challenge",
       },
       404: {
         content: jsonContent(errorResponseSchema),
@@ -111,7 +111,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(challengeListResponseSchema),
-        description: "List flashcard challenges",
+        description: "List challenges",
       },
     },
     tags: challengesTag,
@@ -125,7 +125,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(challengeSessionResponseSchema),
-        description: "Get the next flashcard challenge for practice or review",
+        description: "Get the next challenge for practice or review",
       },
     },
     tags: challengesTag,
@@ -136,7 +136,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(challengeRestartResponseSchema),
-        description: "Reset current flashcard progress and start again",
+        description: "Reset current challenge progress and start again",
       },
     },
     tags: challengesTag,
@@ -155,7 +155,7 @@ export const challengesOpenApi = {
     responses: {
       200: {
         content: jsonContent(singleChallengeResponseSchema),
-        description: "Update a flashcard challenge",
+        description: "Update a challenge",
       },
       404: {
         content: jsonContent(errorResponseSchema),

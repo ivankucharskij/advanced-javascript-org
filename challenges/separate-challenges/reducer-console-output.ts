@@ -1,6 +1,6 @@
 export const reducerConsoleOutputChallenge = {
   slug: "reducer-console-output",
-  snippetId: "8a1692ca-34ae-4848-8454-9368a851b879",
+  snippetId: "2fad25c6-21b8-4545-9a6c-0163b0233eb7",
   topicSlug: "random",
   title: "Predict the console output",
   prompt: "What does this code print?",

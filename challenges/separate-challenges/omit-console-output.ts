@@ -1,6 +1,6 @@
 export const omitConsoleOutputChallenge = {
   slug: "omit-console-output",
-  snippetId: "4dd5d6aa-a36d-4ee1-b58a-6c6e1d4b0e8c",
+  snippetId: "6be0a5b5-a4de-4ef5-b359-3b21049ab360",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

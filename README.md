@@ -1,39 +1,46 @@
 # Advanced JavaScript
 
-Advanced JavaScript is a full-stack learning app for practicing tricky JavaScript behavior through focused docs, runnable examples, and flashcard-style challenges.
+Advanced JavaScript is a full-stack learning app for studying tricky JavaScript behavior through focused documentation, runnable examples, and challenge practice.
 
-The product is built as a portfolio-grade monorepo: a Next.js/Fumadocs documentation site, a Hono API, YDB persistence, shared Zod contracts, Google OAuth, guest progress, and Docker/Yandex Cloud deployment support.
+Visitors can practice without an account, review wrong answers, and keep their progress after signing in with Google. The project is also a portfolio example of a production-oriented TypeScript monorepo with shared runtime contracts, API documentation, database persistence, containers, and CI/CD.
 
-## What It Does
+## Product
 
-- Teaches advanced JavaScript concepts with MDX documentation and executable code examples.
-- Turns reusable JavaScript snippets into multiple flashcard questions.
-- Lets visitors practice before signing in, then merges guest progress after Google OAuth.
-- Tracks current flashcard state with review, answered, and correct counts.
-- Exposes typed API contracts through a shared internal package instead of generated frontend clients.
-- Ships as a combined production container with Next.js publicly proxying internal API routes.
+- MDX lessons about arrays, promises, the event loop, data structures, utilities, and interview edge cases.
+- Runnable CodeMirror/Sandpack examples.
+- `/challenges`: progress dashboard and practice/review entry point.
+- `/challenges/practice`: endless unanswered-challenge flow.
+- `/challenges/review`: challenges currently marked for review.
+- Guest progress with a 50-answer Google OAuth gate and guest-to-user merge.
+- Swagger-managed reusable snippets and challenge content.
 
-## Engineering Highlights
+## Architecture
 
-- **Frontend:** Next.js 16, React 19, Fumadocs, MDX, Tailwind CSS, SWR.
-- **Backend:** Hono, YDB, Goose migrations, Google OAuth, Swagger/OpenAPI.
-- **Shared contracts:** Zod schemas and inferred TypeScript types in `packages/shared-types`.
-- **Monorepo:** pnpm workspaces with Turborepo task orchestration.
-- **Deployment:** Docker image for the web/API runtime, YDB, Yandex Cloud Serverless Containers, GitHub Actions CI/CD.
-
-## Repository Map
+- **Web:** Next.js 16, React 19, Fumadocs, MDX, Tailwind CSS, SWR, CodeMirror, Sandpack.
+- **API:** Hono, Zod OpenAPI, Swagger UI, Google OAuth.
+- **Database:** YDB with Goose migrations.
+- **Contracts:** shared Zod schemas and inferred TypeScript types from `packages/shared-types`.
+- **Monorepo:** pnpm workspaces and Turborepo.
+- **Deployment:** combined Next.js/Hono Docker image for Yandex Cloud Serverless Containers.
 
 ```text
-apps/web                 Next.js docs and flashcard UI
-apps/api                 Hono API, database repositories, Goose migrations, Swagger/OpenAPI
-packages/shared-types    shared Zod schemas and TypeScript types
-infra                    Dockerfiles and local database compose file
-docs/RUNBOOK.md          local dev, Docker, migrations, deploy, CI/CD
+apps/web                 Next.js documentation and challenge UI
+apps/api                 Hono API, YDB repositories, migrations, OpenAPI
+packages/shared-types    compiled shared Zod contracts
+packages/eslint-config   shared ESLint configurations
+challenges               content drafts and seed payloads
+infra                    local YDB and Docker runtime files
+docs/RUNBOOK.md          development, migration, Docker, and deploy operations
 ```
 
-## Local Preview
+## Local Development
 
-Requirements: Node.js 22, pnpm 9, and Docker.
+Requirements:
+
+- Node.js 22 recommended
+- pnpm 9
+- Docker
+- Goose CLI on `PATH`
 
 ```bash
 pnpm install
@@ -41,22 +48,35 @@ cp apps/api/.env.example apps/api/.env
 pnpm db:up
 pnpm db:migrate
 pnpm seed
+pnpm seed:challenges
 pnpm dev
 ```
 
-`pnpm seed` loads reusable snippet seed data from `challenges/seed-snippets.ts` and skips existing snippet slugs.
+Useful URLs:
 
-Useful local URLs:
-
-- Web app: `http://localhost:3000`
-- Flashcards: `http://localhost:3000/challenges`
+- Web: `http://localhost:3000`
+- Challenges: `http://localhost:3000/challenges`
 - API health: `http://localhost:8080/api/healthz`
 - Swagger UI: `http://localhost:8080/api/swagger`
+- OpenAPI JSON: `http://localhost:8080/api/openapi.json`
 - YDB UI: `http://localhost:9876`
+
+## Common Commands
+
+```bash
+pnpm dev                 # run package development tasks
+pnpm build               # build the monorepo through Turborepo
+pnpm check               # build API and web
+pnpm lint                # run package lint tasks
+pnpm db:status           # show local Goose migration status
+pnpm docker:build        # build the combined production image
+pnpm docker:run          # run the combined image on localhost:3000
+```
 
 ## Documentation
 
-- [Runbook](docs/RUNBOOK.md): local development, database, Docker, deployment, CI/CD, troubleshooting.
-- [Web app notes](apps/web/README.md): frontend structure, content workflow, and temporary challenge seed UI.
-- [API notes](apps/api/README.md): API structure, auth, database persistence, OpenAPI, flashcard contracts.
-- [Container notes](infra/README.md): combined web/API image and runtime environment.
+- [Runbook](docs/RUNBOOK.md): setup, environment, YDB, migrations, Docker, Yandex Cloud, CI/CD, and troubleshooting.
+- [Web app](apps/web/README.md): routes, frontend architecture, challenge UI, and content workflow.
+- [API](apps/api/README.md): endpoints, auth, data model, persistence, and seeding.
+- [Shared types](packages/shared-types/README.md): shared contract package.
+- [Infrastructure](infra/README.md): container and local YDB topology.

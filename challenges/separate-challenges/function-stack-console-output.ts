@@ -1,6 +1,6 @@
 export const functionStackConsoleOutputChallenge = {
   slug: "function-stack-console-output",
-  snippetId: "d4d50575-2588-4c51-9b5d-a18ad0f62354",
+  snippetId: "80f25650-0102-4e2f-a6ee-0f30a9c2aa30",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

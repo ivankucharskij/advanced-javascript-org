@@ -1,6 +1,6 @@
 export const popConsoleOutputChallenge = {
   slug: "pop-console-output",
-  snippetId: "c4dce4b3-1435-4d35-9384-d722ceae0000",
+  snippetId: "c651ae6d-d2db-43a1-9450-87844106c285",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

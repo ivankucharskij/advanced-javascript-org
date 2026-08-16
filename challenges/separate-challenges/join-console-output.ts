@@ -1,6 +1,6 @@
 export const joinConsoleOutputChallenge = {
   slug: "join-console-output",
-  snippetId: "3947bfc9-3422-46af-a8ff-23d5181d7ef0",
+  snippetId: "3477ad92-e041-48e1-9aa6-c98e97a7e8e9",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

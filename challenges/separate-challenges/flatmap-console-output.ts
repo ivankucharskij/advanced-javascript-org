@@ -1,6 +1,6 @@
 export const flatmapConsoleOutputChallenge = {
   slug: "flatmap-console-output",
-  snippetId: "0e52477a-ffda-4487-b4f5-a9ede575cf40",
+  snippetId: "ce35ff81-302b-48ac-964a-6aea2c6542ed",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

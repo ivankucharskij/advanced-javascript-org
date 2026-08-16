@@ -1,6 +1,6 @@
 export const pickConsoleOutputChallenge = {
   slug: "pick-console-output",
-  snippetId: "168b9458-41cf-4779-b4c3-bd6bed6b3b50",
+  snippetId: "46122b04-7420-4989-a6e2-861e23eb86e5",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

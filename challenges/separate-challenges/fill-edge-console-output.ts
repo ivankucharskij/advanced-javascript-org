@@ -1,6 +1,6 @@
 export const fillEdgeConsoleOutputChallenge = {
   slug: "fill-edge-console-output",
-  snippetId: "af4084a5-7dfc-4e7b-86c6-108d3ce7b682",
+  snippetId: "4b64342a-29f4-469b-a8be-98ed2b9020cd",
   topicSlug: "array-methods",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

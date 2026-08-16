@@ -1,17 +1,10 @@
 # API
 
-## Overview
+`apps/api` is the Hono API for Advanced JavaScript. It owns Google OAuth, guest sessions, challenge content and progress, YDB persistence, shared-contract validation, and Swagger/OpenAPI.
 
-`apps/api` is a Hono-based API server with:
+## Run And Verify
 
-- `@hono/zod-openapi` for typed routes and OpenAPI generation
-- `@hono/swagger-ui` for interactive docs
-- auth middleware for protected routes
-- YDB-backed persistence owned by the API package
-
-## Run
-
-From the repo root:
+From the repository root:
 
 ```bash
 cp apps/api/.env.example apps/api/.env
@@ -23,58 +16,24 @@ pnpm --filter api start
 pnpm --filter api lint
 ```
 
-Default local port:
+The host-local API defaults to `http://localhost:8080`.
 
-```text
-8080
-```
+API documentation:
 
-## Docs
-
-When the server is running:
-
-- OpenAPI JSON: `/api/openapi.json`
-- OpenAPI document route: `/api/doc`
 - Swagger UI: `/api/swagger`
+- OpenAPI JSON: `/api/openapi.json`
+- Additional OpenAPI document route: `/api/doc`
 
-## Database
-
-Local development uses YDB from `infra/db.compose.yml`; migrations are Goose YQL files in `apps/api/db/migrations`.
-
-```bash
-pnpm db:up
-pnpm db:migrate
-pnpm db:status
-```
-
-## Docker
-
-Build the API image from the repo root:
-
-```bash
-docker build -f infra/api.Dockerfile -t advanced-javascript-org-api .
-```
-
-Run it locally:
-
-```bash
-docker run --env-file apps/api/.env -p 8080:8080 advanced-javascript-org-api
-```
-
-When using Docker `--env-file`, keep values unquoted. For host-local YDB from inside a Docker container, use `host.docker.internal`:
-
-```env
-DB_CONNECTION_STRING=grpc://host.docker.internal:2136/local
-```
-
-## Structure
+## Architecture
 
 Core files:
 
-- `src/app.ts` - Hono app, middleware, routes, Swagger/OpenAPI
-- `src/server.ts` - database check and server bootstrap
-- `src/router.ts` - top-level feature router mounting
-- `src/config/openapi.ts` - OpenAPI document metadata
+- `src/app.ts`: Hono app, logging, CORS, Swagger, and OpenAPI registration.
+- `src/server.ts`: Node server startup and graceful database-driver shutdown.
+- `src/router.ts`: feature-router mounting.
+- `src/config/env.ts`: runtime environment validation.
+- `src/lib/db.ts`: YDB driver/query client and health query.
+- `src/shared/http.ts`: typed result/status/OpenAPI JSON helpers.
 
 Feature folders:
 
@@ -82,81 +41,44 @@ Feature folders:
 - `src/features/admin`
 - `src/features/auth`
 - `src/features/guest-sessions`
-- `src/features/challenge-snippets` reusable code snippet CRUD
-- `src/features/challenges` challenge/question CRUD for the flashcard UX
+- `src/features/challenge-snippets`
+- `src/features/challenges`
 
-Feature modules use resource-prefixed files:
+Feature modules use controller/service/repository/OpenAPI separation. Request and response schemas come from `@repo/shared-types`; the API owns the Swagger document. Expected service failures are returned as typed HTTP results and explicit JSON responses rather than thrown as generic errors.
 
-- `*.controller.ts` - Hono routes and HTTP response mapping
-- `*.service.ts` - business rules and authorization decisions
-- `*.repository.ts` - database access
-- `*.schemas.ts` - request/response validation types
-- `*.openapi.ts` - route definitions for OpenAPI generation
+## Routes
 
-YDB query notes:
-
-- User-facing text sorts should order by `Unicode::ToLower(...)` expressions so mixed-case titles/slugs sort naturally.
-- Keep dynamic sort expressions restricted to hardcoded field maps before passing them to `unsafe(...)`.
-
-Shared API helpers:
-
-- `src/middleware/admin.ts`
-- `src/middleware/auth.ts`
-- `src/shared/http.ts` - HTTP statuses, typed results/bodies, and OpenAPI JSON content helper
-- `src/shared/constants.ts` - shared API constants such as auth cookie settings
-
-Shared request/response schemas live in:
-
-- `packages/shared-types/src`
-
-## Auth
-
-Protected routes use `src/middleware/auth.ts`.
-
-That middleware:
-
-- reads the bearer token from `Authorization` or the `accessToken` cookie
-- resolves the current user through `authService.authorize(...)`
-- stores the user on `c.var.currentUser`
-
-Auth is Google-only:
-
-- Keep `/api/me`, `/api/auth/google`, and `/api/auth/google/callback`.
-- Do not add custom email/password register/login.
-- `User` is the internal learner/account row.
-- `OAuthAccount` links the Google identity to `User`.
-- `GET /api/auth/google` starts OAuth and must be opened as browser navigation, not Swagger `Execute`.
-- `GET /api/auth/google/callback` validates the Google profile, upserts the user, links `OAuthAccount`, sets the `accessToken` cookie, and returns the shared `googleCallbackResponseSchema` response.
-- Local Google token exchange can fail if Node cannot reach `https://oauth2.googleapis.com/token`; this is reported as `502`.
-
-Admin routes use a separate admin bearer token for Swagger-friendly content management:
-
-- `POST /api/admin/session` accepts `{ "code": "<ADMIN_CODE>" }`.
-- The response includes an admin `accessToken` that expires after 12 hours.
-- In Swagger, authorize admin routes with the returned token under `adminBearerAuth`.
-- Admin tokens are separate from Google user tokens and are only valid for admin-protected routes.
-
-## Challenges / Flashcards
-
-The product UX is flashcards, but backend/schema naming intentionally uses `Challenge*`.
-
-Current content authoring model:
-
-- `ChallengeSnippet` stores reusable code: `slug`, `topicSlug`, `title`, `language`, and `code`.
-- `Challenge` stores a question and points at a snippet through `snippetId`.
-- Multiple challenges can reference the same snippet.
-- Keep snippet content drafts in root `challenges/snippets.md` while editing manually.
-- Keep per-snippet challenge drafts in root `challenges/*.md`. Each file preserves one snippet section and appends one to four console-output challenge drafts.
-- `challenges/seed-snippets.ts` contains the reusable snippet seed payload used by `pnpm seed`.
-- `challenges/saved-snippets.ts` stores persisted snippet IDs from the temporary admin seed flow.
-- `challenges/separate-challenges/*.ts` contains generated one-challenge-per-file seed drafts. They use `snippetId`, omit reusable snippet code, keep only challenge-specific `code` or `null`, and do not import shared types.
-- Temporary challenge seed data for the web admin playground lives in `apps/web/src/app/snippet-test/seed-challenges.ts`.
-- Public practice responses combine runnable code as `ChallengeSnippet.code` first, then `Challenge.code` second when challenge-specific code exists.
-- Shared pagination caps list `limit` at 100.
-
-Current CRUD routes:
+Health and guest session:
 
 ```text
+GET    /api/healthz
+GET    /api/guest-session
+POST   /api/guest-session
+DELETE /api/guest-session
+```
+
+Google auth:
+
+```text
+GET /api/auth/google
+GET /api/auth/google/callback
+GET /api/me
+```
+
+Public optional-auth challenge flow:
+
+```text
+GET  /api/challenges/dashboard
+GET  /api/challenges/next?mode=practice
+GET  /api/challenges/next?mode=review
+POST /api/challenges/:id/answer
+POST /api/challenges/restart
+```
+
+Admin/content management:
+
+```text
+POST   /api/admin/session
 GET    /api/challenge-snippets
 POST   /api/challenge-snippets
 PATCH  /api/challenge-snippets/:id
@@ -167,42 +89,87 @@ PATCH  /api/challenges/:id
 DELETE /api/challenges/:id
 ```
 
-These CRUD routes require `adminBearerAuth`.
+Challenge/snippet management routes require the separate `adminBearerAuth` token issued by `POST /api/admin/session`. They are intended for Swagger/content workflows; there is no admin user role or admin UI.
 
-Current public optional-auth practice routes:
+## Auth And Guests
 
-```text
-GET  /api/challenges/dashboard
-GET  /api/challenges/next?mode=practice
-GET  /api/challenges/next?mode=review
-POST /api/challenges/:id/answer
-POST /api/challenges/restart
+Google OAuth is the only user auth flow.
+
+- `GET /api/auth/google` must be opened as browser navigation.
+- The callback validates the Google profile, creates or updates the internal user/OAuth account, merges guest progress, discards the guest session, clears its cookie, and sets the `accessToken` cookie.
+- `/api/me` accepts the auth cookie or bearer token.
+- Auth/guest cookies are secure when `WEB_ORIGIN` is HTTPS and remain usable on local HTTP.
+- There is no local registration, password, role, user status, or blocking model.
+
+Public challenge requests resolve an authenticated user when possible. Otherwise they use a temporary `guestSessionId` cookie. Guests can answer up to 50 total attempts before the dashboard/session response requires Google auth.
+
+## Challenge Model And Behavior
+
+- `ChallengeSnippet` stores reusable code and metadata.
+- `Challenge` stores one question and references its snippet through `snippetId`.
+- Multiple challenges can share a snippet.
+- Challenge-specific code may be null; public runnable code combines snippet code first and challenge code second.
+- Every challenge has exactly three ordered options and exactly one correct option.
+- Management responses include correctness metadata; public next-challenge responses do not.
+
+Progress is current state rather than attempt history:
+
+- `answeredCount` increments for every answer.
+- Correct answers increment `correctCount` and clear `needsReview`.
+- Wrong answers set `needsReview`.
+- Practice mode returns unanswered challenges.
+- Review mode returns challenges currently marked `needsReview`.
+- `totalAnswered` counts challenges answered at least once.
+- `totalCorrect` counts answered challenges not currently needing review.
+- `totalWrong` and `reviewCount` represent the current review set.
+- `practiceCount` represents unanswered challenges.
+- Dashboard topic aggregates are returned by the API but are not currently rendered by the web dashboard.
+- Restart deletes the current actor's progress rows.
+
+There is no difficulty, streak, `ChallengeAttempt`, or answer-history table.
+
+## YDB
+
+YDB is the only database. Local YDB is defined by `infra/db.compose.yml`; Goose migrations live in `db/migrations`.
+
+```bash
+pnpm db:up
+pnpm db:migrate
+pnpm db:status
 ```
 
-Public practice routes identify the actor from a bearer token or `accessToken` cookie when present. Otherwise they create or reuse a `guestSessionId` cookie.
+The current schema migration creates:
 
-Progress is stored in `ChallengeProgress`, not attempt history:
+- `users`
+- `oauth_accounts`
+- `guest_sessions`
+- `challenge_snippets`
+- `challenges`
+- `challenge_options`
+- `user_challenge_progress`
+- `guest_challenge_progress`
 
-- `needsReview`: true after a wrong answer, false after a correct answer.
-- `answeredCount`: incremented on every answer.
-- `correctCount`: incremented on correct answers.
-- Dashboard totals are current card-state counts: `totalAnswered` is answered
-  cards, `totalCorrect` is answered cards not currently needing review, and
-  `totalWrong` is the current review count.
+Repository code owns relation checks and cascades. User-facing text sorts use whitelisted `Unicode::ToLower(...)` expressions so mixed-case values sort naturally.
 
-There is no `ChallengeAttempt`, difficulty, user role/admin, user status/blocking, or local password field.
+`GET /api/healthz` queries YDB and returns:
 
-Guest sessions are temporary anonymous progress buffers. On Google login, merge current guest progress into the authenticated user and discard the guest session.
+```json
+{ "status": "healthy", "db": "ok" }
+```
+
+If YDB is unavailable, it returns HTTP 503 with:
+
+```json
+{ "status": "unhealthy", "db": "fail" }
+```
+
+The API process starts without an eager successful database connection; health and database-backed routes report availability at request time.
 
 ## Environment
 
-See:
+Use `apps/api/.env.example` for host-local development.
 
-```text
-apps/api/.env.example
-```
-
-Main variables:
+Main runtime variables:
 
 - `PORT`
 - `ADMIN_CODE`
@@ -212,34 +179,50 @@ Main variables:
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
 - `DB_CONNECTION_STRING`
+- `YDB_ANONYMOUS_CREDENTIALS` or `YDB_METADATA_CREDENTIALS`
+
+Goose variables:
+
 - `GOOSE_DRIVER`
 - `GOOSE_DBSTRING`
 - `GOOSE_MIGRATION_DIR`
 - `GOOSE_TABLE`
 
-Run this before deploying the API container to apply existing migrations to the configured YDB database:
+Host-local application connection:
 
-```bash
-pnpm db:migrate
+```text
+grpc://localhost:2136/local
 ```
 
-## Seed
+Host-local Goose connection:
 
-Run the seed command from the repo root:
+```text
+grpc://localhost:2136/local?go_query_mode=scripting&go_fake_tx=scripting&go_query_bind=declare,numeric
+```
+
+Use the uncommitted `apps/api/.env.production.local` and root `db:*:prod` commands for production migration status/apply. See `docs/RUNBOOK.md`.
+
+## Seeding
+
+Seed reusable snippets first, then challenges:
 
 ```bash
 pnpm seed
+pnpm seed:challenges
 ```
 
-The seed command does not create demo email/password users. Auth users are created through Google OAuth.
+- `pnpm seed` loads `challenges/seed-snippets.ts` and validates with `createChallengeSnippetSchema`.
+- `pnpm seed:challenges` loads the 85 modules in `challenges/separate-challenges`, validates with `createChallengeSchema`, and requires matching persisted snippet IDs.
+- Both commands create missing rows, skip duplicate slugs, report counts, and fail on other errors.
+- Auth users are never seeded; they are created through Google OAuth.
 
-The seed command loads `challenges/seed-snippets.ts`, validates each item with the shared `createChallengeSnippetSchema`, inserts missing reusable snippets, and skips duplicate slugs.
+## Docker
 
-Temporary challenge seeding is still in the web app at `/snippet-test`:
+The primary deployment artifact is the combined image in `infra/Dockerfile`. The API-only `infra/api.Dockerfile` remains available for local/debug use:
 
-1. Start `pnpm dev`.
-2. Open `http://localhost:3000/snippet-test`.
-3. Authorize with `ADMIN_CODE`.
-4. Click "Add challenges".
+```bash
+pnpm docker:build-api
+pnpm docker:run-api
+```
 
-Challenge seeding posts each item to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.
+When an API container connects to host-local YDB, use `grpc://host.docker.internal:2136/local`.

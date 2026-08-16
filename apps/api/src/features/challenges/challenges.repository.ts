@@ -277,7 +277,6 @@ export const challengesRepository = {
 
     return {
       greetingName: actor.greetingName,
-      answeredToday: 0,
       practiceCount: Math.max(totalChallenges - answeredChallengeCount, 0),
       reviewCount,
       totalAnswered: answeredChallengeCount,

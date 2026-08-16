@@ -1,6 +1,6 @@
 # advanced-javascript-org Runbook
 
-This file is the handoff document for local development, Docker, database migrations, and deployment.
+This is the operational reference for local development, Docker, database migrations, and deployment. Agent-specific project guidance lives in `.agents/AGENTS.md`.
 
 ## Repository Map
 
@@ -64,6 +64,7 @@ Apply local migrations and seed data:
 ```bash
 pnpm db:migrate
 pnpm seed
+pnpm seed:challenges
 ```
 
 Run API and web in dev mode:
@@ -89,18 +90,18 @@ The local compose file maps host `9876` to the YDB container UI port `8765`
 because Windows may reserve host port `8765`.
 
 `pnpm seed` validates and inserts reusable snippets from `challenges/seed-snippets.ts`, skips existing snippet slugs, and does not create demo email/password users. Auth users are created through Google OAuth.
+`pnpm seed:challenges` validates and inserts challenge drafts from `challenges/separate-challenges/*.ts`, skips duplicate challenge slugs, and expects the referenced snippets to already exist.
 `/check-auth` is the temporary auth verification page. It starts Google OAuth through browser navigation and checks `/api/me` with the auth cookie.
 
 Product notes:
 
-- User-facing practice UX is flashcards.
-- Backend/API/schema naming intentionally uses `Challenge*` and `/api/challenges/*`.
+- User-facing practice UX, backend/API/schema naming, and routes use challenges and `/api/challenges/*`.
 - Reusable code snippets are stored as `ChallengeSnippet` records. `Challenge` records store questions and point to snippets through `snippetId`, so one snippet can have multiple questions.
 - `challenges/snippets.md` is the manual working file for snippet content before turning it into database seed/import data.
 - `challenges/seed-snippets.ts` is the reusable snippet seed payload used by `pnpm seed`.
 - `challenges/*.md` contains one Markdown draft per snippet, including the copied snippet metadata/code and one or more console-output challenge drafts.
 - `challenges/saved-snippets.ts` records persisted snippet IDs returned by the admin snippet import flow.
-- `challenges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These objects use persisted `snippetId` values, omit the reusable top snippet code, include only challenge-specific `code` or `null`, and keep correct answers distributed across option positions.
+- `challenges/separate-challenges/*.ts` contains one generated challenge object per challenge draft. These objects use persisted `snippetId` values, omit the reusable top snippet code, include only challenge-specific `code` or `null`, and keep correct answers distributed across option positions. Seed them with `pnpm seed:challenges` after reusable snippets exist.
 - `apps/web/src/app/snippet-test/seed-challenges.ts` is the temporary web seed payload generated from `challenges/separate-challenges`.
 - Auth is Google OAuth only: no local email/password registration/login.
 - Guest sessions are temporary. On Google login, merge current guest progress into the authenticated user and discard the guest session.
@@ -117,9 +118,13 @@ POST /api/challenges/:id/answer
 POST /api/challenges/restart
 ```
 
-Temporary challenge seeding lives at `http://localhost:3000/snippet-test`.
-Authorize with `ADMIN_CODE`, then run "Add challenges".
-The challenge seed flow posts to `/api/challenges`, treats duplicate slugs as skipped, and reports created/skipped/failed counts.
+Command-line challenge seeding:
+
+```bash
+pnpm seed:challenges
+```
+
+The temporary `/snippet-test` page can still be used as a rendering playground and older admin seed UI.
 
 ## Docker Local Run
 
@@ -151,7 +156,14 @@ curl http://localhost:3000/api/healthz
 Expected:
 
 ```json
-{ "status": "healthy" }
+{ "status": "healthy", "db": "ok" }
+```
+
+When the API is reachable but YDB is unavailable, `/api/healthz` returns HTTP
+503 with:
+
+```json
+{ "status": "unhealthy", "db": "fail" }
 ```
 
 ## Database And Migrations
@@ -164,6 +176,7 @@ Development flow:
 pnpm db:up
 pnpm db:migrate
 pnpm seed
+pnpm seed:challenges
 ```
 
 Check migration status:

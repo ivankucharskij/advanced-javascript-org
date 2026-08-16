@@ -6,6 +6,7 @@ export const HttpStatus = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   BAD_GATEWAY: 502,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 export type HttpStatusCode = (typeof HttpStatus)[keyof typeof HttpStatus];

@@ -1,6 +1,6 @@
 export const filtermapConsoleOutputChallenge = {
   slug: "filtermap-console-output",
-  snippetId: "c41fbc7c-323f-482e-812f-1fb0ad7605ee",
+  snippetId: "299f83ea-5e6c-4cef-8db1-d1ac8c5dcf01",
   topicSlug: "random",
   title: "Predict the console output",
   prompt: "What does this code print?",

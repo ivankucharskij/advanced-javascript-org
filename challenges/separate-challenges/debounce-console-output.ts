@@ -1,6 +1,6 @@
 export const debounceConsoleOutputChallenge = {
   slug: "debounce-console-output",
-  snippetId: "3cea4ad2-2fba-4d7f-b54d-7bfbe90e15a6",
+  snippetId: "c0c66913-ce51-4352-a0dd-e1b218f84ea2",
   topicSlug: "debounce-throttle",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

@@ -1,6 +1,6 @@
 export const asyncFunctionAndTimerExecutionOrderOutputChallenge = {
   slug: "async-function-and-timer-execution-order-output",
-  snippetId: "e05d4397-a43f-4061-b48b-d800c28ce6e2",
+  snippetId: "8d9e494b-04c8-4333-8be2-f0168cc09ff2",
   topicSlug: "event-loop",
   title: "Predict async function and timer output order",
   prompt: "What is the console output order?",

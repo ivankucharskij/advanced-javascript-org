@@ -1,6 +1,6 @@
 export const clsxEdgeConsoleOutputChallenge = {
   slug: "clsx-edge-console-output",
-  snippetId: "f136f95d-bb51-4ef8-9b47-6f408f905d73",
+  snippetId: "74b709ba-99e9-4583-94c5-7bcd0afb863c",
   topicSlug: "random",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

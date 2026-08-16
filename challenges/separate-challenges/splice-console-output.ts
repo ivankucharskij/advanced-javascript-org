@@ -1,6 +1,6 @@
 export const spliceConsoleOutputChallenge = {
   slug: "splice-console-output",
-  snippetId: "59b5106c-44a9-4c99-a2e4-d9804ee3374e",
+  snippetId: "c48d1f14-99b5-438e-b1bd-fb798a927116",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",
