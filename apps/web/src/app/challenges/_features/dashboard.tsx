@@ -1,21 +1,21 @@
 import type { ChallengeDashboardResponse } from "@repo/shared-types";
 import { LogIn, X } from "lucide-react";
 
-import { Results } from "@/app/challenges/_components/results";
+import { Results } from "@/app/challenges/_entities/results";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+
+const startGoogleAuth = () => window.location.assign("/api/auth/google");
 
 export function Dashboard({
   dashboard,
   onDismissAuthPrompt,
   onPracticeWrongAnswers,
-  onSignIn,
   showAuthPrompt,
 }: {
   dashboard: ChallengeDashboardResponse["data"];
   onDismissAuthPrompt: () => void;
   onPracticeWrongAnswers: () => void;
-  onSignIn: () => void;
   showAuthPrompt: boolean;
 }) {
   return (
@@ -33,7 +33,6 @@ export function Dashboard({
               </div>
             </div>
             <button
-              aria-label="Dismiss sign in prompt"
               className={buttonVariants({
                 size: "icon-xs",
                 variant: "ghost",
@@ -46,7 +45,7 @@ export function Dashboard({
           </div>
           <button
             className={cn(buttonVariants({ variant: "primary" }), "gap-2 px-3")}
-            onClick={onSignIn}
+            onClick={startGoogleAuth}
             type="button"
           >
             <LogIn className="size-4" />
@@ -54,6 +53,7 @@ export function Dashboard({
           </button>
         </section>
       ) : null}
+
       <Results
         dashboard={dashboard}
         onPracticeWrongAnswers={onPracticeWrongAnswers}

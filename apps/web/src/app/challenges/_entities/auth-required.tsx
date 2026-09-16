@@ -3,7 +3,9 @@ import { LogIn } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-export function AuthRequired({ onSignIn }: { onSignIn: () => void }) {
+const startGoogleAuth = () => window.location.assign("/api/auth/google");
+
+export function AuthRequired() {
   return (
     <section className="grid gap-3 rounded-md border bg-fd-card p-4">
       <div className="flex items-start gap-3">
@@ -21,7 +23,7 @@ export function AuthRequired({ onSignIn }: { onSignIn: () => void }) {
           buttonVariants({ variant: "primary" }),
           "w-fit gap-2 px-3",
         )}
-        onClick={onSignIn}
+        onClick={startGoogleAuth}
         type="button"
       >
         <LogIn className="size-4" />
