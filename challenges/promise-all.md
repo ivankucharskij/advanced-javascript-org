@@ -82,7 +82,7 @@ prompt: What does this edge case print?
 code:
 
 ```js
-myPromiseAll([]).then((values) => console.log(JSON.stringify(values)));
+myPromiseAll([]).then((values) => console.log(values));
 ```
 
 Options:

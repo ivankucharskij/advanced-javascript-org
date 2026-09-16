@@ -4,7 +4,7 @@ export const fillEdgeConsoleOutputChallenge = {
   topicSlug: "array-methods",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",
-  code: "const values = [1, 2, 3, 4];\r\nconsole.log(JSON.stringify(values.customFill(9, -2)));",
+  code: "const values = [1, 2, 3, 4];\r\nconsole.log(values.customFill(9, -2));",
   order: 2,
   options: [
     {

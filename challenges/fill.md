@@ -62,7 +62,7 @@ code:
 
 ```js
 const values = [1, 2, 3, 4];
-console.log(JSON.stringify(values.customFill(9, -2)));
+console.log(values.customFill(9, -2));
 ```
 
 Options:

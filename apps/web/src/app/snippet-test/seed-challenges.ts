@@ -351,7 +351,7 @@ export const seedChallenges = [
     topicSlug: "array-methods",
     title: "Predict the console output",
     prompt: "What does this code print?",
-    code: "const numbers = [1, 2];\r\nconsole.log(JSON.stringify(numbers.myConcat([3, 4], 5)));",
+    code: "const numbers = [1, 2];\r\nconsole.log(numbers.myConcat([3, 4], 5));",
     order: 1,
     options: [
       {
@@ -566,7 +566,7 @@ export const seedChallenges = [
     topicSlug: "array-methods",
     title: "Predict the edge-case console output",
     prompt: "What does this edge case print?",
-    code: "const values = [1, 2, 3, 4];\r\nconsole.log(JSON.stringify(values.customFill(9, -2)));",
+    code: "const values = [1, 2, 3, 4];\r\nconsole.log(values.customFill(9, -2));",
     order: 2,
     options: [
       {
@@ -1746,7 +1746,7 @@ export const seedChallenges = [
     topicSlug: "promises",
     title: "Predict the edge-case console output",
     prompt: "What does this edge case print?",
-    code: "myPromiseAll([]).then((values) => console.log(JSON.stringify(values)));",
+    code: "myPromiseAll([]).then((values) => console.log(values));",
     order: 2,
     options: [
       {

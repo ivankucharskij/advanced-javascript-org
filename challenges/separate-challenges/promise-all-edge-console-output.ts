@@ -4,7 +4,7 @@ export const promiseAllEdgeConsoleOutputChallenge = {
   topicSlug: "promises",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",
-  code: "myPromiseAll([]).then((values) => console.log(JSON.stringify(values)));",
+  code: "myPromiseAll([]).then((values) => console.log(values));",
   order: 2,
   options: [
     {

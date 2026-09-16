@@ -4,7 +4,7 @@ export const concatConsoleOutputChallenge = {
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",
-  code: "const numbers = [1, 2];\r\nconsole.log(JSON.stringify(numbers.myConcat([3, 4], 5)));",
+  code: "const numbers = [1, 2];\r\nconsole.log(numbers.myConcat([3, 4], 5));",
   order: 1,
   options: [
     {

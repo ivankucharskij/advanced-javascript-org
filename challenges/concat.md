@@ -34,7 +34,7 @@ code:
 
 ```js
 const numbers = [1, 2];
-console.log(JSON.stringify(numbers.myConcat([3, 4], 5)));
+console.log(numbers.myConcat([3, 4], 5));
 ```
 
 Options:
