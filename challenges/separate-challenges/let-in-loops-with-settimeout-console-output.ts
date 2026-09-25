@@ -1,6 +1,6 @@
 export const letInLoopsWithSettimeoutConsoleOutputChallenge = {
   slug: "let-in-loops-with-settimeout-console-output",
-  snippetId: "fa0e4f90-d243-4236-95ce-87ec41b7f0cf",
+  snippetId: "757c829f-63d2-49e5-8803-1431f0007f6a",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

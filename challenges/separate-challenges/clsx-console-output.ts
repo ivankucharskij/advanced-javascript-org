@@ -1,6 +1,6 @@
 export const clsxConsoleOutputChallenge = {
   slug: "clsx-console-output",
-  snippetId: "74b709ba-99e9-4583-94c5-7bcd0afb863c",
+  snippetId: "c6354d81-86a2-4bd8-a364-87854edb700b",
   topicSlug: "random",
   title: "Predict the console output",
   prompt: "What does this code print?",

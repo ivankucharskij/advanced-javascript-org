@@ -1,6 +1,6 @@
 export const innerjoinConsoleOutputChallenge = {
   slug: "innerjoin-console-output",
-  snippetId: "b5f79ef6-f9e3-4e37-b906-8066cb7121c9",
+  snippetId: "1267f844-1607-4ec6-b7ec-1d184ef3e657",
   topicSlug: "random",
   title: "Predict the console output",
   prompt: "What does this code print?",

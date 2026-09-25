@@ -1,6 +1,6 @@
 export const topologicalSortConsoleOutputChallenge = {
   slug: "topological-sort-console-output",
-  snippetId: "f250e367-76e3-4978-aabf-7b9e482ebe0a",
+  snippetId: "148eb8b3-9106-462d-9e05-6d889c09580e",
   topicSlug: "random",
   title: "Predict the console output",
   prompt: "What does this code print?",

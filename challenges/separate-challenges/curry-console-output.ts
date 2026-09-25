@@ -1,6 +1,6 @@
 export const curryConsoleOutputChallenge = {
   slug: "curry-console-output",
-  snippetId: "701c97fd-79f5-4e2e-ac18-db0b788e9120",
+  snippetId: "ddba2645-3026-41ff-8385-dfedbfe2a20d",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

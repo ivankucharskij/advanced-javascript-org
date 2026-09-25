@@ -1,6 +1,6 @@
 export const reduceConsoleOutputChallenge = {
   slug: "reduce-console-output",
-  snippetId: "57646604-bc95-49e7-a046-43f53c540aae",
+  snippetId: "38b38504-f28e-442a-8cc1-5aee4b4adb7c",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

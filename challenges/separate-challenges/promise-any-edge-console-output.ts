@@ -1,6 +1,6 @@
 export const promiseAnyEdgeConsoleOutputChallenge = {
   slug: "promise-any-edge-console-output",
-  snippetId: "e009feda-50da-4ec8-bcec-da293cb37c50",
+  snippetId: "b40d3734-7707-4a56-a784-846623d7c1e1",
   topicSlug: "promises",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

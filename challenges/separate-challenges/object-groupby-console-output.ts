@@ -1,6 +1,6 @@
 export const objectGroupbyConsoleOutputChallenge = {
   slug: "object-groupby-console-output",
-  snippetId: "65edba6b-734d-4c08-8068-2742b2092cc0",
+  snippetId: "5afa1f8c-fadc-4886-8cd6-a2544dc27752",
   topicSlug: "map-and-set",
   title: "Predict the console output",
   prompt: "What does this code print?",

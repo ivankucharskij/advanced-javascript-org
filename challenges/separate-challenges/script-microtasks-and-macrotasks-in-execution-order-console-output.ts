@@ -1,7 +1,7 @@
 export const scriptMicrotasksAndMacrotasksInExecutionOrderConsoleOutputChallenge =
   {
     slug: "script-microtasks-and-macrotasks-in-execution-order-console-output",
-    snippetId: "cb4dadd1-984a-480b-94d9-19b31fc0d01c",
+    snippetId: "7a30d984-79ec-48b7-b0b2-2197d0a2eec3",
     topicSlug: "event-loop",
     title: "Predict the console output",
     prompt: "What does the snippet print?",

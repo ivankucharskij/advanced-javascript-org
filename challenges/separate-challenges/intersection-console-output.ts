@@ -1,6 +1,6 @@
 export const intersectionConsoleOutputChallenge = {
   slug: "intersection-console-output",
-  snippetId: "a6dd21a8-5ef9-4c16-80b4-a5c808400505",
+  snippetId: "964577f5-d961-41f1-b9e4-480555e455a4",
   topicSlug: "lodash",
   title: "Predict the console output",
   prompt: "What does this code print?",

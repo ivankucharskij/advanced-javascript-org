@@ -1,6 +1,6 @@
 export const asyncGeneratorConsoleOutputChallenge = {
   slug: "async-generator-console-output",
-  snippetId: "030f8b46-fc6d-42de-a752-6387b10d0937",
+  snippetId: "5a03cab4-5686-4057-92a7-19f7009918b7",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

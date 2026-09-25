@@ -1,6 +1,6 @@
 export const thisEdgeConsoleOutputChallenge = {
   slug: "this-edge-console-output",
-  snippetId: "347bd14a-4f5d-417b-b85b-05e830e99dbf",
+  snippetId: "05949bd5-6834-4a6b-97c8-77fd704370fb",
   topicSlug: "core-concepts",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

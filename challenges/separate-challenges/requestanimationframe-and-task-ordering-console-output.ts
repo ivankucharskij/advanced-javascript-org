@@ -1,6 +1,6 @@
 export const requestanimationframeAndTaskOrderingConsoleOutputChallenge = {
   slug: "requestanimationframe-and-task-ordering-console-output",
-  snippetId: "8b065588-d7bd-4e50-a03d-835b41fd2052",
+  snippetId: "ae5a059d-5aa9-4438-a8fc-f22373e04d0f",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

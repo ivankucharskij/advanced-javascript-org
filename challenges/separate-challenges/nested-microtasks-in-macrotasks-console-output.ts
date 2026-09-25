@@ -1,6 +1,6 @@
 export const nestedMicrotasksInMacrotasksConsoleOutputChallenge = {
   slug: "nested-microtasks-in-macrotasks-console-output",
-  snippetId: "258af7f8-e126-46a1-844a-d001e9255f20",
+  snippetId: "0958a0b6-a321-4da0-a356-34eefc27fa8d",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

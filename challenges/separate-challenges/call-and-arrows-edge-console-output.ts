@@ -1,6 +1,6 @@
 export const callAndArrowsEdgeConsoleOutputChallenge = {
   slug: "call-and-arrows-edge-console-output",
-  snippetId: "79b59a6d-dd35-43e1-a03f-0f07247c4a5f",
+  snippetId: "b4f394ba-5619-49e1-a999-fc418a4b7eb7",
   topicSlug: "core-concepts",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

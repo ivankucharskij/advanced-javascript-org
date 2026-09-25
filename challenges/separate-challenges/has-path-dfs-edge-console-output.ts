@@ -1,6 +1,6 @@
 export const hasPathDfsEdgeConsoleOutputChallenge = {
   slug: "has-path-dfs-edge-console-output",
-  snippetId: "ac450f65-8d8f-41a6-b66b-20e2be3f305c",
+  snippetId: "3dddd158-ab37-4eeb-8609-92a54452448d",
   topicSlug: "graph-traversal",
   title: "Predict the edge-case console output",
   prompt: "What does this edge case print?",

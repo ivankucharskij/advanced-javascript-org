@@ -1,6 +1,6 @@
 export const compositionConsoleOutputChallenge = {
   slug: "composition-console-output",
-  snippetId: "5d4a8d85-968e-44ed-9ebc-c779bb3288cd",
+  snippetId: "67004a88-7c87-4eeb-9bf7-82453e3ce4f6",
   topicSlug: "composition-vs-inheritance",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

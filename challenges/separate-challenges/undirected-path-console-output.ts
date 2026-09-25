@@ -1,6 +1,6 @@
 export const undirectedPathConsoleOutputChallenge = {
   slug: "undirected-path-console-output",
-  snippetId: "9a246e18-6c29-47a4-b737-a80c7046ece9",
+  snippetId: "758b7400-6840-48ff-9e33-d59d799f3084",
   topicSlug: "graph-traversal",
   title: "Predict the console output",
   prompt: "What does this code print?",

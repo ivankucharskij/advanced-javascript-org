@@ -17,6 +17,9 @@
     "dev": "turbo run dev",
     "seed": "pnpm --filter api seed",
     "seed:challenges": "pnpm --filter api seed:challenges",
+    "seed:prod": "node scripts/seed-prod.mjs all",
+    "seed:snippets:prod": "node scripts/seed-prod.mjs snippets",
+    "seed:challenges:prod": "node scripts/seed-prod.mjs challenges",
     "lint": "turbo run lint"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 export const findlastConsoleOutputChallenge = {
   slug: "findlast-console-output",
-  snippetId: "78600ee3-8e9b-44ae-b04f-1a0075f87738",
+  snippetId: "d0f71511-637b-47c1-b27b-54c3e5838f7d",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

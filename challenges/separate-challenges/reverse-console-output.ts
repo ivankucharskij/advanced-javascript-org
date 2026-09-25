@@ -1,6 +1,6 @@
 export const reverseConsoleOutputChallenge = {
   slug: "reverse-console-output",
-  snippetId: "dde7cd74-b061-4df6-b043-8c1bdcb96fc0",
+  snippetId: "19e39fb1-a125-4fe0-8521-db599634ac36",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

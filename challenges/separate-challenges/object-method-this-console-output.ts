@@ -1,6 +1,6 @@
 export const objectMethodThisConsoleOutputChallenge = {
   slug: "object-method-this-console-output",
-  snippetId: "86956479-1d9a-4194-b653-40bf3f051286",
+  snippetId: "b462ad86-0722-4549-bf49-1ad8cfe552e0",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

@@ -1,6 +1,6 @@
 export const promiseLifecycleAndEventLoopTimingConsoleOutputChallenge = {
   slug: "promise-lifecycle-and-event-loop-timing-console-output",
-  snippetId: "560aebcb-0250-437c-9a5c-2830288777c1",
+  snippetId: "8505986b-5621-47c2-abfd-b4c1eb565990",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

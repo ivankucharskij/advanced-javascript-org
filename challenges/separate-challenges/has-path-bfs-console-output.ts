@@ -1,6 +1,6 @@
 export const hasPathBfsConsoleOutputChallenge = {
   slug: "has-path-bfs-console-output",
-  snippetId: "a6ec011d-8ccd-401d-8268-434ac62d1714",
+  snippetId: "27fb62f6-aa9e-4c55-aa7a-3822990074ec",
   topicSlug: "graph-traversal",
   title: "Predict the console output",
   prompt: "What does this code print?",

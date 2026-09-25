@@ -1,6 +1,6 @@
 export const mapConsoleOutputChallenge = {
   slug: "map-console-output",
-  snippetId: "c0d3cc56-0208-442f-a20b-b52a422cc6d7",
+  snippetId: "1c74e9c8-7c9a-4d1d-841f-6971971b7dff",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",

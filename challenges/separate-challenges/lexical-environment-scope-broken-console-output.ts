@@ -1,6 +1,6 @@
 export const lexicalEnvironmentScopeBrokenConsoleOutputChallenge = {
   slug: "lexical-environment-scope-broken-console-output",
-  snippetId: "75ac0c87-5c6e-482c-b2e0-ed017dbef07e",
+  snippetId: "f47e9a7c-bb13-484d-a2e9-5f1fc573587f",
   topicSlug: "core-concepts",
   title: "Predict the console output",
   prompt: "What does this code print?",

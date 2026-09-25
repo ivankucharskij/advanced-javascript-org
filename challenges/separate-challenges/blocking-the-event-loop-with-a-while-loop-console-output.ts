@@ -1,6 +1,6 @@
 export const blockingTheEventLoopWithAWhileLoopConsoleOutputChallenge = {
   slug: "blocking-the-event-loop-with-a-while-loop-console-output",
-  snippetId: "6d7bb068-43b1-460e-8cfe-59563e6392f6",
+  snippetId: "1d23fb8e-ee87-4fea-a5c1-77f9c6535886",
   topicSlug: "event-loop",
   title: "Predict the console output",
   prompt: "What does the snippet print?",

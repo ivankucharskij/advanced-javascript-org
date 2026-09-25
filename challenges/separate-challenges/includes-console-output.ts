@@ -1,6 +1,6 @@
 export const includesConsoleOutputChallenge = {
   slug: "includes-console-output",
-  snippetId: "026c913e-864a-40b3-b750-ce3fbb2f3d02",
+  snippetId: "2d35f928-8b95-42a8-a655-1a89fbb86739",
   topicSlug: "array-methods",
   title: "Predict the console output",
   prompt: "What does this code print?",
